@@ -1,0 +1,2 @@
+DECLARE_VHDL_COMPONENT=ddr_sdram_phy_alt_mem_phy_pll_ciii
+DECLARE_VHDL_COMPONENT=ddr_sdram_phy_alt_mem_phy_sequencer_wrapper

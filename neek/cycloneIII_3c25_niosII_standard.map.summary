@@ -1,0 +1,14 @@
+Analysis & Synthesis Status : Successful - Wed Nov 26 22:09:03 2008
+Quartus II Version : 8.0 Build 231 07/10/2008 SP 1 SJ Full Version
+Revision Name : cycloneIII_3c25_niosII_standard
+Top-level Entity Name : cycloneIII_3c25_niosII_standard
+Family : Cyclone III
+Total logic elements : 10,629
+    Total combinational functions : 10,629
+    Dedicated logic registers : 7,366
+Total registers : 7454
+Total pins : 141
+Total virtual pins : 1
+Total memory bits : 122,936
+Embedded Multiplier 9-bit elements : 4
+Total PLLs : 2

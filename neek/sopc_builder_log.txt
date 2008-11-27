@@ -1,0 +1,60 @@
+ALTMEMPHY Returning list of Ports to IPTB
+[pll_ref_clk, global_reset_n, soft_reset_n, reset_request_n, phy_clk, reset_phy_clk_n, aux_half_rate_clk, aux_full_rate_clk, local_address[21..0], local_read_req, local_wdata[63..0], local_write_req, local_size[0..0], local_be[7..0], local_refresh_req, local_burstbegin, local_ready, local_rdata[63..0], local_rdata_valid, local_init_done, local_refresh_ack, local_wdata_req, ctl_address[21..0], ctl_read_req, ctl_wdata[63..0], ctl_write_req, ctl_size[0..0], ctl_be[7..0], ctl_refresh_req, ctl_burstbegin, ctl_ready, ctl_wdata_req, ctl_rdata[63..0], ctl_rdata_valid, ctl_refresh_ack, ctl_mem_addr_h[12..0], ctl_mem_addr_l[12..0], ctl_mem_ba_h[1..0], ctl_mem_ba_l[1..0], ctl_mem_cas_n_h, ctl_mem_cas_n_l, ctl_mem_cke_h[0..0], ctl_mem_cke_l[0..0], ctl_mem_cs_n_h[0..0], ctl_mem_cs_n_l[0..0], ctl_mem_odt_h[0..0], ctl_mem_odt_l[0..0], ctl_mem_ras_n_h, ctl_mem_ras_n_l, ctl_mem_we_n_h, ctl_mem_we_n_l, ctl_mem_be[7..0], ctl_mem_dqs_burst, ctl_mem_wdata[63..0], ctl_mem_wdata_valid, ctl_mem_wps_n[0..0], ctl_mem_rps_n[0..0], ctl_mem_rdata[63..0], ctl_mem_rdata_valid, ctl_init_done, ctl_doing_rd, ctl_add_1t_ac_lat, ctl_add_1t_odt_lat, ctl_add_intermediate_regs, ctl_negedge_en, ctl_usr_mode_rdy, mem_addr[12..0], mem_ba[1..0], mem_cas_n, mem_cke[0..0], mem_cs_n[0..0], mem_d[15..0], mem_dm[1..0], mem_odt[0..0], mem_ras_n, mem_we_n, mem_reset_n, mem_doff_n, mem_rps_n[0..0], mem_wps_n[0..0], mem_clk[0..0], mem_clk_n[0..0], mem_dq[15..0], mem_dqs[1..0], mem_dqsn[1..0], resynchronisation_successful, postamble_successful, tracking_successful, tracking_adjustment_up, tracking_adjustment_down, dqs_delay_ctrl_import[5..0], dqs_delay_ctrl_export[5..0], dll_reference_clk, pll_reconfig_enable, pll_reconfig_counter_type[3..0], pll_reconfig_counter_param[2..0], pll_reconfig_data_in[8..0], pll_reconfig_read_param, pll_reconfig_write_param, pll_reconfig, pll_reconfig_clk, pll_reconfig_reset, pll_reconfig_data_out[8..0], pll_reconfig_busy, local_autopch_req, local_powerdn_req, local_self_rfsh_req, local_self_rfsh_ack, local_powerdn_ack, ctl_autopch_req, ctl_powerdn_req, ctl_self_rfsh_req, ctl_self_rfsh_ack, ctl_powerdn_ack]
+Generating MegaCore function top-level...
+MSG NF-1 Added project file "ddr_sdram_phy.v" Location = 2
+Generating QIP file ...
+MSG NF-1 Added project file "ddr_sdram_phy_alt_mem_phy_sequencer_wrapper.v" Location = 2
+MSG NF-1 Added project file "alt_mem_phy_sequencer.vhd" Location = 2
+MSG NF-1 Added project file "ddr_sdram_phy.v" Location = 2
+MSG NF-1 Added project file "ddr_sdram_phy_alt_mem_phy_ciii.v" Location = 2
+MSG NF-1 Added project file "ddr_sdram_phy_alt_mem_phy_pll_ciii.v" Location = 2
+MSG NF-1 Added project file "ddr_sdram_phy_alt_mem_phy_reconfig_ciii.v" Location = 2
+MSG NF-1 Added project file "ddr_sdram_phy_alt_mem_phy_siii_afi.v" Location = 2
+MSG APF-6: Processing ddr_sdram_phy_alt_mem_phy_sequencer_wrapper.v
+MSG QIP-2: Adding Verilog file ddr_sdram_phy_alt_mem_phy_sequencer_wrapper.v
+MSG APF-6: Processing alt_mem_phy_sequencer.vhd
+MSG QIP-1: Adding VHDL file alt_mem_phy_sequencer.vhd
+MSG APF-6: Processing ddr_sdram_phy.v
+MSG QIP-2: Adding Verilog file ddr_sdram_phy.v
+MSG APF-6: Processing ddr_sdram_phy_alt_mem_phy_ciii.v
+MSG QIP-2: Adding Verilog file ddr_sdram_phy_alt_mem_phy_ciii.v
+MSG APF-6: Processing ddr_sdram_phy_alt_mem_phy_pll_ciii.v
+MSG QIP-2: Adding Verilog file ddr_sdram_phy_alt_mem_phy_pll_ciii.v
+MSG APF-6: Processing ddr_sdram_phy_alt_mem_phy_reconfig_ciii.v
+MSG QIP-2: Adding Verilog file ddr_sdram_phy_alt_mem_phy_reconfig_ciii.v
+MSG APF-6: Processing ddr_sdram_phy_alt_mem_phy_siii_afi.v
+MSG QIP-2: Adding Verilog file ddr_sdram_phy_alt_mem_phy_siii_afi.v
+Adding design files to Quartus II project ...
+MSG NF-1 Added project file "ddr_sdram_phy_alt_mem_phy_sequencer_wrapper.v" Location = 2
+MSG NF-1 Added project file "alt_mem_phy_sequencer.vhd" Location = 2
+MSG NF-1 Added project file "ddr_sdram_phy.v" Location = 2
+MSG NF-1 Added project file "ddr_sdram_phy_alt_mem_phy_ciii.v" Location = 2
+MSG NF-1 Added project file "ddr_sdram_phy_alt_mem_phy_pll_ciii.v" Location = 2
+MSG NF-1 Added project file "ddr_sdram_phy_alt_mem_phy_reconfig_ciii.v" Location = 2
+MSG NF-1 Added project file "ddr_sdram_phy_alt_mem_phy_siii_afi.v" Location = 2
+MSG APF-8: Processing ddr_sdram_phy_alt_mem_phy_sequencer_wrapper.v
+MSG APF-1: Adding Tcl file ddr_sdram_phy_alt_mem_phy_sequencer_wrapper.v
+MSG APF-1: Adding Tcl file ddr_sdram_phy_alt_mem_phy_sequencer_wrapper.v
+MSG APF-8: Processing alt_mem_phy_sequencer.vhd
+MSG APF-1: Adding Tcl file alt_mem_phy_sequencer.vhd
+MSG APF-1: Adding Tcl file alt_mem_phy_sequencer.vhd
+MSG APF-8: Processing ddr_sdram_phy.v
+MSG APF-1: Adding Tcl file ddr_sdram_phy.v
+MSG APF-1: Adding Tcl file ddr_sdram_phy.v
+MSG APF-8: Processing ddr_sdram_phy_alt_mem_phy_ciii.v
+MSG APF-1: Adding Tcl file ddr_sdram_phy_alt_mem_phy_ciii.v
+MSG APF-1: Adding Tcl file ddr_sdram_phy_alt_mem_phy_ciii.v
+MSG APF-8: Processing ddr_sdram_phy_alt_mem_phy_pll_ciii.v
+MSG APF-1: Adding Tcl file ddr_sdram_phy_alt_mem_phy_pll_ciii.v
+MSG APF-1: Adding Tcl file ddr_sdram_phy_alt_mem_phy_pll_ciii.v
+MSG APF-8: Processing ddr_sdram_phy_alt_mem_phy_reconfig_ciii.v
+MSG APF-1: Adding Tcl file ddr_sdram_phy_alt_mem_phy_reconfig_ciii.v
+MSG APF-1: Adding Tcl file ddr_sdram_phy_alt_mem_phy_reconfig_ciii.v
+MSG APF-8: Processing ddr_sdram_phy_alt_mem_phy_siii_afi.v
+MSG APF-1: Adding Tcl file ddr_sdram_phy_alt_mem_phy_siii_afi.v
+MSG APF-1: Adding Tcl file ddr_sdram_phy_alt_mem_phy_siii_afi.v
+ALTMEMPHY Returning list of Ports to IPTB
+[pll_ref_clk, global_reset_n, soft_reset_n, reset_request_n, phy_clk, reset_phy_clk_n, aux_half_rate_clk, aux_full_rate_clk, local_address[21..0], local_read_req, local_wdata[63..0], local_write_req, local_size[0..0], local_be[7..0], local_refresh_req, local_burstbegin, local_ready, local_rdata[63..0], local_rdata_valid, local_init_done, local_refresh_ack, local_wdata_req, ctl_address[21..0], ctl_read_req, ctl_wdata[63..0], ctl_write_req, ctl_size[0..0], ctl_be[7..0], ctl_refresh_req, ctl_burstbegin, ctl_ready, ctl_wdata_req, ctl_rdata[63..0], ctl_rdata_valid, ctl_refresh_ack, ctl_mem_addr_h[12..0], ctl_mem_addr_l[12..0], ctl_mem_ba_h[1..0], ctl_mem_ba_l[1..0], ctl_mem_cas_n_h, ctl_mem_cas_n_l, ctl_mem_cke_h[0..0], ctl_mem_cke_l[0..0], ctl_mem_cs_n_h[0..0], ctl_mem_cs_n_l[0..0], ctl_mem_odt_h[0..0], ctl_mem_odt_l[0..0], ctl_mem_ras_n_h, ctl_mem_ras_n_l, ctl_mem_we_n_h, ctl_mem_we_n_l, ctl_mem_be[7..0], ctl_mem_dqs_burst, ctl_mem_wdata[63..0], ctl_mem_wdata_valid, ctl_mem_wps_n[0..0], ctl_mem_rps_n[0..0], ctl_mem_rdata[63..0], ctl_mem_rdata_valid, ctl_init_done, ctl_doing_rd, ctl_add_1t_ac_lat, ctl_add_1t_odt_lat, ctl_add_intermediate_regs, ctl_negedge_en, ctl_usr_mode_rdy, mem_addr[12..0], mem_ba[1..0], mem_cas_n, mem_cke[0..0], mem_cs_n[0..0], mem_d[15..0], mem_dm[1..0], mem_odt[0..0], mem_ras_n, mem_we_n, mem_reset_n, mem_doff_n, mem_rps_n[0..0], mem_wps_n[0..0], mem_clk[0..0], mem_clk_n[0..0], mem_dq[15..0], mem_dqs[1..0], mem_dqsn[1..0], resynchronisation_successful, postamble_successful, tracking_successful, tracking_adjustment_up, tracking_adjustment_down, dqs_delay_ctrl_import[5..0], dqs_delay_ctrl_export[5..0], dll_reference_clk, pll_reconfig_enable, pll_reconfig_counter_type[3..0], pll_reconfig_counter_param[2..0], pll_reconfig_data_in[8..0], pll_reconfig_read_param, pll_reconfig_write_param, pll_reconfig, pll_reconfig_clk, pll_reconfig_reset, pll_reconfig_data_out[8..0], pll_reconfig_busy, local_autopch_req, local_powerdn_req, local_self_rfsh_req, local_self_rfsh_ack, local_powerdn_ack, ctl_autopch_req, ctl_powerdn_req, ctl_self_rfsh_req, ctl_self_rfsh_ack, ctl_powerdn_ack]
+MegaCore Function Generation successful.
+MSG FMP-1: Posting close event for IP Toolbench. Application will exit now.
+Generation Finished

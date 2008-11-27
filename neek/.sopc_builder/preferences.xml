@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?><preferences>
+    <systemtable>
+        <columns>
+            <connections preferredWidth="175" />
+            <irq preferredWidth="34" />
+            <inputclock preferredWidth="149" />
+            <name preferredWidth="166" />
+        </columns>
+    </systemtable>
+    <clocktable>
+        <columns>
+            <clockname preferredWidth="311" />
+            <clocksource preferredWidth="311" />
+            <frequency preferredWidth="296" />
+        </columns>
+    </clocktable>
+    <window width="1440" height="870" x="0" y="0" />
+    <library expandedCategories="Bridges and Adapters/Memory Mapped,Bridges and Adapters,Interface Protocols/Ethernet,Interface Protocols" />
+</preferences>

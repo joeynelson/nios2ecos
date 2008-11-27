@@ -1,0 +1,13 @@
+set_global_assignment -name IP_TOOL_NAME "altmemphy"
+set_global_assignment -name IP_TOOL_VERSION "8.0"
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) "ddr_sdram_phy_alt_mem_phy_sequencer_wrapper.v"]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) "alt_mem_phy_sequencer.vhd"]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) "ddr_sdram_phy.v"]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) "ddr_sdram_phy_alt_mem_phy_ciii.v"]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) "ddr_sdram_phy_alt_mem_phy_pll_ciii.v"]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) "ddr_sdram_phy_alt_mem_phy_reconfig_ciii.v"]
+set_global_assignment -name VERILOG_FILE [file join $::quartus(qip_path) "ddr_sdram_phy_alt_mem_phy_siii_afi.v"]
+set_global_assignment -name SEARCH_PATH  C:/altera/80/ip/ddr_high_perf/lib
+set_global_assignment -name MISC_FILE [file join $::quartus(qip_path) ddr_sdram_phy.v ]
+set_global_assignment -name MISC_FILE [file join $::quartus(qip_path) ddr_sdram_phy.qip ]
+set_global_assignment -name MISC_FILE [file join $::quartus(qip_path) ddr_sdram_phy.html ]
