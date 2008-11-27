@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!--=========================================================================##
+ * program_flash.gtf
+ *
+ * GTF script to generate the file: program_flash.
+ *
+ *=============================================================================
+ *###ECOSGPLCOPYRIGHTBEGIN####
+ * 
+ * This file is part of eCos, the Embedded Configurable Operating System.
+ *
+ * eCos is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 or (at your option) any later version.
+ *
+ * eCos is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with eCos; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+ *
+ * As a special exception, if other files instantiate templates or use macros
+ * or inline functions from this file, or you compile this file and link it
+ * with other works to produce a work based on this file, this file does not
+ * by itself cause the resulting work to be covered by the GNU General Public
+ * License. However the source code for this file must still be made available
+ * in accordance with section (3) of the GNU General Public License.
+ *
+ * This exception does not invalidate any other reasons why a work based on
+ * this file might be covered by the GNU General Public License.
+ * 
+ *###ECOSGPLCOPYRIGHTEND####
+ *==========================================================================-->
+
+<!-- This GTF script is used to generate the Nios flash programming script, 
+     program_flash. This file is constructed to match the hardware
+     configuration of the associated the SOPC builder project. It is used to 
+     program an executable elf file into flash, without requiring the user to
+     understand the semantics of the flash programmer. -->
+
+<template name="program_flash">
+
+    <!-- After calling this script, the variable GTF_DIR will be reset to point
+         to the gtf directory of the Nios2 kit. The original value can be 
+         obtained using the variable ECOS_GTF_DIR. This allows us to reuse 
+         some of the scripts supplied with the Nios II kit. -->
+
+    <call gtf="%GTF_DIR%/ECOS_GTF_DIR.gtf"/>
+
+    <call gtf="%GTF_DIR%/check_version.gtf"/>
+
+    <call gtf="%GTF_DIR%/CPU.gtf"/>
+
+    <call gtf="%GTF_DIR%/RESET_ADDRESS.gtf"/>
+
+    <set_variable variable="MEMORY_MODULES_ONLY" to="1"/>
+    <export variable="MEMORY_MODULES_ONLY"/>
+    <call gtf="%GTF_DIR%/MODULE_lists.gtf"/>
+
+    <!-- Write out the header -->
+
+    <text>#!/bin/sh
+
+# %FILE_NAME%
+#
+# Machine generated for a CPU named "%CPU%" as defined in:
+# %PTF_NAME%
+#
+# Generated: %TIMESTAMP%
+#
+#<![CDATA[
+
+#
+# Print general help message
+#
+print_help()
+{
+  echo "usage : program_flash name_of_your_elf_file [optional]: name_of_your_sof_file"
+  echo ""
+  echo "This utility programs flash with the specified eCos executable (elf) file."
+  echo "You can optionally specify a .sof file used to configure your target board"
+  echo "for flash programmer communication. This .sof file is NOT programmed into"
+  echo "flash memory."
+  echo ""
+  echo "NOTE: If a .sof file is not specified, you must manually download your design"
+  echo ".sof file to the target board prior to running this utility."
+}
+
+#
+# Download .sof to target
+#
+download_sof()
+{
+  quartus_pgm --mode=jtag -o p\;$1
+}
+
+#
+# Convert .elf to .flash files for all flash devices targetted
+# in the software design, and then program these into flash.
+#
+program_flash()
+{
+  ]]></text>
+
+  <!-- Construct variables which point to the associated board programming project -->    
+  <set_variable variable="JTAG_DEV" ptf_path="SYSTEM/WIZARD_SCRIPT_ARGUMENTS/BOARD_INFO/JTAG_device_index"/>
+
+  <!-- locate the reset device -->
+  <set_variable variable="RESET_SLAVE" ptf_path="SYSTEM/MODULE %CPU%/WIZARD_SCRIPT_ARGUMENTS/reset_slave"/>
+ 
+  <!-- Loop through all devices, seeking one that is suitable for programming -->
+
+  <for_each variable="MODULE" ptf_path="SYSTEM/MODULE">
+    <if condition="and( ptf_module_is_mastered_by( %MODULE%, %CPU% ), ne( %MODULE%, %CPU% ) )">
+      <for_each variable="SLAVE" ptf_path="SYSTEM/MODULE %MODULE%/SLAVE">
+        <set_variable variable="IS_ENABLED" ptf_path="SYSTEM/MODULE %MODULE%/SLAVE %SLAVE%/SYSTEM_BUILDER_INFO/Is_Enabled"/>
+        <if condition="ne( %IS_ENABLED%, 0 )"> <!-- defaults to 1 -->
+          <set_variable variable="MODULE_CLASS" ptf_path="SYSTEM/MODULE %MODULE%/class"/>
+          <if condition="or( eq( %MODULE_CLASS%, altera_avalon_cfi_flash ), eq( %MODULE_CLASS%, altera_avalon_epcs_flash_controller ))"> 
+
+            <!-- Having found an apropriate device, generate the commands for creating and programming
+                 the flash file -->
+
+            <set_variable variable="FLASH_BASE" ptf_path="SYSTEM/MODULE %MODULE%/SLAVE %SLAVE%/SYSTEM_BUILDER_INFO/Base_Address"/>
+            <set_variable variable="FLASH_SPAN" ptf_path="SYSTEM/MODULE %MODULE%/SLAVE %SLAVE%/SYSTEM_BUILDER_INFO/Address_Span"/>
+            <set_variable variable="FLASH_END" to="add( %FLASH_BASE%, %FLASH_SPAN% )"/> 
+            <set_variable variable="FLASH_END" to="sub( %FLASH_END%, 1 )"/> 
+                        
+            <if condition="eq( %MODULE_CLASS%, altera_avalon_cfi_flash )">
+              <text><![CDATA[
+  #
+  # Update device ]]>%MODULE%<![CDATA[
+  #                       
+  echo Generating flash file for device ]]>%MODULE%<![CDATA[...
+  elf2flash --silent --input=$1 --boot=`$QUARTUS_ROOTDIR/sopc_builder/bin/find_sopc_component_dir altera_nios2`/boot_loader_cfi.srec --output=$TMP/ecos.flash --sim_optimize=0 --base=]]>%FLASH_BASE%<![CDATA[ --end=]]>%FLASH_END%<![CDATA[ --reset=]]>%RESET_ADDRESS%<![CDATA[
+
+  echo Programming device ]]>%MODULE%<![CDATA[...
+  nios2-flash-programmer --base=]]>%FLASH_BASE%<![CDATA[ --device=]]>%JTAG_DEV%<![CDATA[ $TMP/ecos.flash]]>
+              </text>
+            </if>
+            <!-- only program an epcs device if it's the reset device -->
+            <if condition="and( eq( %MODULE_CLASS%, altera_avalon_epcs_flash_controller ), eq( %RESET_SLAVE%, %MODULE%/%SLAVE%))"> 
+
+              <text><![CDATA[...
+  echo Generating flash file for device ]]>%MODULE%<![CDATA[...
+  elf2flash --silent --input=$1 --epcs --boot=`$QUARTUS_ROOTDIR/sopc_builder/bin/find_sopc_component_dir altera_nios2`/boot_loader_epcs.srec --output=$TMP/ecos.flash
+
+  echo Programming device ]]>%MODULE%<![CDATA[...
+  nios2-flash-programmer --epcs --base=]]>%FLASH_BASE%<![CDATA[ --device=]]>%JTAG_DEV%<![CDATA[ $TMP/ecos.flash]]>
+              </text>
+            </if>
+          </if>
+        </if>
+      </for_each>
+    </if>
+  </for_each>
+
+  <!-- Finally, clean up the temporary file -->
+  <text><![CDATA[
+  # Now clean up
+  rm -f $TMP/ecos.flash
+  echo ...done
+}
+
+
+#
+# The meat: Process args and act on them
+#
+ 
+#
+# Did they request the help option?
+#
+if [ "$1" = "--help" ]
+  then 
+  print_help
+else
+  #
+  # Case: Two arguments -- <elf> <sof>
+  #
+  if [ $# = 2 ] 
+    then
+    if [ -f "$2" ]
+      then
+      download_sof $2
+    else
+      echo "Cannot find the SOF file ""$2"
+      print_help
+      exit
+    fi
+    if [ -f "$1" ]
+      then
+      program_flash $1
+    else
+      echo "Cannot find the ELF file ""$1"
+      print_help
+      exit
+    fi
+  else
+    #
+    # Case: One argument -- <elf>
+    #
+    if [ $# = 1 ]
+      then
+      if [ -f "$1" ]
+        then
+        program_flash $1
+      else
+        echo "Cannot find the ELF file ""$1"
+        print_help
+        exit
+      fi
+    #
+    # Anything else is incorrect
+    #
+    else
+      if [ -z "$1" ]
+        then
+        echo "Too few arguments"
+      else
+        echo "Too many arguments"
+      fi
+      print_help
+      exit
+    fi
+  fi
+fi
+
+]]>
+</text>
+</template>

@@ -1,0 +1,82 @@
+# ====================================================================
+#
+#      altera_avalon_uart.cdl
+#
+#      Configuration file for the Altera Avalon UART driver.
+#
+# ====================================================================
+#####ECOSGPLCOPYRIGHTBEGIN####
+## -------------------------------------------
+## This file is part of eCos, the Embedded Configurable Operating System.
+##
+## eCos is free software; you can redistribute it and/or modify it under
+## the terms of the GNU General Public License as published by the Free
+## Software Foundation; either version 2 or (at your option) any later version.
+##
+## eCos is distributed in the hope that it will be useful, but WITHOUT ANY
+## WARRANTY; without even the implied warranty of MERCHANTABILITY or
+## FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+## for more details.
+##
+## You should have received a copy of the GNU General Public License along
+## with eCos; if not, write to the Free Software Foundation, Inc.,
+## 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+##
+## As a special exception, if other files instantiate templates or use macros
+## or inline functions from this file, or you compile this file and link it
+## with other works to produce a work based on this file, this file does not
+## by itself cause the resulting work to be covered by the GNU General Public
+## License. However the source code for this file must still be made available
+## in accordance with section (3) of the GNU General Public License.
+##
+## This exception does not invalidate any other reasons why a work based on
+## this file might be covered by the GNU General Public License.
+##
+## -------------------------------------------
+#####ECOSGPLCOPYRIGHTEND####
+
+cdl_package CYGPKG_ALTERA_AVALON_UART {
+    display       "Altera Avalon UART serial device driver"
+
+    parent        CYGPKG_IO_SERIAL_DEVICES
+    active_if     CYGPKG_IO_SERIAL
+    active_if     {!CYGHWR_DETECTED_SOPC_DEVICES || is_substr (CYGHWR_DETECTED_SOPC_DEVICE_LIST, " altera_avalon_uart ")}
+
+    description   "
+        This option enables the serial device drivers for the
+        Altera Avalon UART."
+
+    compile       altera_avalon_uart.c 
+    compile -library=libextras.a  altera_avalon_uart_devices.c
+
+    cdl_option CYGDAT_ALT_AVALON_UART_BUF_LEN {
+        display       "Receive/transmit buffer size"
+        flavor        data
+        default_value { "64" }
+        description "
+            The length of the transmit and receive buffers in bytes."
+    }
+
+    cdl_option CYGPKG_ALTERA_AVALON_UART_CFLAGS_ADD {
+        display       "Additional compiler flags"
+        flavor        data
+        no_define
+        default_value { "-I`cygpath -u $$QUARTUS_ROOTDIR`/../ip/altera/sopc_builder_ip/altera_avalon_uart/inc -I$(PREFIX)/include/cyg/hal" }
+        description   "
+            This option modifies the set of compiler flags for
+            building the Altera Avalon UART driver.
+            These flags are used in addition
+            to the set of global flags."
+    }
+
+    cdl_option CYGPKG_ALTERA_AVALON_UART_CFLAGS_REMOVE {
+        display       "Suppressed compiler flags"
+        flavor        data
+        no_define
+        default_value { "" }
+        description   "
+            This option modifies the set of compiler flags for
+            building the Altera Avalon UART driver. These flags are removed from
+            the set of global flags if present."
+    }
+}

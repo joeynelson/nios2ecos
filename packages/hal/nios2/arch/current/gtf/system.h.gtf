@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!--=========================================================================##
+ * system.h.gtf
+ *
+ * GTF script to generate the file: system.h.
+ *
+ *	compatible with NiosII 5.1
+ *
+ *=============================================================================
+ *###ECOSGPLCOPYRIGHTBEGIN####
+ *
+ * This file is part of eCos, the Embedded Configurable Operating System.
+ *
+ * eCos is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 or (at your option) any later version.
+ *
+ * eCos is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with eCos; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+ *
+ * As a special exception, if other files instantiate templates or use macros
+ * or inline functions from this file, or you compile this file and link it
+ * with other works to produce a work based on this file, this file does not
+ * by itself cause the resulting work to be covered by the GNU General Public
+ * License. However the source code for this file must still be made available
+ * in accordance with section (3) of the GNU General Public License.
+ *
+ * This exception does not invalidate any other reasons why a work based on
+ * this file might be covered by the GNU General Public License.
+ * 
+ *###ECOSGPLCOPYRIGHTEND####
+ *==========================================================================-->
+
+<!-- This GTF script is used to generate the Nios II system header, system.h.
+     This header file contains defines for the various wizard settings entered
+     into the associated SOPC builder project. -->
+
+<template name="system.h">
+
+    <!-- After calling this script, the variable GTF_DIR will be reset to point
+         to the gtf directory of the Nios2 kit. The original value can be 
+         obtained using the variable ECOS_GTF_DIR. This allows us to reuse 
+         some of the scripts supplied with the Nios II kit. -->  
+
+    <call gtf="%GTF_DIR%/ECOS_GTF_DIR.gtf"/>
+
+    <call gtf="%GTF_DIR%/check_version.gtf"/>
+
+    <call gtf="%GTF_DIR%/CPU.gtf"/>
+
+    <call gtf="%GTF_DIR%/file_heading.h.gtf"/>
+
+    <text>               
+/*
+ * Machine generated for a CPU named "%CPU%" as defined in:
+ * %PTF_NAME%
+ *
+ * Generated: %TIMESTAMP%
+ *
+ */
+
+#ifndef __SYSTEM_H_
+#define __SYSTEM_H_
+
+    </text>               
+
+    <include source="%GTF_DIR%/warning.h"/>
+
+    <include source="%GTF_DIR%/license.h"/>
+
+    <set_variable variable="PTF_SYSTEM_NAME" ptf_path="SYSTEM"/>
+    <set_variable variable="CPU_ARCHITECTURE" ptf_path="SYSTEM/MODULE %CPU%/class"/>
+    <set_variable variable="DEVICE_FAMILY" ptf_path="SYSTEM/WIZARD_SCRIPT_ARGUMENTS/device_family"/>
+
+    <set_variable variable="BOARD_CLASS" ptf_path="SYSTEM/WIZARD_SCRIPT_ARGUMENTS/board_class"/>
+    <if condition="%BOARD_CLASS%">
+        <set_variable variable="BOARD_DEFINE" to="uppercase( %BOARD_CLASS% )"/>
+    </if>
+
+    <set_variable variable="CLOCK_FREQ" ptf_path="SYSTEM/WIZARD_SCRIPT_ARGUMENTS/clock_freq"/>
+    <set_variable variable="CPU_IMPLEMENTATION" ptf_path="SYSTEM/MODULE %CPU%/WIZARD_SCRIPT_ARGUMENTS/CPU_Implementation"/>
+    <set_variable variable="ICACHE_SIZE" ptf_path="SYSTEM/MODULE %CPU%/WIZARD_SCRIPT_ARGUMENTS/cache_icache_size"/>
+    <set_variable variable="DCACHE_SIZE" ptf_path="SYSTEM/MODULE %CPU%/WIZARD_SCRIPT_ARGUMENTS/cache_dcache_size"/>
+    <set_variable variable="ICACHE_LINE_SIZE" ptf_path="SYSTEM/MODULE %CPU%/WIZARD_SCRIPT_ARGUMENTS/CONSTANTS/CONSTANT nasys_icache_line_size/value"/>
+    <set_variable variable="DCACHE_LINE_SIZE" ptf_path="SYSTEM/MODULE %CPU%/WIZARD_SCRIPT_ARGUMENTS/CONSTANTS/CONSTANT nasys_dcache_line_size/value"/>
+    <set_variable variable="CACHE_HAS_ICACHE" ptf_path="SYSTEM/MODULE %CPU%/WIZARD_SCRIPT_ARGUMENTS/cache_has_icache"/>
+    <if condition="eq( %CACHE_HAS_ICACHE%, 0 )">
+        <set_variable variable="ICACHE_SIZE" to="0"/>
+        <set_variable variable="ICACHE_LINE_SIZE" to="0"/>
+    </if>
+    <set_variable variable="CACHE_HAS_DCACHE" ptf_path="SYSTEM/MODULE %CPU%/WIZARD_SCRIPT_ARGUMENTS/cache_has_dcache"/>
+    <if condition="eq( %CACHE_HAS_DCACHE%, 0 )">
+        <set_variable variable="DCACHE_SIZE" to="0"/>
+        <set_variable variable="DCACHE_LINE_SIZE" to="0"/>
+    </if>
+
+    <call gtf="%GTF_DIR%/EXC_ADDRESS.gtf"/>
+
+    <call gtf="%GTF_DIR%/RESET_ADDRESS.gtf"/>
+
+    <text>
+/*
+ * system configuration
+ *
+ */
+
+#define ALT_SYSTEM_NAME "%PTF_SYSTEM_NAME%"
+#define ALT_CPU_NAME "%CPU%"
+#define ALT_CPU_ARCHITECTURE "%CPU_ARCHITECTURE%"
+#define ALT_DEVICE_FAMILY "%DEVICE_FAMILY%" 
+    </text>
+
+    <if condition="%BOARD_DEFINE%"> <!-- in other words, if defined -->
+        <text>
+#define %BOARD_DEFINE% 
+        </text>
+    </if>
+
+    <text>
+#define ALT_CPU_FREQ %CLOCK_FREQ%
+
+/*
+ * processor configuration
+ *
+ */
+
+#define NIOS2_CPU_IMPLEMENTATION "%CPU_IMPLEMENTATION%"
+
+#define NIOS2_ICACHE_SIZE %ICACHE_SIZE%
+#define NIOS2_DCACHE_SIZE %DCACHE_SIZE%
+#define NIOS2_ICACHE_LINE_SIZE %ICACHE_LINE_SIZE%
+#define NIOS2_DCACHE_LINE_SIZE %DCACHE_LINE_SIZE%
+
+#define NIOS2_EXCEPTION_ADDR %EXC_ADDRESS%
+#define NIOS2_RESET_ADDR %RESET_ADDRESS%
+    </text>
+
+    <call gtf="%GTF_DIR%/MODULE_lists.gtf"/>
+
+    <!-- a define for each unique module class -->
+
+    <text>
+
+/*
+ * A define for each class of peripheral
+ *
+ */
+
+    </text>
+
+    <for_each variable="CLASS" list="%MODULE_CLASS_LIST%">
+        <set_variable variable="CLASS_UPPER" to="uppercase( %CLASS% )"/>
+        <text>
+#define __%CLASS_UPPER%
+        </text>
+    </for_each>
+
+    <!--                                                                         -->
+    <!-- output a section for each module in the PTF that is mastered by the CPU -->
+    <!--                                                                         -->
+
+    <set_variable variable="CUSTOM_INSTRUCTION_MODULE_SLAVE_LIST" to=""/>
+
+    <call gtf="%GTF_DIR%/COMPONENT_LIST.gtf"/>
+
+    <for_each variable="MODULE_SLAVE" index_variable="MODULE_SLAVE_LIST_INDEX" list="%MODULE_SLAVE_LIST%">
+        <export variable="MODULE_SLAVE"/>
+
+        <set_variable variable="MODULE" to='regex( "(.+)/SLAVE .+", 1, %MODULE_SLAVE% )'/>
+        <set_variable variable="MODULE_CLASS" ptf_path="SYSTEM/MODULE %MODULE%/class"/>
+
+        <if condition="eq( %MODULE_CLASS%, altera_nios2 )">
+            <!-- skip the rest for the CPU -->
+            <continue/>
+        </if>
+
+        <set_variable variable="IS_CUSTOM_INSTRUCTION"
+                      ptf_path="SYSTEM/MODULE %MODULE_SLAVE%/SYSTEM_BUILDER_INFO/Is_Custom_Instruction"/>
+        <if condition="eq( 1, %IS_CUSTOM_INSTRUCTION% )">  <!-- default to 0 -->
+            <set_variable variable="CUSTOM_INSTRUCTION_MODULE_SLAVE_LIST"
+                          to="list_add( %CUSTOM_INSTRUCTION_MODULE_SLAVE_LIST%, (%MODULE_SLAVE%,%MODULE%) )"/>
+            <!-- skip the rest for custom instructions -->
+            <continue/>
+        </if>
+
+        <set_variable variable="MODULE_SLAVE_NAME"
+                      to="list_get( %MODULE_SLAVE_NAME_LIST%, %MODULE_SLAVE_LIST_INDEX% )"/>
+
+        <call gtf="%GTF_DIR%/BASE_ADDRESS_and_ADDRESS_SPAN.gtf"/>
+
+        <if condition="ne( %BASE_ADDRESS%, N/A )">
+            <if condition="and( ge( %EXC_ADDRESS%, %BASE_ADDRESS% ), lt( %EXC_ADDRESS%, add( %BASE_ADDRESS%, %ADDRESS_SPAN% ) ) )">
+                <set_variable variable="EXCEPTIONS_SEGMENT" to="%MODULE_SLAVE_NAME%"/>
+            </if>
+
+            <if condition="and( ge( %RESET_ADDRESS%, %BASE_ADDRESS% ), lt( %RESET_ADDRESS%, add( %BASE_ADDRESS%, %ADDRESS_SPAN% ) ) )">
+                <set_variable variable="RESET_SEGMENT" to="%MODULE_SLAVE_NAME%"/>
+            </if>
+        </if>
+
+        <set_variable variable="HAS_IRQ"
+                      ptf_path="SYSTEM/MODULE %MODULE_SLAVE%/SYSTEM_BUILDER_INFO/Has_IRQ"/>
+        <if condition="eq( %HAS_IRQ%, 1 )">
+            <set_variable variable="IRQ"
+                          ptf_path="SYSTEM/MODULE %MODULE_SLAVE%/SYSTEM_BUILDER_INFO/IRQ_MASTER %CPU%\/data_master/IRQ_Number"/>
+            <if condition="eq( length( %IRQ% ), 0 )">
+                <set_variable variable="IRQ"
+                              ptf_path="SYSTEM/MODULE %MODULE_SLAVE%/SYSTEM_BUILDER_INFO/IRQ_Number"/>
+            </if>
+            <if condition="eq( %IRQ%, NC )">
+                <set_variable variable="IRQ" to="ALT_IRQ_NOT_CONNECTED"/>
+            </if>
+        </if>
+
+        <set_variable variable="MODULE_NAME" to="%MODULE_SLAVE_NAME%"/>
+        <if condition="ne( %MODULE_NAME%, %MODULE% )">
+            <set_variable variable="SLAVE" to='regex( ".+/SLAVE (.+)", 1, %MODULE_SLAVE% )'/>
+            <set_variable variable="MODULE_NAME" to="%MODULE%/%SLAVE%"/>
+        </if>
+        <set_variable variable="MODULE_SLAVE_NAME_UPPER" to="uppercase( %MODULE_SLAVE_NAME% )"/>
+
+        <switch>
+            <export variable="MODULE"/>
+            <export variable="MODULE_NAME"/>
+            <export variable="MODULE_SLAVE_NAME_UPPER"/>
+            <export variable="MMU_PRESENT"/>
+            <export variable="BASE_ADDRESS"/>
+	    <export variable="ADDRESS_SPAN"/>
+            <export variable="HAS_IRQ"/>
+            <export variable="IRQ"/>
+
+            <set_variable variable="COMPONENT_LIST_INDEX"
+                          to="list_index_of( %COMPONENT_LIST%, %MODULE_CLASS%, 0 )"/>
+            <set_variable variable="COMPONENT_DIR"
+                          to="list_get( list_get( %COMPONENT_LIST%, %COMPONENT_LIST_INDEX% ), 1 )"/>
+
+            <!-- if the component has its own GTF use that... -->
+            <if condition="file_exists( %COMPONENT_DIR%/HAL/system.h_component_output.gtf )">
+                <call gtf="%COMPONENT_DIR%/HAL/system.h_component_output.gtf"/>
+                <break/>
+            </if>
+
+            <!-- ...otherwise output the default for all components -->
+            <export variable="MODULE_CLASS"/>
+            <call gtf="%GTF_DIR%/system.h_component_output.gtf"/>
+        </switch>
+
+        <!-- The following has been put in as an eCos specific 'tweak' for the timer. There 
+             probably is a more apropriate place for this to go, but it will do for now. --> 
+
+        <if condition="eq( %MODULE_CLASS%, altera_avalon_timer )">
+               <set_variable variable="WIZARD_SCRIPT_ARGUMENTS_LIST"
+                             ptf_path="SYSTEM/MODULE %MODULE%/WIZARD_SCRIPT_ARGUMENTS"
+                             index="*"/>
+               <for_each variable="WSARG" list="%WIZARD_SCRIPT_ARGUMENTS_LIST%">
+                   <set_variable variable="WSARG_NAME" to="uppercase( list_get( %WSARG%, 0 ) )"/>
+                     <if condition="eq( %WSARG_NAME%, PERIOD_UNITS )">
+                         <set_variable variable="UPPERCASE_PERIOD_UNITS" to="uppercase( list_get( %WSARG%, 1 ) )"/>
+                     <text>
+#define %MODULE_SLAVE_NAME_UPPER%_ALT_AVALON_TIMER_PERIOD_UNITS ALT_AVALON_TIMER_PERIOD_UNITS_%UPPERCASE_PERIOD_UNITS% 
+                     </text>
+                     </if>
+               </for_each>
+        </if> 
+    </for_each>
+
+
+    <!--                     -->
+    <!-- custom instructions -->
+    <!--                     -->
+
+    <if condition="gt( list_size( %CUSTOM_INSTRUCTION_MODULE_SLAVE_LIST% ), 0 )">
+        <text>
+
+/*
+ * custom instruction macros
+ *
+ */
+
+        </text>
+        <for_each variable="MODULE_SLAVE_AND_MODULE" list="%CUSTOM_INSTRUCTION_MODULE_SLAVE_LIST%">
+            <set_variable variable="MODULE_SLAVE"
+                          to="list_get( %MODULE_SLAVE_AND_MODULE%, 0 )"/>
+            <set_variable variable="MODULE"
+                          to="list_get( %MODULE_SLAVE_AND_MODULE%, 1 )"/>
+
+            <!-- use SYSTEM_BUILDER_INFO or WIZARD_SCRIPT_ARGUMENTS? -->
+            <switch>
+                <!-- try SYSTEM_BUILDER_INFO first -->
+                <set_variable variable="PTF_PATH"
+                              to="SYSTEM/MODULE %MODULE_SLAVE%/SYSTEM_BUILDER_INFO"/>
+                <set_variable variable="CI_MACRO_NAME"
+                              ptf_path="%PTF_PATH%/ci_macro_name"/>
+                <if condition='ne( %CI_MACRO_NAME%, "" )'>
+                    <!-- we'll use SYSTEM_BUILDER_INFO -->
+                    <break/>
+                </if>
+
+                <!-- it must be in WIZARD_SCRIPT_ARGUMENTS -->
+                <set_variable variable="PTF_PATH"
+                              to="SYSTEM/MODULE %MODULE%/WIZARD_SCRIPT_ARGUMENTS"/>
+                <set_variable variable="CI_MACRO_NAME"
+                              ptf_path="%PTF_PATH%/ci_macro_name"/>
+            </switch>
+
+            <set_variable variable="CI_MACRO_NAME"
+                          to="uppercase( %CI_MACRO_NAME% )"/>
+            <set_variable variable="BASE_ADDRESS"
+                          ptf_path="SYSTEM/MODULE %MODULE_SLAVE%/SYSTEM_BUILDER_INFO/Base_Address"/>
+
+            <set_variable variable="CI_OPERANDS"
+                          ptf_path="%PTF_PATH%/ci_operands"/>
+
+            <switch>
+                <if condition="eq( 0, %CI_OPERANDS% )">
+                    <set_variable variable="MACRO_PARAMS" to=""/>
+                    <set_variable variable="FUNCTION_ARGS" to=""/>
+                    <set_variable variable="BUILTIN_FUNCTION_TAIL" to="in"/>
+                    <break/>
+                </if>
+                <if condition="eq( 1, %CI_OPERANDS% )">
+                    <set_variable variable="MACRO_PARAMS" to="A"/>
+                    <set_variable variable="FUNCTION_ARGS" to=",(A)"/>
+                    <set_variable variable="BUILTIN_FUNCTION_TAIL" to="ini"/>
+                    <break/>
+                </if>
+                <!-- default to 2 -->
+                <set_variable variable="MACRO_PARAMS" to="A,B"/>
+                <set_variable variable="FUNCTION_ARGS" to=",(A),(B)"/>
+                <set_variable variable="BUILTIN_FUNCTION_TAIL" to="inii"/>
+            </switch>
+            <text>
+#define ALT_CI_%CI_MACRO_NAME%_N %BASE_ADDRESS%
+            </text>
+            <set_variable variable="ADDRESS_WIDTH"
+                          ptf_path="SYSTEM/MODULE %MODULE_SLAVE%/SYSTEM_BUILDER_INFO/Address_Width"/>
+            <set_variable variable="N_MASK" to=""/>
+            <if condition="ne( 0, %ADDRESS_WIDTH% )">
+                <switch>
+                    <if condition="%MACRO_PARAMS%">
+                        <set_variable variable="MACRO_PARAMS" to="n,%MACRO_PARAMS%"/>
+                        <break/>
+                    </if>
+                    <set_variable variable="MACRO_PARAMS" to="n"/>
+                </switch>
+                <set_variable variable="N_ARG" to="n"/>
+                <set_variable variable="N_MASK"
+                              to="no_eval( +(n&amp;ALT_CI_%CI_MACRO_NAME%_N_MASK) )"/>
+                <text>
+#define ALT_CI_%CI_MACRO_NAME%_N_MASK <![CDATA[((1<<%ADDRESS_WIDTH%)-1) ]]>
+                </text>
+            </if>
+            <if condition="%MACRO_PARAMS%">
+                <set_variable variable="MACRO_PARAMS" to="(%MACRO_PARAMS%)"/>
+            </if>
+            <text>
+#define ALT_CI_%CI_MACRO_NAME%%MACRO_PARAMS% __builtin_custom_%BUILTIN_FUNCTION_TAIL%(ALT_CI_%CI_MACRO_NAME%_N%N_MASK%%FUNCTION_ARGS%)
+            </text>
+        </for_each>
+    </if>
+
+    <text>
+
+#endif /* __SYSTEM_H_ */
+    </text>
+
+</template>

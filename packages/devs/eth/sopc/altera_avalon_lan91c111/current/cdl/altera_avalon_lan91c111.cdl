@@ -1,0 +1,96 @@
+# ====================================================================
+#
+#      altera_avalon_lan91c111.cdl
+#
+#      Configuration file for the Altera Avalon LAN91C111 driver.
+#
+# ====================================================================
+#####ECOSGPLCOPYRIGHTBEGIN####
+## -------------------------------------------
+## This file is part of eCos, the Embedded Configurable Operating System.
+##
+## eCos is free software; you can redistribute it and/or modify it under
+## the terms of the GNU General Public License as published by the Free
+## Software Foundation; either version 2 or (at your option) any later version.
+##
+## eCos is distributed in the hope that it will be useful, but WITHOUT ANY
+## WARRANTY; without even the implied warranty of MERCHANTABILITY or
+## FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+## for more details.
+##
+## You should have received a copy of the GNU General Public License along
+## with eCos; if not, write to the Free Software Foundation, Inc.,
+## 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+##
+## As a special exception, if other files instantiate templates or use macros
+## or inline functions from this file, or you compile this file and link it
+## with other works to produce a work based on this file, this file does not
+## by itself cause the resulting work to be covered by the GNU General Public
+## License. However the source code for this file must still be made available
+## in accordance with section (3) of the GNU General Public License.
+##
+## This exception does not invalidate any other reasons why a work based on
+## this file might be covered by the GNU General Public License.
+##
+## -------------------------------------------
+#####ECOSGPLCOPYRIGHTEND####
+
+cdl_package CYGPKG_ALTERA_AVALON_LAN91C111 {
+    display       "Altera Avalon LAN91C111"
+
+    parent        CYGPKG_IO_ETH_DRIVERS
+    active_if     CYGPKG_IO_ETH_DRIVERS
+    active_if     {!CYGHWR_DETECTED_SOPC_DEVICES || is_substr (CYGHWR_DETECTED_SOPC_DEVICE_LIST, " altera_avalon_lan91c111 ")}
+
+    implements    CYGHWR_NET_DRIVERS
+    implements    CYGHWR_NET_DRIVER_ETH0
+    implements    CYGINT_DEVS_ETH_SMSC_LAN91CXX_REQUIRED
+
+    requires      CYGPKG_DEVS_ETH_SMSC_LAN91CXX
+
+    include_dir   cyg/sopc
+
+    define_proc {
+        puts $::cdl_system_header "/***** ethernet driver proc output start *****/"
+        puts $::cdl_system_header "#define CYGDAT_DEVS_ETH_SMSC_LAN91CXX_INL <cyg/sopc/altera_avalon_lan91c111.inl>"
+        puts $::cdl_system_header "#define CYGDAT_DEVS_ETH_SMSC_LAN91CXX_CFG <pkgconf/altera_avalon_lan91c111.h>"
+        puts $::cdl_system_header "/*****  ethernet driver proc output end  *****/"
+    }
+
+    description   "
+           This option enables the LAN91C111 Ethernet driver for SOPC builder 
+           based systems."
+
+    cdl_interface CYGINT_DEVS_ETH_SMSC_LAN91CXX_REQUIRED {
+        display   "SMSC LAN91CXX driver required"
+    }
+
+    cdl_option CYGINT_DEVS_SOPC_ALT_AVALON_LAN91C111_STATIC_ESA {
+	display       "ESA is statically configured"
+        flavor        data
+        default_value {"1"}
+	description "
+	    If this is nonzero, then the ESA (MAC address) is
+            configured using the parameters given below."
+        implements CYGINT_DEVS_ETH_SMSC_LAN91CXX_STATIC_ESA
+    }
+
+    cdl_option CYGDAT_LAN91C111_GET_ESA {
+        display       "Function call for MAC address"
+        flavor        data
+        default_value { "altera_avalon_lan91c111_get_esa" }
+        description "
+            The function called to set the ethernet MAC address."
+    }
+
+    cdl_option CYGDAT_LAN91C111_MAC_DEFAULT {
+        display       "MAC address used if none in flash"
+        flavor        data
+        default_value {"{0x12, 0x13, 0x14, 0x15, 0x16, 0x17}"}
+        description   "
+            A static ethernet station address. 
+            Used if this is not an Altera Development Board, or fi there is no MAC address found in the flash by the MAC address function.
+            Caution: Booting two systems with the same MAC on the same
+            network, will cause severe conflicts."
+    }
+}

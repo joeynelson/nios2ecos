@@ -1,0 +1,590 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!--=========================================================================##
+ * nios2_auto.cdl.gtf
+ *
+ * GTF script to generate the file: nios2_auto.cdl.
+ *
+ *=============================================================================
+ *###ECOSGPLCOPYRIGHTBEGIN####
+ * 
+ * This file is part of eCos, the Embedded Configurable Operating System.
+ *
+ * eCos is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 or (at your option) any later version.
+ *
+ * eCos is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with eCos; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+ *
+ * As a special exception, if other files instantiate templates or use macros
+ * or inline functions from this file, or you compile this file and link it
+ * with other works to produce a work based on this file, this file does not
+ * by itself cause the resulting work to be covered by the GNU General Public
+ * License. However the source code for this file must still be made available
+ * in accordance with section (3) of the GNU General Public License.
+ *
+ * This exception does not invalidate any other reasons why a work based on
+ * this file might be covered by the GNU General Public License.
+ * 
+ *###ECOSGPLCOPYRIGHTEND####
+ *==========================================================================-->
+
+<!-- This GTF script is used to generate the Nios II CDL file, 
+     nios2_auto.cdl. This file is constructed to match the hardware
+     configuration of the associated the SOPC builder project. It is used to 
+     set the defaults, and constrain the user setable options, so that they are
+     valid for the current hardware configuration. -->
+
+<template name="nios2_auto.cdl">
+
+    <!-- After calling this script, the variable GTF_DIR will be reset to point
+         to the gtf directory of the Nios2 kit. The original value can be 
+         obtained using the variable ECOS_GTF_DIR. This allows us to reuse 
+         some of the scripts supplied with the Nios II kit. -->
+
+    <call gtf="%GTF_DIR%/ECOS_GTF_DIR.gtf"/>
+
+    <call gtf="%GTF_DIR%/check_version.gtf"/>
+
+    <call gtf="%GTF_DIR%/CPU.gtf"/>
+
+    <call gtf="%GTF_DIR%/RESET_ADDRESS.gtf"/>
+
+    <call gtf="%GTF_DIR%/EXC_ADDRESS.gtf"/>
+
+    <set_variable variable="MEMORY_MODULES_ONLY" to="1"/>
+    <export variable="MEMORY_MODULES_ONLY"/>
+    <call gtf="%GTF_DIR%/MODULE_lists.gtf"/>
+
+    <!-- Construct various lists of devices based on class -->
+
+    <set_variable variable="DEBUG_CHARACTER_DEVICE_LIST" to=""/>
+    <set_variable variable="CONSOLE_CHARACTER_DEVICE_LIST" to=""/>
+    <set_variable variable="TIMER_DEVICE_LIST" to=""/>
+    <for_each variable="MODULE" ptf_path="SYSTEM/MODULE">
+        <if condition="and( ptf_module_is_mastered_by( %MODULE%, %CPU% ), ne( %MODULE%, %CPU% ) )">
+            <for_each variable="SLAVE" ptf_path="SYSTEM/MODULE %MODULE%/SLAVE">
+                <set_variable variable="IS_ENABLED" ptf_path="SYSTEM/MODULE %MODULE%/SLAVE %SLAVE%/SYSTEM_BUILDER_INFO/Is_Enabled"/>
+                <if condition="ne( %IS_ENABLED%, 0 )"> <!-- defaults to 1 -->
+                    <set_variable variable="MODULE_CLASS" ptf_path="SYSTEM/MODULE %MODULE%/class"/> 
+                    <set_variable variable="IS_CHARACTER_DEVICE" ptf_path="SYSTEM/MODULE %MODULE%/SLAVE %SLAVE%/SYSTEM_BUILDER_INFO/Is_Printable_Device"/>
+                    <if condition="eq( %IS_CHARACTER_DEVICE%, 1 )">
+                        <if condition="and( ne( %MODULE_CLASS%, altera_avalon_jtag_uart ), ne( %MODULE_CLASS%, altera_avalon_lcd_16207 ) )">
+                            <set_variable variable="DEBUG_CHARACTER_DEVICE_LIST"
+                                              to='list_add( %DEBUG_CHARACTER_DEVICE_LIST%, "/dev/%MODULE%" )'/>
+                        </if>
+                        <if condition="ne( %MODULE_CLASS%, altera_avalon_lcd_16207 )">  
+                            <set_variable variable="CONSOLE_CHARACTER_DEVICE_LIST"
+                                              to='list_add( %CONSOLE_CHARACTER_DEVICE_LIST%, "/dev/%MODULE%" )'/>
+                        </if>
+                    </if>
+                    <if condition="eq( %MODULE_CLASS%, altera_avalon_timer )">      
+                        <set_variable variable="TIMER_DEVICE_LIST"
+                                          to='list_add( %TIMER_DEVICE_LIST%, "uppercase( %MODULE% )" )'/>  
+                    </if>
+                </if>
+            </for_each>
+        </if>
+    </for_each>
+
+    <!-- Allow the possibility that there is to be no console/debug device -->
+
+    <set_variable variable="CONSOLE_CHARACTER_DEVICE_LIST"
+             to='list_add( %CONSOLE_CHARACTER_DEVICE_LIST%, "none" )'/>
+    <set_variable variable="DEBUG_CHARACTER_DEVICE_LIST"
+             to='list_add( %DEBUG_CHARACTER_DEVICE_LIST%, "none" )'/>
+
+    <!-- Set the default character devices -->
+
+    <set_variable variable="DEFAULT_CONSOLE_CHARACTER_DEVICE" to="list_get( %CONSOLE_CHARACTER_DEVICE_LIST%, 0 )"/>
+    <set_variable variable="DEFAULT_DEBUG_CHARACTER_DEVICE" to="list_get( %DEBUG_CHARACTER_DEVICE_LIST%, 0 )"/>
+
+    <!-- Set the default timer device -->
+
+    <set_variable variable="DEFAULT_TIMER_DEVICE" to="list_get( %TIMER_DEVICE_LIST%, 0 )"/>
+
+    <!-- Locate the partition to use by default for memory placement and construct lists of memory -->
+    <!-- partitions while we're at it.                                                             -->
+
+    <set_variable variable="RESET_ROUTINE_SIZE" to="32"/>
+    <set_variable variable="LARGEST_RAM_MODULE_SPAN" to="0"/>
+    <set_variable variable="LARGEST_ROM_MODULE_SPAN" to="0"/>
+
+    <set_variable variable="RAM_DEVICE_LIST" to=""/>
+    <set_variable variable="ROM_DEVICE_LIST" to=""/>
+
+    <for_each variable="MODULE_SLAVE" index_variable="MODULE_SLAVE_LIST_INDEX" list="%MODULE_SLAVE_LIST%">
+        <export variable="MODULE_SLAVE"/>
+        <call gtf="%GTF_DIR%/BASE_ADDRESS_and_ADDRESS_SPAN.gtf"/>
+        <set_variable variable="MODULE_SLAVE_NAME" to="list_get( %MODULE_SLAVE_NAME_LIST%, %MODULE_SLAVE_LIST_INDEX% )"/>
+        <set_variable variable="IS_NON_VOLATILE" ptf_path="SYSTEM/MODULE %MODULE_SLAVE%/SYSTEM_BUILDER_INFO/Is_Nonvolatile_Storage"/>
+
+        <if condition="eq( %IS_NON_VOLATILE%, 1 )">
+             <set_variable variable="ROM_DEVICE_LIST"
+                            to='list_add( %ROM_DEVICE_LIST%, "%MODULE_SLAVE_NAME%" )'/>
+        </if> 
+        <if condition="ne( %IS_NON_VOLATILE%, 1 )">
+             <set_variable variable="RAM_DEVICE_LIST"
+                            to='list_add( %RAM_DEVICE_LIST%, "%MODULE_SLAVE_NAME%" )'/>
+        </if>
+ 
+        <switch>
+            <!-- if the base address for this MODULE/SLAVE is the same as the reset address, then make room for the reset handler -->
+            <if condition="eq( %BASE_ADDRESS%, %RESET_ADDRESS% )">
+                <set_variable variable="BASE_ADDRESS" to="add( %BASE_ADDRESS%, %RESET_ROUTINE_SIZE% )"/>
+                <set_variable variable="ADDRESS_SPAN" to="sub( %ADDRESS_SPAN%, %RESET_ROUTINE_SIZE% )"/>
+                <break/>
+            </if>
+
+            <!-- if the reset address is in the address range of this MODULE/SLAVE, then we split the segment in two... -->
+            <if condition="and( gt( %RESET_ADDRESS%, %BASE_ADDRESS% ), lt( %RESET_ADDRESS%, add( %BASE_ADDRESS%, %ADDRESS_SPAN% ) ) )">
+                <!-- ...everything less than the reset address is unused -->
+                <set_variable variable="NEW_SEGMENT_ADDRESS_SPAN" to="radix( sub( %RESET_ADDRESS%, %BASE_ADDRESS% ), 10 )"/>
+                <!-- ...and start the usable segment after the reset handler -->
+                <set_variable variable="BASE_ADDRESS" to="add( %RESET_ADDRESS%, %RESET_ROUTINE_SIZE% )"/>
+                <set_variable variable="ADDRESS_SPAN" to="sub( %ADDRESS_SPAN%, %NEW_SEGMENT_ADDRESS_SPAN%, %RESET_ROUTINE_SIZE% )"/>
+            </if>
+        </switch>
+
+        <!-- ASSUME that the exception address is always higher than the reset address (if they're in the same memory) -->
+
+        <switch>
+            <!-- if the exception address is the same as the base address (for this MODULE/SLAVE), then the exception section is at the start of this segment -->
+            <if condition="eq( %EXC_ADDRESS%, %BASE_ADDRESS% )">
+                <set_variable variable="EXCEPTIONS_SEGMENT" to="%MODULE_SLAVE_NAME%"/>
+                <break/>
+            </if>
+            <!-- if the exception address is in the address range of this MODULE/SLAVE, then we split the segment in two... -->
+            <if condition="and( gt( %EXC_ADDRESS%, %BASE_ADDRESS% ), lt( %EXC_ADDRESS%, add( %BASE_ADDRESS%, %ADDRESS_SPAN% ) ) )">
+                <!-- ...everything less than the exception address is unused -->
+                <set_variable variable="NEW_SEGMENT_ADDRESS_SPAN" to="radix( sub( %EXC_ADDRESS%, %BASE_ADDRESS% ), 10 )"/>
+                <!-- ...and start the usable segment at the exception address -->
+                <set_variable variable="BASE_ADDRESS" to="%EXC_ADDRESS%"/>
+                <set_variable variable="ADDRESS_SPAN" to="sub( %ADDRESS_SPAN%, %NEW_SEGMENT_ADDRESS_SPAN% )"/>
+                <set_variable variable="EXCEPTIONS_SEGMENT" to="%MODULE_SLAVE_NAME%"/>
+            </if>
+        </switch>
+        <switch>
+            <if condition="eq( %IS_NON_VOLATILE%, 1 )">
+                <if condition="gt( %ADDRESS_SPAN%, %LARGEST_ROM_MODULE_SPAN%)">
+                    <set_variable variable="LARGEST_ROM_MODULE" to="%MODULE_SLAVE_NAME%"/>
+                    <set_variable variable="LARGEST_ROM_MODULE_SPAN" to="%ADDRESS_SPAN%"/>
+                </if>
+                <break/>
+            </if>
+            <if condition="gt( %ADDRESS_SPAN%, %LARGEST_RAM_MODULE_SPAN%)">
+                <set_variable variable="LARGEST_RAM_MODULE" to="%MODULE_SLAVE_NAME%"/>
+                <set_variable variable="LARGEST_RAM_MODULE_SPAN" to="%ADDRESS_SPAN%"/>
+            </if>
+        </switch>
+    </for_each>
+
+    <!-- Set the additional compiler/linker flags that can be auto determined -->
+
+    <set_variable variable="PTF_CFLAGS" to=""/>
+
+    <switch>
+        <set_variable variable="HARDWARE_MULTIPLY_PRESENT"
+                      ptf_path="SYSTEM/MODULE %CPU%/WIZARD_SCRIPT_ARGUMENTS/hardware_multiply_present"/>
+        <if condition="eq( 0, %HARDWARE_MULTIPLY_PRESENT% )"> <!-- default to "1" -->
+            <set_variable variable="PTF_CFLAGS" to="%PTF_CFLAGS% -mno-hw-mul"/>
+            <break/>
+        </if>
+
+        <!-- hardware multiply is present... -->
+        <set_variable variable="PTF_CFLAGS" to="%PTF_CFLAGS% -mhw-mul"/>
+
+        <!-- ...but is mulx?... -->
+        <set_variable variable="HARDWARE_MULTIPLY_OMITS_MSW"
+                      ptf_path="SYSTEM/MODULE %CPU%/WIZARD_SCRIPT_ARGUMENTS/hardware_multiply_omits_msw"/>
+        <if condition="eq( 1, %HARDWARE_MULTIPLY_OMITS_MSW% )"> <!-- default to "0" -->
+            <!-- ...it's not -->
+            <set_variable variable="PTF_CFLAGS" to="%PTF_CFLAGS% -mno-hw-mulx"/>
+            <break/>
+        </if>
+        <!-- ...it is -->
+        <set_variable variable="PTF_CFLAGS" to="%PTF_CFLAGS% -mhw-mulx"/>
+    </switch>
+
+    <switch>
+        <set_variable variable="HARDWARE_DIVIDE_PRESENT"
+                      ptf_path="SYSTEM/MODULE %CPU%/WIZARD_SCRIPT_ARGUMENTS/hardware_divide_present"/>
+        <if condition="eq( 1, %HARDWARE_DIVIDE_PRESENT% )"> <!-- default to "0" -->
+            <set_variable variable="PTF_CFLAGS" to="%PTF_CFLAGS% -mhw-div"/>
+            <break/>
+        </if>
+        <set_variable variable="PTF_CFLAGS" to="%PTF_CFLAGS% -mno-hw-div"/>
+    </switch>
+
+    <text># %FILE_NAME%
+#
+# Machine generated for a CPU named "%CPU%" as defined in:
+# %PTF_NAME%
+#
+# Generated: %TIMESTAMP%
+#
+#<![CDATA[
+
+    cdl_option CYGNUM_HAL_VIRTUAL_VECTOR_COMM_CHANNELS {
+        display       "Number of virtual comm channels in the system"
+        parent        CYGPKG_HAL_NIOS2
+        flavor        data
+        calculated    2
+        description   "
+            This option defines the number of virtual vector communication 
+            channels. For Nios II there are always two channels available.
+            The first is the debug communication channel, and the second is
+            used for console input and output."
+    }
+
+    cdl_option CYGNUM_HAL_VIRTUAL_VECTOR_DEBUG_CHANNEL {
+        display       "Debug comm channel"
+        parent        CYGPKG_HAL_NIOS2
+        flavor        data
+        calculated    0
+        description   "
+            Set the index of the virtual communication channel used for the
+            debugger. For Nios II this channel is always the first (i.e. index
+            zero)."
+     }
+
+    cdl_option CYGHWR_HAL_NIOS2_VV_DEBUG_DEV {
+        display       "Debug device"
+        parent        CYGPKG_HAL_NIOS2
+        flavor        data
+        legal_values  { ]]></text>
+           <for_each variable="DEBUG_CHARACTER_DEVICE" index_variable="DEBUG_CHARACTER_DEVICE_LIST_INDEX" list="%DEBUG_CHARACTER_DEVICE_LIST%">
+             <export variable="DEBUG_CHARACTER_DEVICE"/>
+             <text><![CDATA[ "]]>%DEBUG_CHARACTER_DEVICE%<![CDATA["]]> </text>
+           </for_each>
+        <text><![CDATA[ }
+        default_value { "]]>%DEFAULT_DEBUG_CHARACTER_DEVICE%<![CDATA[" }
+        description   "
+            The name of the device connected to the debug channel."
+    }
+
+     cdl_option CYGNUM_HAL_VIRTUAL_VECTOR_CONSOLE_CHANNEL {
+        display       "Diagnostic console comm channel"
+        parent        CYGPKG_HAL_NIOS2
+        flavor data
+        calculated    1
+        description   "
+            Set the index of the virtual communication channel used for the
+            console. For Nios II this channel is always the second (i.e. index
+            two)."
+     }
+
+    cdl_option CYGHWR_HAL_NIOS2_VV_CONSOLE_DEV {
+        display       "Diagnostic console device"
+        parent        CYGPKG_HAL_NIOS2
+        flavor        data        
+        legal_values  { ]]></text>
+           <for_each variable="CONSOLE_CHARACTER_DEVICE" index_variable="CONSOLE_CHARACTER_DEVICE_LIST_INDEX" list="%CONSOLE_CHARACTER_DEVICE_LIST%">
+             <export variable="CONSOLE_CHARACTER_DEVICE"/>
+             <text><![CDATA[ "]]>%CONSOLE_CHARACTER_DEVICE%<![CDATA["]]> </text>
+           </for_each>
+        <text><![CDATA[ }
+        default_value { "]]>%DEFAULT_CONSOLE_CHARACTER_DEVICE%<![CDATA[" }
+        description   "
+           The name of the device connected to the console channel."
+    }
+
+    cdl_option CYGHWR_HAL_SYSCLK_DEV {
+        display       "System clock"
+        parent        CYGPKG_HAL_NIOS2
+        flavor        data
+        legal_values  { ]]></text>
+           <for_each variable="TIMER_DEVICE" index_variable="TIMER_DEVICE_LIST_INDEX" list="%TIMER_DEVICE_LIST%">
+             <export variable="TIMER_DEVICE"/>
+             <text><![CDATA[ "]]>%TIMER_DEVICE%<![CDATA["]]> </text>
+           </for_each>
+        <text><![CDATA[ }
+        default_value { "]]>%DEFAULT_TIMER_DEVICE%<![CDATA[" }
+        description   "
+           The name of the device to use as the system clock."
+    }
+
+    cdl_option        CYGHWR_MEMORY_LAYOUT_LDI {
+        display       "Memory layout linker script fragment"
+        parent        CYGPKG_HAL_NIOS2
+        flavor        data
+        no_define
+        define -file system.h CYGHWR_MEMORY_LAYOUT_LDI
+        default_value { "<pkgconf/mlt_nios2.ldi>" }
+        description   "
+            The LDI file used to construct the linker script. By default this is generated to match
+            the memory configuration of the SOPC builder project."
+    }
+
+    cdl_option CYGHWR_MEMORY_LAYOUT_H {
+        display       "Memory layout header file"
+        parent        CYGPKG_HAL_NIOS2
+        flavor data
+        no_define
+        define -file system.h CYGHWR_MEMORY_LAYOUT_H
+        default_value { "<pkgconf/mlt_nios2.h>" }
+        description   "
+            The C header file which describes the memory layout. By default this is generated to match
+            the memory configuration of the SOPC builder project."
+    }
+
+    cdl_option CYGHWR_HAL_NIOS2_TEXT_REGION {
+        display       "text region"
+        parent        CYGPKG_HAL_NIOS2
+        flavor        data
+        legal_values  { ]]></text>
+           <for_each variable="ROM_DEVICE" index_variable="ROM_DEVICE_LIST_INDEX" list="%ROM_DEVICE_LIST%">
+             <export variable="ROM_DEVICE"/>
+             <text><![CDATA[ CYG_HAL_STARTUP == "ROM" ? "]]>%ROM_DEVICE%<![CDATA[" : ""]]> </text>
+           </for_each>
+           <for_each variable="RAM_DEVICE" index_variable="RAM_DEVICE_LIST_INDEX" list="%RAM_DEVICE_LIST%">
+             <export variable="RAM_DEVICE"/>
+             <text><![CDATA[ CYG_HAL_STARTUP == "ROM" ? "" :  "]]>%RAM_DEVICE%<![CDATA["]]> </text>
+           </for_each>
+        <text><![CDATA[ }
+        default_value { CYG_HAL_STARTUP == "ROM" ? "]]>%LARGEST_ROM_MODULE%<![CDATA[" : "]]>%LARGEST_RAM_MODULE%<![CDATA[" }
+        description   "
+               This option allows you to define the memory region used for the
+               text section. The names of the available memory regions are the names 
+               assigned in SOPC builder."
+    }
+
+    cdl_option CYGHWR_HAL_NIOS2_RODATA_REGION {
+        display       "rodata region"
+        parent        CYGPKG_HAL_NIOS2
+        flavor  data
+        legal_values  { ]]></text>
+           <for_each variable="ROM_DEVICE" index_variable="ROM_DEVICE_LIST_INDEX" list="%ROM_DEVICE_LIST%">
+             <export variable="ROM_DEVICE"/>
+             <text><![CDATA[ CYG_HAL_STARTUP == "ROM" ? "]]>%ROM_DEVICE%<![CDATA[" : ""]]> </text>
+           </for_each>
+           <for_each variable="RAM_DEVICE" index_variable="RAM_DEVICE_LIST_INDEX" list="%RAM_DEVICE_LIST%">
+             <export variable="RAM_DEVICE"/>
+             <text><![CDATA[ CYG_HAL_STARTUP == "ROM" ? "" :  "]]>%RAM_DEVICE%<![CDATA["]]> </text>
+           </for_each>
+        <text><![CDATA[ }
+        default_value { CYG_HAL_STARTUP == "ROM" ? "]]>%LARGEST_ROM_MODULE%<![CDATA[" : "]]>%LARGEST_RAM_MODULE%<![CDATA[" }
+        description   "
+               This option allows you to define the memory region used for the
+               read only data section. The names of the available memory regions are 
+               the names assigned in SOPC builder."
+    }
+
+    cdl_option CYGHWR_HAL_NIOS2_RWDATA_REGION {
+        display       "rwdata region"
+        parent        CYGPKG_HAL_NIOS2
+        flavor  data     
+        legal_values  { ]]></text>
+           <for_each variable="RAM_DEVICE" index_variable="RAM_DEVICE_LIST_INDEX" list="%RAM_DEVICE_LIST%">
+             <export variable="RAM_DEVICE"/>
+             <text><![CDATA[ "]]>%RAM_DEVICE%<![CDATA["]]> </text>
+           </for_each>
+        <text><![CDATA[ }
+        default_value { "]]>%LARGEST_RAM_MODULE%<![CDATA[" }
+        description   "
+               This option allows you to define the memory region used for the
+               read/write data section. The names of the available memory regions are 
+               the names assigned in SOPC builder."
+   }
+
+    cdl_option CYGNUM_ROM_MONITOR_EXCEPTIONS_LEN {
+        display       "Size of ROM monitor exception handler"
+        flavor        data
+        calculated    { 0x2c }
+        parent        CYGPKG_HAL_ROM_MONITOR
+        requires      CYGSEM_HAL_USE_ROM_MONITOR
+        active_if     CYGSEM_HAL_USE_ROM_MONITOR
+        description   "
+            Size of the memory region to be reserved for the ROM monitor
+            exception handler. This parameter is used for systems built for
+            \"RAM\", which are expected to be loaded by a ROM monitor."
+    }
+
+    cdl_option CYGSEM_ROM_MONITOR_TEXT_REGION {
+        display       "ROM monitor text region"
+        flavor        data
+        legal_values  { ]]></text>
+           <for_each variable="ROM_DEVICE" index_variable="ROM_DEVICE_LIST_INDEX" list="%ROM_DEVICE_LIST%">
+             <export variable="ROM_DEVICE"/>
+             <text><![CDATA[ "]]>%ROM_DEVICE%<![CDATA["]]> </text>
+           </for_each>
+           <for_each variable="RAM_DEVICE" index_variable="RAM_DEVICE_LIST_INDEX" list="%RAM_DEVICE_LIST%">
+             <export variable="RAM_DEVICE"/>
+             <text><![CDATA[ "]]>%RAM_DEVICE%<![CDATA["]]> </text>
+           </for_each>
+        <text><![CDATA[ }
+        default_value { "]]>%LARGEST_RAM_MODULE%<![CDATA[" }
+        parent        CYGPKG_HAL_ROM_MONITOR
+        requires      CYGSEM_HAL_USE_ROM_MONITOR
+        active_if     CYGSEM_HAL_USE_ROM_MONITOR
+        description   "
+            Name of the memory region to be reserved for the ROM monitor
+            code.This parameter is used for systems built for
+            \"RAM\", which are expected to be loaded by a ROM monitor."
+    }
+
+    cdl_option CYGNUM_ROM_MONITOR_TEXT_LEN {
+        display       "Size of ROM monitor text region"
+        flavor        data
+        default_value { 0x20000 }
+        parent        CYGPKG_HAL_ROM_MONITOR
+        requires      CYGSEM_HAL_USE_ROM_MONITOR
+        active_if     CYGSEM_HAL_USE_ROM_MONITOR
+        description   "
+            Size of the memory region to be reserved for the ROM monitor
+            code.This parameter is used for systems built for
+            \"RAM\", which are expected to be loaded by a ROM monitor."
+    }
+
+    cdl_option CYGSEM_ROM_MONITOR_RODATA_REGION {
+        display       "ROM monitor rodata region"
+        flavor        data
+        legal_values  { ]]></text>
+           <for_each variable="ROM_DEVICE" index_variable="ROM_DEVICE_LIST_INDEX" list="%ROM_DEVICE_LIST%">
+             <export variable="ROM_DEVICE"/>
+             <text><![CDATA[ "]]>%ROM_DEVICE%<![CDATA["]]> </text>
+           </for_each>
+           <for_each variable="RAM_DEVICE" index_variable="RAM_DEVICE_LIST_INDEX" list="%RAM_DEVICE_LIST%">
+             <export variable="RAM_DEVICE"/>
+             <text><![CDATA[ "]]>%RAM_DEVICE%<![CDATA["]]> </text>
+           </for_each>
+        <text><![CDATA[ }
+        default_value { "]]>%LARGEST_RAM_MODULE%<![CDATA[" }
+        parent        CYGPKG_HAL_ROM_MONITOR
+        requires      CYGSEM_HAL_USE_ROM_MONITOR
+        active_if     CYGSEM_HAL_USE_ROM_MONITOR
+        description   "
+            Name of the memory region to be reserved for the ROM monitor
+            read only data.This parameter is used for systems built for
+            \"RAM\", which are expected to be loaded by a ROM monitor."
+    }
+
+    cdl_option CYGNUM_ROM_MONITOR_RODATA_LEN {
+        display       "Size of ROM monitor rodata region"
+        flavor        data
+        default_value { 0x5000 }
+        parent        CYGPKG_HAL_ROM_MONITOR
+        requires      CYGSEM_HAL_USE_ROM_MONITOR
+        active_if     CYGSEM_HAL_USE_ROM_MONITOR
+        description   "
+            Size of the memory region to be reserved for the ROM monitor
+            read only data.This parameter is used for systems built for
+            \"RAM\", which are expected to be loaded by a ROM monitor."
+    }
+
+    cdl_option CYGSEM_ROM_MONITOR_RWDATA_REGION {
+        display       "ROM monitor rwdata region"
+        flavor        data
+        legal_values  { ]]></text>
+           <for_each variable="RAM_DEVICE" index_variable="RAM_DEVICE_LIST_INDEX" list="%RAM_DEVICE_LIST%">
+             <export variable="RAM_DEVICE"/>
+             <text><![CDATA[ "]]>%RAM_DEVICE%<![CDATA["]]> </text>
+           </for_each>
+        <text><![CDATA[ }
+        default_value { "]]>%LARGEST_RAM_MODULE%<![CDATA[" }
+        parent        CYGPKG_HAL_ROM_MONITOR
+        requires      CYGSEM_HAL_USE_ROM_MONITOR
+        active_if     CYGSEM_HAL_USE_ROM_MONITOR
+        description   "
+            Name of the memory region to be reserved for the ROM monitor
+            read/write data. Note this includes the stack and heap.This 
+            parameter is used for system built for \"RAM\", which are 
+            expected to be loaded by a ROM monitor."
+    }
+
+    cdl_option CYGNUM_ROM_MONITOR_RWDATA_LEN {
+        display       "Size of ROM monitor rwdata region"
+        flavor        data
+        default_value { 0x110000 }
+        parent        CYGPKG_HAL_ROM_MONITOR
+        requires      CYGSEM_HAL_USE_ROM_MONITOR
+        active_if     CYGSEM_HAL_USE_ROM_MONITOR
+        description   "
+            Size of the memory region to be reserved for the ROM monitor
+            read/write data. Note this includes the stack and heap.
+            This parameter is used for systems built for
+            \"RAM\", which are expected to be loaded by a ROM monitor."
+    }
+
+    cdl_option CYGBLD_GLOBAL_CFLAGS {
+        display       "Global compiler flags"
+        parent        CYGBLD_GLOBAL_OPTIONS
+        flavor        data
+        no_define
+        default_value { "-g -O3 -ffunction-sections -fdata-sections -fno-rtti -fno-exceptions -fvtable-gc -DSYSTEM_BUS_WIDTH=32 ]]>%PTF_CFLAGS%<![CDATA[" }
+        description   "
+            This option controls the global compiler flags which
+            are used to compile all packages by
+            default. Individual packages may define
+            options which override these global flags."
+    }
+
+    cdl_option CYGBLD_GLOBAL_LDFLAGS {
+        display       "Global linker flags"
+        parent        CYGBLD_GLOBAL_OPTIONS
+        flavor        data
+        no_define
+        default_value { "-g -nostdlib -Wl,--gc-sections -Wl,-static ]]>%PTF_CFLAGS%<![CDATA[" }
+        description   "
+            This option controls the global linker flags. Individual
+            packages may define options which override these global flags."
+    }
+
+    cdl_component CYGHWR_DETECTED_SOPC_DEVICES {
+        display       "Detected SOPC devices"
+        parent        CYGPKG_HAL_SOPC
+        flavor        bool
+        default_value 1
+        description   "
+            This component contains a list all of the devices classes discovered within the
+            current SOPC builder system. Selecting this component allows this information to 
+            be used in determining which drivers are enabled."
+    }
+
+    cdl_option CYGHWR_NIOS2_PTF {
+        display       "SOPC builder configuration"
+        parent        CYGPKG_HAL_NIOS2
+        flavor        data
+        calculated    {"]]>%PTF_NAME%<![CDATA["}
+        description   "The SOPC builder configuration file."
+    }
+
+    cdl_option CYGHWR_NIOS2_CPU {
+        display       "Nios II CPU"
+        parent        CYGPKG_HAL_NIOS2
+        flavor        data
+        calculated    {"]]>%CPU%<![CDATA["}
+        description   "The Name of the CPU being targeted."
+    }
+
+]]></text>
+
+
+    <set_variable variable="MEMORY_MODULES_ONLY" to="0"/>
+    <export variable="MEMORY_MODULES_ONLY"/>
+    <call gtf="%GTF_DIR%/MODULE_lists.gtf"/>
+
+
+        <text><![CDATA[
+    cdl_option CYGHWR_DETECTED_SOPC_DEVICE_LIST {
+        display       "List of detected SOPC builder devices"
+        parent        CYGHWR_DETECTED_SOPC_DEVICES
+        flavor        data
+        calculated    { "]]></text>
+    <for_each variable="CLASS" list="%MODULE_CLASS_LIST%">
+        <text><![CDATA[ ]]>%CLASS%<![CDATA[ ]]></text>
+    </for_each>
+    <text><![CDATA[ " }
+        description   "A list of all device classes found in the SOPC builder system."
+    }
+    ]]></text>
+
+</template>
+

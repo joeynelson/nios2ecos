@@ -1,0 +1,304 @@
+# ====================================================================
+#
+#      hal_nios2.cdl
+#
+#      Nios II HAL package configuration data
+#
+# ====================================================================
+#####ECOSGPLCOPYRIGHTBEGIN####
+## -------------------------------------------
+## This file is part of eCos, the Embedded Configurable Operating System.
+##
+## eCos is free software; you can redistribute it and/or modify it under
+## the terms of the GNU General Public License as published by the Free
+## Software Foundation; either version 2 or (at your option) any later version.
+##
+## eCos is distributed in the hope that it will be useful, but WITHOUT ANY
+## WARRANTY; without even the implied warranty of MERCHANTABILITY or
+## FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+## for more details.
+##
+## You should have received a copy of the GNU General Public License along
+## with eCos; if not, write to the Free Software Foundation, Inc.,
+## 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+##
+## As a special exception, if other files instantiate templates or use macros
+## or inline functions from this file, or you compile this file and link it
+## with other works to produce a work based on this file, this file does not
+## by itself cause the resulting work to be covered by the GNU General Public
+## License. However the source code for this file must still be made available
+## in accordance with section (3) of the GNU General Public License.
+##
+## This exception does not invalidate any other reasons why a work based on
+## this file might be covered by the GNU General Public License.
+##
+## -------------------------------------------
+#####ECOSGPLCOPYRIGHTEND####
+
+# Define the variable $nios2_config_file. This is the CDL script file that 
+# defines the hardware constrained options. The file is generated based on
+# the SOPC builder system configuration using the gtf-generate tool.
+
+set nios2_config_file "$env(TMP)/nios2_auto.cdl" 
+
+# If this configuration file does not exist, generate an appropriate error.
+
+if {![file exists $nios2_config_file]} {
+  error "The file $nios2_config_file does not exist. 
+This file is normally created by either the 
+nios2configtool or nios2ecosconfig wrapper scripts:
+
+> nios2configtool --ptf=<PTF file> --cpu=<CPU name>
+
+or:
+
+> nios2ecosconfig --ptf=<PTF file> --cpu=<CPU name>
+
+Alteratively, you can generate it directly before 
+starting the configuration tool:
+
+> gtf-generate --gtf=\$NIOS_ECOS/hal/nios2/arch/current/gtf/nios2_auto.cdl.gtf --ptf=<PTF file> --cpu=<CPU name>"
+}
+
+#
+# The Nios II component definition
+#
+
+cdl_package CYGPKG_HAL_NIOS2 {
+    display "Nios2 architecture"
+    parent        CYGPKG_HAL
+    hardware
+    include_dir   cyg/hal
+    define_header hal_nios2.h
+    description   "
+        The Nios2 architecture HAL package provides support
+        for the Nios II architecture."
+
+    compile       hal_misc.c context.S hal_intr.c nios2-stub.c
+
+    implements    CYGINT_HAL_VIRTUAL_VECTOR_SUPPORT
+    implements    CYGINT_HAL_DEBUG_GDB_STUBS
+    implements    CYGINT_HAL_DEBUG_GDB_STUBS_BREAK
+
+#
+#   Provide the rule used to construct the vectors.o object file. This file
+#   provides the code entry points, and so is not built into the eCos library.
+#   Instead it is included directly into the link by the linker script.
+#
+
+    make {
+        <PREFIX>/lib/vectors.o : <PACKAGE>/src/vectors.S <PREFIX>/inc/pkgconf/system.h> <PREFIX>/inc/pkgconf/mlt_nios2.h
+        $(CC) -Wa,-gdwarf2 -Wp,-MD,vectors.tmp $(INCLUDE_PATH) $(CFLAGS) -c -o $@ $<
+        @echo $@ ": \\" > $(notdir $@).deps
+        @tail +2 vectors.tmp >> $(notdir $@).deps
+        @echo >> $(notdir $@).deps
+        @rm vectors.tmp
+    }
+
+#
+#   A number of the input source files are generated according to the SOPC 
+#   builder configuration. The rules used to generate these files are given 
+#   below.
+#
+#   They are generated using the gtf-generate utility provided with the Nios II
+#   development kit. The generated files are:
+#
+#   system.h      - a C header file which contains defines for the SOPC 
+#                   builder wizard settings.
+#   devices.h     - a C macro file which contains a macro instance for each 
+#                   peripheral in the SOPC builder system.
+#   mlt_nios2.ldi - a partial linker script which is preprocessed with 
+#                   nios2.ld to create a linker script that matches the 
+#                   memory layout of the SOPC builder system.
+#   mlt_nios2.h   - a C header file that describes the memory layout created 
+#                   by the linker script.
+#
+#   The gtf-generate utility is launched using the generated script: 
+#   gtf-launch. This supplies the name of the PTF (SOPC builder 
+#   configuration) file to gtf-generate. The name of the PTF file is obtained
+#   from a CDL option defined in nios2_auto.cdl.
+
+    make --priority=1 {
+        <PREFIX>/gtf-launch: <PACKAGE>/src/gtf-launch.in  <PREFIX>/include/pkgconf/hal_nios2.h
+        $(CC) -E -P -Wp,-MD,target.tmp -DEXTRAS=1 -xc $(INCLUDE_PATH) $(CFLAGS) -o $@ $<
+        chmod a+x $@
+    }
+
+    make -priority=2 {
+        <PREFIX>/include/cyg/hal/system.h-t: <PREFIX>/gtf-launch <PACKAGE>/gtf/system.h.gtf
+        $< --gtf=`cygpath -m $(word 2, $^)` --output-directory=`cygpath -m $(dir $@)`
+	@echo This is an auto-generated timestamp file. > $@
+    }
+
+    make -priority=2 {
+        <PREFIX>/include/cyg/hal/devices.h-t: <PREFIX>/gtf-launch <PACKAGE>/gtf/devices.h.gtf
+        $< --gtf=`cygpath -m $(word 2, $^)` --output-directory=`cygpath -m $(dir $@)`
+	@echo This is an auto-generated timestamp file. > $@
+    }
+
+    make -priority=2 {
+        <PREFIX>/include/pkgconf/mlt_nios2.ldi-t: <PREFIX>/gtf-launch <PACKAGE>/gtf/mlt_nios2.ldi.gtf
+        $< --gtf=`cygpath -m $(word 2, $^)` --output-directory=`cygpath -m $(dir $@)`
+	@echo This is an auto-generated timestamp file. > $@
+    }
+
+    make -priority=2 {
+        <PREFIX>/include/pkgconf/mlt_nios2.h-t: <PREFIX>/gtf-launch <PACKAGE>/gtf/mlt_nios2.h.gtf
+        $< --gtf=`cygpath -m $(word 2, $^)` --output-directory=`cygpath -m $(dir $@)`
+	@echo This is an auto-generated timestamp file. > $@
+    }
+
+#
+#   Define the rule used to create the linker script. The linker script is 
+#   generated based on a compination of the auto generated file mlt_nios.ldi, 
+#   and the defines provided in nios2.ld.
+#
+
+    make {
+        <PREFIX>/lib/target.ld: <PACKAGE>/src/nios2.ld <PREFIX>/include/pkgconf/mlt_nios2.ldi <PREFIX>/inc/pkgconf/system.h>
+        $(CC) -E -P -Wp,-MD,target.tmp -DEXTRAS=1 -xc $(INCLUDE_PATH) $(CFLAGS) -o $@ $<
+        @echo $@ ": \\" > $(notdir $@).deps
+        @tail +2 target.tmp >> $(notdir $@).deps
+        @echo >> $(notdir $@).deps
+        @rm target.tmp
+    }
+
+#
+#   Add definitions to the system header for architecture specific parameters.
+#
+
+    define_proc {
+        puts $::cdl_system_header "#define CYGBLD_HAL_TARGET_H   <pkgconf/hal_nios2.h>"
+        puts $::cdl_system_header "#define CYGBLD_HAL_PLATFORM_H <pkgconf/hal_nios2.h>"
+
+        puts $::cdl_header "#define CYGPRI_KERNEL_TESTS_DHRYSTONE_PASSES 100000"
+
+        puts $::cdl_header "#ifndef HAL_NIOS2_NO_SYSTEM_H"
+        puts $::cdl_header "#include <cyg/hal/system.h>"
+        puts $::cdl_header "#endif /* HAL_NIOS2_NO_SYSTEM_H */"
+    }
+
+#
+#   Options and components presented to the user.
+#
+
+    cdl_option CYGBLD_LINKER_SCRIPT {
+        display        "Linker script"
+        flavor         data
+        no_define
+        calculated     { "include/pkgconf/autogen.ldi" }
+        description    "
+            The LDI file used to construct the linker script. This is generated to match
+            the memory configuration of the SOPC builder project."
+    }
+
+    cdl_component CYG_HAL_STARTUP {
+        display        "Startup type"
+        flavor         data
+        legal_values   {"RAM" "ROM" "ROMRAM"}
+        default_value  {"ROMRAM"}
+        no_define
+        define -file system.h CYG_HAL_STARTUP
+        description    "
+            Three flavours of startup type are supported. \"ROM\" is used to boot and
+            run from read only memory (i.e. flash), \"ROMRAM\" is used to boot from ROM
+            and then copy the code to RAM and execute from there. \"RAM\" is used to 
+            execute in RAM. When the \"RAM\" option is selected, it is assumed that the
+            code will be loaded by an external boot monitor, e.g. Redboot."
+    }
+
+    cdl_option CYGBLD_BUILD_FLASH_PROGRAMMER {
+        display       "Create flash programming script"
+        calculated    {CYG_HAL_STARTUP != "RAM"}
+        no_define
+        description   "
+            This option enables the generation of the flash programming script."
+
+            make -priority 325 {
+                <PREFIX>/program_flash: <PREFIX>/gtf-launch <PACKAGE>/gtf/program_flash.gtf
+                $< --gtf=`cygpath -m $(word 2, $^)` --output-directory=`cygpath -m $(dir $@)`
+            }
+    }
+
+    cdl_option CYGSEM_HAL_USE_ROM_MONITOR {
+        display        "Work with a ROM monitor"
+        flavor         booldata
+        legal_values   { "Generic" "CygMon" "GDB_stubs" }
+        default_value  { CYG_HAL_STARTUP == "RAM" ? "GDB_stubs" : 0 }
+        parent         CYGPKG_HAL_ROM_MONITOR
+        description    "
+            Support can be enabled for three different varieties of ROM monitor.
+            This support changes various eCos semantics such as the encoding
+            of diagnostic output, or the overriding of hardware interrupt
+            vectors.
+            Firstly there is \"Generic\" support which prevents the HAL
+            from overriding the hardware vectors that it does not use, to
+            instead allow an installed ROM monitor to handle them. This is
+            the most basic support which is likely to be common to most
+            implementations of ROM monitor.
+            \"CygMon\" provides support for the Cygnus ROM Monitor.
+            And finally, \"GDB_stubs\" provides support when GDB stubs are
+            included in the ROM monitor or boot ROM."
+    }
+
+    cdl_option CYGSEM_HAL_ROM_MONITOR {
+        display        "Behave as a ROM monitor"
+        flavor         bool
+        default_value  0
+        parent         CYGPKG_HAL_ROM_MONITOR
+        requires       { CYG_HAL_STARTUP != "RAM" }
+        description    "
+            Enable this option if this program is to be used as a ROM monitor,
+            i.e. applications will be loaded into RAM on the board, and this
+            ROM monitor may process exceptions generated from the
+            application. This enables features such as utilizing a separate
+            interrupt stack when exceptions are generated."
+    }
+
+    cdl_option CYGDBG_HAL_NIOS2_DEBUG_GDB_CTRLC_SUPPORT {
+        display        "Architecture GDB CTRLC support"
+        calculated     { CYGDBG_HAL_DEBUG_GDB_CTRLC_SUPPORT || CYGDBG_HAL_DEBUG_GDB_BREAK_SUPPORT }
+        active_if      { CYGINT_HAL_DEBUG_GDB_CTRLC_UNSUPPORTED == 0 }
+        description    "
+            If either the CTRLC or BREAK support options in hal.h are set
+            then set our own option to turn on shared generic support for
+            control C handling."
+    }
+
+    cdl_option CYGNUM_HAL_BREAKPOINT_LIST_SIZE {
+        display       "Number of breakpoints supported by the HAL."
+        flavor        data
+        default_value 25
+        description   "
+            This option determines the number of breakpoints supported by the HAL."
+    }
+
+    cdl_component CYGHWR_MEMORY_LAYOUT {
+        display       "Hardware memory configuration"
+        flavor        data
+        calculated    { "nios2" }
+        script        $nios2_config_file
+        description   "
+            This component defines the memory layout, and also supplies options which
+            are constrained by the system hardware configuration."
+    }
+}
+
+cdl_component CYGBLD_GLOBAL_OPTIONS {
+    display           "Global build options"
+    flavor            none
+    parent            CYGPKG_NONE
+    description       "
+        Global build options including control over
+        compiler flags, linker flags and choice of toolchain."
+
+    cdl_option CYGBLD_GLOBAL_COMMAND_PREFIX {
+        display "Global command prefix"
+        flavor        data
+        no_define
+        default_value { "nios2-elf" }
+        description   "
+            This option specifies the command prefix used when
+            invoking the build tools."
+    }
+}

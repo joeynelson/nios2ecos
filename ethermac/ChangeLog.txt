@@ -1,0 +1,20 @@
+2008-02-15:	Added support for running eCos in ROM (SPARC/LEON3 only)
+           	Boot loader parameters added and has been made configurable from the eCos configuration editor.
+
+2008-02-01:	Updated eCos source tree to current official eCos CVS tree (2008-01-31)
+
+2007-10-12:	Added OpenSSL example
+
+2007-10-10:	Added OpenSSL and IPSEC package
+
+2007-06-05:	Added GRETH_GBIT support to GRETH Ethernet driver (scatter gather, zero copy, checksum offloading)
+           	Added TTCP example.
+		Updated GRETH PHY autonego.
+
+2006-06-19:	Corrected FPU context switch for SMP systems
+
+2006-05-18: 	GRETH driver could hang if bad packet was received
+
+2006-05-12: 	Slave CPU initialization routine protected with semaphore, 
+		irq 14 (used by SMP scheduler) does not get cleared any more, 
+		updated FFT benchmark

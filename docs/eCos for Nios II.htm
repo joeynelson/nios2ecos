@@ -1,0 +1,2335 @@
+<html xmlns:v="urn:schemas-microsoft-com:vml"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:w="urn:schemas-microsoft-com:office:word"
+xmlns:dt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882"
+xmlns="http://www.w3.org/TR/REC-html40">
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=ProgId content=Word.Document>
+<meta name=Generator content="Microsoft Word 11">
+<meta name=Originator content="Microsoft Word 11">
+<link rel=File-List href="filelist.xml">
+<link rel=Edit-Time-Data href="editdata.mso">
+<!--[if !mso]>
+<style>
+v\:* {behavior:url(#default#VML);}
+o\:* {behavior:url(#default#VML);}
+w\:* {behavior:url(#default#VML);}
+.shape {behavior:url(#default#VML);}
+</style>
+<![endif]-->
+<title>eCos 2.0 for Nios II</title>
+<!--[if gte mso 9]><xml>
+ <o:CustomDocumentProperties>
+  <o:Version dt:dt="string">0.1</o:Version>
+  <o:System dt:dt="string">n/a</o:System>
+  <o:Subsystem dt:dt="string">n/a</o:Subsystem>
+  <o:Publisher dt:dt="string">n/a</o:Publisher>
+ </o:CustomDocumentProperties>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:WordDocument>
+  <w:DisplayHorizontalDrawingGridEvery>0</w:DisplayHorizontalDrawingGridEvery>
+  <w:DisplayVerticalDrawingGridEvery>0</w:DisplayVerticalDrawingGridEvery>
+  <w:UseMarginsForDrawingGridOrigin/>
+  <w:ValidateAgainstSchemas/>
+  <w:SaveIfXMLInvalid>false</w:SaveIfXMLInvalid>
+  <w:IgnoreMixedContent>false</w:IgnoreMixedContent>
+  <w:AlwaysShowPlaceholderText>false</w:AlwaysShowPlaceholderText>
+  <w:Compatibility>
+   <w:WW6BorderRules/>
+   <w:FootnoteLayoutLikeWW8/>
+   <w:ShapeLayoutLikeWW8/>
+   <w:AlignTablesRowByRow/>
+   <w:ForgetLastTabAlignment/>
+   <w:LayoutRawTableWidth/>
+   <w:LayoutTableRowsApart/>
+   <w:UseWord97LineBreakingRules/>
+   <w:UseFELayout/>
+  </w:Compatibility>
+  <w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
+ </w:WordDocument>
+</xml><![endif]--><!--[if gte mso 9]><xml>
+ <w:LatentStyles DefLockedState="false" LatentStyleCount="156">
+ </w:LatentStyles>
+</xml><![endif]-->
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:"MS Mincho";
+	panose-1:2 2 6 9 4 2 5 8 3 4;
+	mso-font-alt:"\FF2D\FF33 \660E\671D";
+	mso-font-charset:128;
+	mso-generic-font-family:modern;
+	mso-font-pitch:fixed;
+	mso-font-signature:-1610612033 1757936891 16 0 131231 0;}
+@font-face
+	{font-family:Tahoma;
+	panose-1:2 11 6 4 3 5 4 4 2 4;
+	mso-font-charset:0;
+	mso-generic-font-family:swiss;
+	mso-font-pitch:variable;
+	mso-font-signature:1627421319 -2147483648 8 0 66047 0;}
+@font-face
+	{font-family:"\@MS Mincho";
+	panose-1:2 2 6 9 4 2 5 8 3 4;
+	mso-font-charset:128;
+	mso-generic-font-family:modern;
+	mso-font-pitch:fixed;
+	mso-font-signature:-1610612033 1757936891 16 0 131231 0;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{mso-style-parent:"";
+	margin-top:6.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";}
+h1
+	{mso-style-next:Normal;
+	margin-top:.5in;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	text-indent:0in;
+	mso-pagination:widow-orphan;
+	page-break-after:avoid;
+	mso-outline-level:1;
+	mso-list:l6 level1 lfo1;
+	font-size:14.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Arial;
+	mso-bidi-font-family:"Times New Roman";
+	mso-font-kerning:14.0pt;
+	mso-bidi-font-weight:normal;}
+h2
+	{mso-style-next:Normal;
+	margin-top:24.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:0in;
+	margin-bottom:.0001pt;
+	text-indent:0in;
+	mso-pagination:widow-orphan lines-together;
+	page-break-after:avoid;
+	mso-outline-level:2;
+	mso-list:l6 level2 lfo1;
+	font-size:12.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Arial;
+	mso-bidi-font-family:"Times New Roman";
+	mso-bidi-font-weight:normal;}
+h3
+	{mso-style-next:Normal;
+	margin-top:.25in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:0in;
+	margin-bottom:.0001pt;
+	text-indent:0in;
+	mso-pagination:widow-orphan lines-together;
+	page-break-after:avoid;
+	mso-outline-level:3;
+	mso-list:l6 level3 lfo1;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-bidi-font-family:"Times New Roman";
+	mso-bidi-font-weight:normal;}
+h4
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:0in;
+	margin-bottom:.0001pt;
+	text-indent:0in;
+	mso-pagination:widow-orphan lines-together;
+	page-break-after:avoid;
+	mso-outline-level:4;
+	mso-list:l6 level4 lfo1;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-bidi-font-family:"Times New Roman";
+	mso-bidi-font-weight:normal;}
+h5
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	text-indent:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:5;
+	mso-list:l6 level5 lfo1;
+	font-size:11.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Arial;
+	mso-bidi-font-family:"Times New Roman";
+	font-weight:normal;}
+h6
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	text-indent:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:6;
+	mso-list:l6 level6 lfo1;
+	font-size:11.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Arial;
+	mso-bidi-font-family:"Times New Roman";
+	font-weight:normal;
+	font-style:italic;
+	mso-bidi-font-style:normal;}
+p.MsoHeading7, li.MsoHeading7, div.MsoHeading7
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	text-indent:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:7;
+	mso-list:l6 level7 lfo1;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";}
+p.MsoHeading8, li.MsoHeading8, div.MsoHeading8
+	{mso-style-next:Normal;
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	text-indent:0in;
+	mso-pagination:widow-orphan;
+	mso-outline-level:8;
+	mso-list:l6 level8 lfo1;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	font-style:italic;
+	mso-bidi-font-style:normal;}
+p.MsoHeading9, li.MsoHeading9, div.MsoHeading9
+	{mso-style-name:"Heading 9\,Appendix";
+	mso-style-next:Normal;
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	text-indent:0in;
+	page-break-before:always;
+	mso-pagination:widow-orphan lines-together;
+	page-break-after:avoid;
+	mso-outline-level:9;
+	mso-list:l6 level9 lfo1;
+	font-size:14.0pt;
+	mso-bidi-font-size:10.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	mso-font-kerning:14.0pt;
+	font-weight:bold;
+	mso-bidi-font-weight:normal;}
+p.MsoToc1, li.MsoToc1, div.MsoToc1
+	{mso-style-noshow:yes;
+	mso-style-next:Normal;
+	margin-top:6.0pt;
+	margin-right:0in;
+	margin-bottom:6.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	tab-stops:right dotted 6.0in;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	text-transform:uppercase;
+	font-weight:bold;
+	mso-bidi-font-weight:normal;}
+p.MsoToc2, li.MsoToc2, div.MsoToc2
+	{mso-style-update:auto;
+	mso-style-noshow:yes;
+	mso-style-next:Normal;
+	margin-top:6.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:10.0pt;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";}
+p.MsoToc3, li.MsoToc3, div.MsoToc3
+	{mso-style-update:auto;
+	mso-style-noshow:yes;
+	mso-style-next:Normal;
+	margin-top:6.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:20.0pt;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";}
+p.MsoToc4, li.MsoToc4, div.MsoToc4
+	{mso-style-update:auto;
+	mso-style-noshow:yes;
+	mso-style-next:Normal;
+	margin-top:6.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:30.0pt;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";}
+p.MsoToc9, li.MsoToc9, div.MsoToc9
+	{mso-style-noshow:yes;
+	mso-style-next:Normal;
+	margin-top:6.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:right dotted 6.0in;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	text-transform:uppercase;
+	font-weight:bold;
+	mso-bidi-font-weight:normal;}
+p.MsoFootnoteText, li.MsoFootnoteText, div.MsoFootnoteText
+	{mso-style-noshow:yes;
+	margin-top:6.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";}
+p.MsoCommentText, li.MsoCommentText, div.MsoCommentText
+	{mso-style-noshow:yes;
+	margin-top:6.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";}
+p.MsoHeader, li.MsoHeader, div.MsoHeader
+	{margin-top:6.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:center 3.0in right 6.0in;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";}
+p.MsoFooter, li.MsoFooter, div.MsoFooter
+	{margin-top:6.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:center 3.0in right 6.0in;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";}
+p.MsoCaption, li.MsoCaption, div.MsoCaption
+	{mso-style-noshow:yes;
+	mso-style-next:Normal;
+	margin-top:6.0pt;
+	margin-right:0in;
+	margin-bottom:6.0pt;
+	margin-left:0in;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	font-weight:bold;}
+span.MsoFootnoteReference
+	{mso-style-noshow:yes;
+	vertical-align:super;}
+span.MsoCommentReference
+	{mso-style-noshow:yes;
+	mso-ansi-font-size:8.0pt;
+	mso-bidi-font-size:8.0pt;}
+p.MsoDate, li.MsoDate, div.MsoDate
+	{mso-style-next:Normal;
+	margin-top:6.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";}
+a:link, span.MsoHyperlink
+	{color:blue;
+	text-decoration:underline;
+	text-underline:single;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:purple;
+	text-decoration:underline;
+	text-underline:single;}
+p.MsoDocumentMap, li.MsoDocumentMap, div.MsoDocumentMap
+	{mso-style-noshow:yes;
+	margin-top:6.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	background:navy;
+	font-size:10.0pt;
+	font-family:Tahoma;
+	mso-fareast-font-family:"Times New Roman";}
+code
+	{font-family:"Courier New";
+	mso-ascii-font-family:"Courier New";
+	mso-fareast-font-family:"Times New Roman";
+	mso-hansi-font-family:"Courier New";
+	mso-bidi-font-family:"Courier New";}
+pre
+	{margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Courier New";
+	mso-fareast-font-family:"Times New Roman";
+	color:black;}
+tt
+	{font-family:"Courier New";
+	mso-ascii-font-family:"Courier New";
+	mso-fareast-font-family:"Times New Roman";
+	mso-hansi-font-family:"Courier New";
+	mso-bidi-font-family:"Courier New";}
+p.MsoCommentSubject, li.MsoCommentSubject, div.MsoCommentSubject
+	{mso-style-noshow:yes;
+	mso-style-parent:"Comment Text";
+	mso-style-next:"Comment Text";
+	margin-top:6.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	font-weight:bold;}
+p.MinorBullet, li.MinorBullet, div.MinorBullet
+	{mso-style-name:"Minor Bullet";
+	margin-top:6.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:.5in;
+	margin-bottom:.0001pt;
+	text-indent:-.25in;
+	mso-pagination:widow-orphan;
+	mso-list:l1 level1 lfo2;
+	tab-stops:list .5in;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";}
+span.TreeCharCharCharCharCharCharCharCharCharCharCharCharCharChar
+	{mso-style-name:"Tree Char Char Char Char Char Char Char Char Char Char Char Char Char Char";
+	mso-style-locked:yes;
+	mso-style-link:"Tree Char Char Char Char Char Char Char Char Char Char Char Char Char";
+	mso-ansi-font-size:9.0pt;
+	mso-bidi-font-size:9.0pt;
+	font-family:"Courier New";
+	mso-ascii-font-family:"Courier New";
+	mso-hansi-font-family:"Courier New";
+	mso-bidi-font-family:"Courier New";
+	mso-ansi-language:EN-US;
+	mso-fareast-language:EN-US;
+	mso-bidi-language:AR-SA;
+	mso-bidi-font-weight:bold;}
+p.TreeCharCharCharCharCharCharCharCharCharCharCharCharChar, li.TreeCharCharCharCharCharCharCharCharCharCharCharCharChar, div.TreeCharCharCharCharCharCharCharCharCharCharCharCharChar
+	{mso-style-name:"Tree Char Char Char Char Char Char Char Char Char Char Char Char Char";
+	mso-style-update:auto;
+	mso-style-parent:"";
+	mso-style-link:"Tree Char Char Char Char Char Char Char Char Char Char Char Char Char Char";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:.2in .4in .6in .8in;
+	font-size:9.0pt;
+	font-family:"Courier New";
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	mso-bidi-font-weight:bold;}
+p.TBD, li.TBD, div.TBD
+	{mso-style-name:TBD;
+	mso-style-next:Normal;
+	margin-top:6.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:Arial;
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	font-weight:bold;
+	mso-bidi-font-weight:normal;
+	font-style:italic;
+	mso-bidi-font-style:normal;}
+span.StyleSnippetBoldCharCharCharChar
+	{mso-style-name:"Style Snippet + Bold Char Char Char Char";
+	mso-style-locked:yes;
+	mso-style-parent:"Tree Char Char Char Char Char Char Char Char Char Char Char Char Char Char";
+	mso-style-link:"Style Snippet + Bold Char Char Char";
+	mso-ansi-font-size:9.0pt;
+	mso-bidi-font-size:9.0pt;
+	font-family:"Courier New";
+	mso-ascii-font-family:"Courier New";
+	mso-hansi-font-family:"Courier New";
+	mso-bidi-font-family:"Courier New";
+	mso-ansi-language:EN-US;
+	mso-fareast-language:EN-US;
+	mso-bidi-language:AR-SA;
+	font-weight:bold;}
+p.StyleSnippetBoldCharCharChar, li.StyleSnippetBoldCharCharChar, div.StyleSnippetBoldCharCharChar
+	{mso-style-name:"Style Snippet + Bold Char Char Char";
+	mso-style-parent:"Tree Char Char Char Char Char Char Char Char Char Char Char Char Char";
+	mso-style-link:"Style Snippet + Bold Char Char Char Char";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:.2in .4in .6in .8in;
+	font-size:9.0pt;
+	font-family:"Courier New";
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	font-weight:bold;
+	mso-bidi-font-weight:normal;}
+p.TreeCharCharCharCharCharChar, li.TreeCharCharCharCharCharChar, div.TreeCharCharCharCharCharChar
+	{mso-style-name:"Tree Char Char Char Char Char Char";
+	mso-style-update:auto;
+	mso-style-parent:"";
+	margin:0in;
+	margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	tab-stops:.2in .4in .6in .8in;
+	font-size:9.0pt;
+	font-family:"Courier New";
+	mso-fareast-font-family:"Times New Roman";
+	mso-bidi-font-family:"Times New Roman";
+	mso-bidi-font-weight:bold;}
+ /* Page Definitions */
+ @page
+	{mso-footnote-separator:url("header.htm") fs;
+	mso-footnote-continuation-separator:url("header.htm") fcs;
+	mso-endnote-separator:url("header.htm") es;
+	mso-endnote-continuation-separator:url("header.htm") ecs;}
+@page Section1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.25in 1.0in 1.25in;
+	mso-header-margin:.5in;
+	mso-footer-margin:.5in;
+	mso-page-numbers:1;
+	mso-header:url("header.htm") h1;
+	mso-footer:url("header.htm") f1;
+	mso-paper-source:0;}
+div.Section1
+	{page:Section1;}
+ /* List Definitions */
+ @list l0
+	{mso-list-id:150870201;
+	mso-list-type:hybrid;
+	mso-list-template-ids:1295176160 67698689 67698691 67698693 67698689 67698691 67698693 67698689 67698691 67698693;}
+@list l0:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:Symbol;}
+@list l0:level2
+	{mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l0:level3
+	{mso-level-tab-stop:1.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l0:level4
+	{mso-level-tab-stop:2.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l0:level5
+	{mso-level-tab-stop:2.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l0:level6
+	{mso-level-tab-stop:3.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l0:level7
+	{mso-level-tab-stop:3.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l0:level8
+	{mso-level-tab-stop:4.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l0:level9
+	{mso-level-tab-stop:4.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1
+	{mso-list-id:950553735;
+	mso-list-type:hybrid;
+	mso-list-template-ids:954136038 1509342918 67698691 67698693 67698689 67698691 67698693 67698689 67698691 67698693;}
+@list l1:level1
+	{mso-level-number-format:bullet;
+	mso-level-style-link:"Minor Bullet";
+	mso-level-text:o;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:"Courier New";
+	mso-bidi-font-family:"Times New Roman";}
+@list l1:level2
+	{mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1:level3
+	{mso-level-tab-stop:1.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1:level4
+	{mso-level-tab-stop:2.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1:level5
+	{mso-level-tab-stop:2.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1:level6
+	{mso-level-tab-stop:3.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1:level7
+	{mso-level-tab-stop:3.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1:level8
+	{mso-level-tab-stop:4.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l1:level9
+	{mso-level-tab-stop:4.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l2
+	{mso-list-id:1048650778;
+	mso-list-type:hybrid;
+	mso-list-template-ids:2145013828 67698689 67698691 67698693 67698689 67698691 67698693 67698689 67698691 67698693;}
+@list l2:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:Symbol;}
+@list l2:level2
+	{mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l2:level3
+	{mso-level-tab-stop:1.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l2:level4
+	{mso-level-tab-stop:2.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l2:level5
+	{mso-level-tab-stop:2.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l2:level6
+	{mso-level-tab-stop:3.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l2:level7
+	{mso-level-tab-stop:3.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l2:level8
+	{mso-level-tab-stop:4.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l2:level9
+	{mso-level-tab-stop:4.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l3
+	{mso-list-id:1306161181;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-1162834752 134807553 134807555 134807557 134807553 134807555 134807557 134807553 134807555 134807557;}
+@list l3:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:Symbol;}
+@list l3:level2
+	{mso-level-number-format:bullet;
+	mso-level-text:o;
+	mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:"Courier New";}
+@list l3:level3
+	{mso-level-tab-stop:1.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l3:level4
+	{mso-level-tab-stop:2.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l3:level5
+	{mso-level-tab-stop:2.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l3:level6
+	{mso-level-tab-stop:3.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l3:level7
+	{mso-level-tab-stop:3.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l3:level8
+	{mso-level-tab-stop:4.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l3:level9
+	{mso-level-tab-stop:4.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l4
+	{mso-list-id:2030790487;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-1778997684 67698703 67698713 67698715 67698703 67698713 67698715 67698703 67698713 67698715;}
+@list l4:level1
+	{mso-level-tab-stop:52.8pt;
+	mso-level-number-position:left;
+	margin-left:52.8pt;
+	text-indent:-.25in;}
+@list l4:level2
+	{mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l4:level3
+	{mso-level-tab-stop:1.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l4:level4
+	{mso-level-tab-stop:2.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l4:level5
+	{mso-level-tab-stop:2.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l4:level6
+	{mso-level-tab-stop:3.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l4:level7
+	{mso-level-tab-stop:3.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l4:level8
+	{mso-level-tab-stop:4.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l4:level9
+	{mso-level-tab-stop:4.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l5
+	{mso-list-id:2069188705;
+	mso-list-type:hybrid;
+	mso-list-template-ids:-1136239424 67698689 67698691 67698693 67698689 67698691 67698693 67698689 67698691 67698693;}
+@list l5:level1
+	{mso-level-number-format:bullet;
+	mso-level-text:\F0B7;
+	mso-level-tab-stop:.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;
+	font-family:Symbol;}
+@list l5:level2
+	{mso-level-tab-stop:1.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l5:level3
+	{mso-level-tab-stop:1.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l5:level4
+	{mso-level-tab-stop:2.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l5:level5
+	{mso-level-tab-stop:2.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l5:level6
+	{mso-level-tab-stop:3.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l5:level7
+	{mso-level-tab-stop:3.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l5:level8
+	{mso-level-tab-stop:4.0in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l5:level9
+	{mso-level-tab-stop:4.5in;
+	mso-level-number-position:left;
+	text-indent:-.25in;}
+@list l6
+	{mso-list-id:2114322569;
+	mso-list-template-ids:-1;}
+@list l6:level1
+	{mso-level-style-link:"Heading 1";
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	mso-level-legacy:yes;
+	mso-level-legacy-indent:0in;
+	mso-level-legacy-space:.1in;
+	margin-left:0in;
+	text-indent:0in;}
+@list l6:level2
+	{mso-level-style-link:"Heading 2";
+	mso-level-text:"%1\.%2";
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	mso-level-legacy:yes;
+	mso-level-legacy-indent:0in;
+	mso-level-legacy-space:.1in;
+	margin-left:0in;
+	text-indent:0in;}
+@list l6:level3
+	{mso-level-style-link:"Heading 3";
+	mso-level-text:"%1\.%2\.%3";
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	mso-level-legacy:yes;
+	mso-level-legacy-indent:0in;
+	mso-level-legacy-space:.1in;
+	margin-left:0in;
+	text-indent:0in;}
+@list l6:level4
+	{mso-level-style-link:"Heading 4";
+	mso-level-text:"%1\.%2\.%3\.%4";
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	mso-level-legacy:yes;
+	mso-level-legacy-indent:0in;
+	mso-level-legacy-space:.1in;
+	margin-left:0in;
+	text-indent:0in;}
+@list l6:level5
+	{mso-level-style-link:"Heading 5";
+	mso-level-text:"%1\.%2\.%3\.%4\.%5";
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	mso-level-legacy:yes;
+	mso-level-legacy-indent:0in;
+	mso-level-legacy-space:.1in;
+	margin-left:0in;
+	text-indent:0in;}
+@list l6:level6
+	{mso-level-style-link:"Heading 6";
+	mso-level-text:"%1\.%2\.%3\.%4\.%5\.%6";
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	mso-level-legacy:yes;
+	mso-level-legacy-indent:0in;
+	mso-level-legacy-space:.1in;
+	margin-left:0in;
+	text-indent:0in;}
+@list l6:level7
+	{mso-level-style-link:"Heading 7";
+	mso-level-text:"%1\.%2\.%3\.%4\.%5\.%6\.%7";
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	mso-level-legacy:yes;
+	mso-level-legacy-indent:0in;
+	mso-level-legacy-space:.1in;
+	margin-left:0in;
+	text-indent:0in;}
+@list l6:level8
+	{mso-level-style-link:"Heading 8";
+	mso-level-text:"%1\.%2\.%3\.%4\.%5\.%6\.%7\.%8";
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	mso-level-legacy:yes;
+	mso-level-legacy-indent:0in;
+	mso-level-legacy-space:.1in;
+	margin-left:0in;
+	text-indent:0in;}
+@list l6:level9
+	{mso-level-number-format:alpha-upper;
+	mso-level-style-link:"Heading 9";
+	mso-level-text:"Appendix %9\:";
+	mso-level-tab-stop:none;
+	mso-level-number-position:left;
+	mso-level-legacy:yes;
+	mso-level-legacy-indent:0in;
+	mso-level-legacy-space:.1in;
+	margin-left:0in;
+	text-indent:0in;}
+ol
+	{margin-bottom:0in;}
+ul
+	{margin-bottom:0in;}
+-->
+</style>
+<!--[if gte mso 10]>
+<style>
+ /* Style Definitions */
+ table.MsoNormalTable
+	{mso-style-name:"Table Normal";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	mso-style-noshow:yes;
+	mso-style-parent:"";
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-para-margin:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-fareast-font-family:"Times New Roman";
+	mso-ansi-language:#0400;
+	mso-fareast-language:#0400;
+	mso-bidi-language:#0400;}
+table.MsoTableGrid
+	{mso-style-name:"Table Grid";
+	mso-tstyle-rowband-size:0;
+	mso-tstyle-colband-size:0;
+	border:solid windowtext 1.0pt;
+	mso-border-alt:solid windowtext .5pt;
+	mso-padding-alt:0in 5.4pt 0in 5.4pt;
+	mso-border-insideh:.5pt solid windowtext;
+	mso-border-insidev:.5pt solid windowtext;
+	mso-para-margin-top:6.0pt;
+	mso-para-margin-right:0in;
+	mso-para-margin-bottom:0in;
+	mso-para-margin-left:0in;
+	mso-para-margin-bottom:.0001pt;
+	mso-pagination:widow-orphan;
+	font-size:10.0pt;
+	font-family:"Times New Roman";
+	mso-ansi-language:#0400;
+	mso-fareast-language:#0400;
+	mso-bidi-language:#0400;}
+</style>
+<![endif]--><!--[if gte mso 9]><xml>
+ <o:shapedefaults v:ext="edit" spidmax="51202" fill="f" fillcolor="#396">
+  <v:fill color="#396" on="f"/>
+  <o:colormenu v:ext="edit" fillcolor="none"/>
+ </o:shapedefaults></xml><![endif]--><!--[if gte mso 9]><xml>
+ <o:shapelayout v:ext="edit">
+  <o:idmap v:ext="edit" data="1"/>
+ </o:shapelayout></xml><![endif]-->
+</head>
+
+<body lang=EN-US link=blue vlink=purple style='tab-interval:.5in'>
+
+<div class=Section1>
+
+<p class=MsoNormal align=center style='text-align:center'><span
+style='font-size:35.0pt;text-transform:uppercase'>eCos for Nios II</span><span
+style='font-size:35.0pt;mso-bidi-font-size:10.0pt'><o:p></o:p></span></p>
+
+<p class=MsoNormal align=center style='text-align:center'><span
+style='font-size:20.0pt;mso-bidi-font-size:10.0pt'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal align=center style='text-align:center'><span
+style='font-size:20.0pt;mso-bidi-font-size:10.0pt'>Contents<o:p></o:p></span></p>
+
+<p class=MsoNormal align=center style='text-align:center'><span
+style='font-size:20.0pt;mso-bidi-font-size:10.0pt'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoToc1 style='tab-stops:30.0pt right dotted 6.0in'><!--[if supportFields]><span
+style='font-size:12.0pt;mso-bidi-font-size:10.0pt;text-transform:none'><span
+style='mso-element:field-begin'></span><span
+style='mso-spacerun:yes'> </span>TOC \o \n <span style='mso-element:field-separator'></span></span><![endif]--><span
+style='mso-no-proof:yes'>1.</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";text-transform:none;
+font-weight:normal;mso-no-proof:yes'><span style='mso-tab-count:1'>       </span></span><span
+style='mso-no-proof:yes'>Introduction</span><span style='font-size:12.0pt;
+font-family:"Times New Roman";mso-fareast-font-family:"MS Mincho";text-transform:
+none;font-weight:normal;mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc1 style='tab-stops:30.0pt right dotted 6.0in'><span
+style='mso-no-proof:yes'>2.</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";text-transform:none;
+font-weight:normal;mso-no-proof:yes'><span style='mso-tab-count:1'>       </span></span><span
+style='mso-no-proof:yes'>About eCos</span><span style='font-size:12.0pt;
+font-family:"Times New Roman";mso-fareast-font-family:"MS Mincho";text-transform:
+none;font-weight:normal;mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc1 style='tab-stops:30.0pt right dotted 6.0in'><span
+style='mso-no-proof:yes'>3.</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";text-transform:none;
+font-weight:normal;mso-no-proof:yes'><span style='mso-tab-count:1'>       </span></span><span
+style='mso-no-proof:yes'>About the Nios II eCos Port</span><span
+style='font-size:12.0pt;font-family:"Times New Roman";mso-fareast-font-family:
+"MS Mincho";text-transform:none;font-weight:normal;mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc1 style='tab-stops:30.0pt right dotted 6.0in'><span
+style='mso-no-proof:yes'>4.</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";text-transform:none;
+font-weight:normal;mso-no-proof:yes'><span style='mso-tab-count:1'>       </span></span><span
+style='mso-no-proof:yes'>Getting Help</span><span style='font-size:12.0pt;
+font-family:"Times New Roman";mso-fareast-font-family:"MS Mincho";text-transform:
+none;font-weight:normal;mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc1 style='tab-stops:30.0pt right dotted 6.0in'><span
+style='mso-no-proof:yes'>5.</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";text-transform:none;
+font-weight:normal;mso-no-proof:yes'><span style='mso-tab-count:1'>       </span></span><span
+style='mso-no-proof:yes'>Installation Requirements</span><span
+style='font-size:12.0pt;font-family:"Times New Roman";mso-fareast-font-family:
+"MS Mincho";text-transform:none;font-weight:normal;mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc1 style='tab-stops:30.0pt right dotted 6.0in'><span
+style='mso-no-proof:yes'>6.</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";text-transform:none;
+font-weight:normal;mso-no-proof:yes'><span style='mso-tab-count:1'>       </span></span><span
+style='mso-no-proof:yes'>Getting Started</span><span style='font-size:12.0pt;
+font-family:"Times New Roman";mso-fareast-font-family:"MS Mincho";text-transform:
+none;font-weight:normal;mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc2 style='tab-stops:48.0pt right dotted 431.5pt'><span
+style='mso-no-proof:yes'>6.1</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><span
+style='mso-tab-count:1'>        </span></span><span style='mso-no-proof:yes'>Step
+1: Create the eCos Library</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc2 style='tab-stops:48.0pt right dotted 431.5pt'><span
+style='mso-no-proof:yes'>6.2</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><span
+style='mso-tab-count:1'>        </span></span><span style='mso-no-proof:yes'>Step
+2: Build the Application</span><span style='font-size:12.0pt;font-family:"Times New Roman";
+mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc2 style='tab-stops:48.0pt right dotted 431.5pt'><span
+style='mso-no-proof:yes'>6.3</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><span
+style='mso-tab-count:1'>        </span></span><span style='mso-no-proof:yes'>Step
+3: Run the Application</span><span style='font-size:12.0pt;font-family:"Times New Roman";
+mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc1 style='tab-stops:30.0pt right dotted 6.0in'><span
+style='mso-no-proof:yes'>7.</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";text-transform:none;
+font-weight:normal;mso-no-proof:yes'><span style='mso-tab-count:1'>       </span></span><span
+style='mso-no-proof:yes'>Using the Nios II IDE</span><span style='font-size:
+12.0pt;font-family:"Times New Roman";mso-fareast-font-family:"MS Mincho";
+text-transform:none;font-weight:normal;mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc1 style='tab-stops:30.0pt right dotted 6.0in'><span
+style='mso-no-proof:yes'>8.</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";text-transform:none;
+font-weight:normal;mso-no-proof:yes'><span style='mso-tab-count:1'>       </span></span><span
+style='mso-no-proof:yes'>Debug over JTAG</span><span style='font-size:12.0pt;
+font-family:"Times New Roman";mso-fareast-font-family:"MS Mincho";text-transform:
+none;font-weight:normal;mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc2 style='tab-stops:48.0pt right dotted 431.5pt'><span
+style='mso-no-proof:yes'>8.1</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><span
+style='mso-tab-count:1'>        </span></span><span style='mso-no-proof:yes'>JTAG
+Debug Using the Nios II IDE</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc2 style='tab-stops:48.0pt right dotted 431.5pt'><span
+style='mso-no-proof:yes'>8.2</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><span
+style='mso-tab-count:1'>        </span></span><span style='mso-no-proof:yes'>JTAG
+Debug Using <i style='mso-bidi-font-style:normal'>nios2-elf-insight</i></span><span
+style='font-size:12.0pt;font-family:"Times New Roman";mso-fareast-font-family:
+"MS Mincho";mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc1 style='tab-stops:30.0pt right dotted 6.0in'><span
+style='mso-no-proof:yes'>9.</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";text-transform:none;
+font-weight:normal;mso-no-proof:yes'><span style='mso-tab-count:1'>       </span></span><span
+style='mso-no-proof:yes'>A Network Based Example</span><span style='font-size:
+12.0pt;font-family:"Times New Roman";mso-fareast-font-family:"MS Mincho";
+text-transform:none;font-weight:normal;mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc1 style='tab-stops:30.0pt right dotted 6.0in'><span
+style='mso-no-proof:yes'>10.</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";text-transform:none;
+font-weight:normal;mso-no-proof:yes'><span style='mso-tab-count:1'>      </span></span><span
+style='mso-no-proof:yes'>Using Redboot</span><span style='font-size:12.0pt;
+font-family:"Times New Roman";mso-fareast-font-family:"MS Mincho";text-transform:
+none;font-weight:normal;mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc2 style='tab-stops:48.0pt right dotted 431.5pt'><span
+style='mso-no-proof:yes'>10.1</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><span
+style='mso-tab-count:1'>       </span></span><span style='mso-no-proof:yes'>Configuring
+and Building Redboot</span><span style='font-size:12.0pt;font-family:"Times New Roman";
+mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc2 style='tab-stops:48.0pt right dotted 431.5pt'><span
+style='mso-no-proof:yes'>10.2</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><span
+style='mso-tab-count:1'>       </span></span><span style='mso-no-proof:yes'>Debugging
+Applications with Redboot</span><span style='font-size:12.0pt;font-family:"Times New Roman";
+mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc3 style='tab-stops:60.0pt right dotted 431.5pt'><span
+style='mso-no-proof:yes'>10.2.1</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><span
+style='mso-tab-count:1'>    </span></span><span style='mso-no-proof:yes'>Debug
+Over Ethernet</span><span style='font-size:12.0pt;font-family:"Times New Roman";
+mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc3 style='tab-stops:60.0pt right dotted 431.5pt'><span
+style='mso-no-proof:yes'>10.2.2</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><span
+style='mso-tab-count:1'>    </span></span><span style='mso-no-proof:yes'>Debug
+Over Serial</span><span style='font-size:12.0pt;font-family:"Times New Roman";
+mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc2 style='tab-stops:48.0pt right dotted 431.5pt'><span
+style='mso-no-proof:yes'>10.3</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><span
+style='mso-tab-count:1'>       </span></span><span style='mso-no-proof:yes'>Redboot
+Memory Assignments</span><span style='font-size:12.0pt;font-family:"Times New Roman";
+mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc2 style='tab-stops:48.0pt right dotted 431.5pt'><span
+style='mso-no-proof:yes'>10.4</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><span
+style='mso-tab-count:1'>       </span></span><span style='mso-no-proof:yes'>Booting
+Altera HAL Applications Using Redboot</span><span style='font-size:12.0pt;
+font-family:"Times New Roman";mso-fareast-font-family:"MS Mincho";mso-no-proof:
+yes'><o:p></o:p></span></p>
+
+<p class=MsoToc1 style='tab-stops:30.0pt right dotted 6.0in'><span
+style='mso-no-proof:yes'>11.</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";text-transform:none;
+font-weight:normal;mso-no-proof:yes'><span style='mso-tab-count:1'>      </span></span><span
+style='mso-no-proof:yes'>Accessing Character Devices</span><span
+style='font-size:12.0pt;font-family:"Times New Roman";mso-fareast-font-family:
+"MS Mincho";text-transform:none;font-weight:normal;mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc1 style='tab-stops:30.0pt right dotted 6.0in'><span
+style='mso-no-proof:yes'>12.</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";text-transform:none;
+font-weight:normal;mso-no-proof:yes'><span style='mso-tab-count:1'>      </span></span><span
+style='mso-no-proof:yes'>Using the Compact Flash Interface</span><span
+style='font-size:12.0pt;font-family:"Times New Roman";mso-fareast-font-family:
+"MS Mincho";text-transform:none;font-weight:normal;mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc2 style='tab-stops:48.0pt right dotted 431.5pt'><span
+style='mso-no-proof:yes'>12.1</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><span
+style='mso-tab-count:1'>       </span></span><span style='mso-no-proof:yes'>Compact
+Flash Device Name</span><span style='font-size:12.0pt;font-family:"Times New Roman";
+mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc2 style='tab-stops:48.0pt right dotted 431.5pt'><span
+style='mso-no-proof:yes'>12.2</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";mso-no-proof:yes'><span
+style='mso-tab-count:1'>       </span></span><span style='mso-no-proof:yes'>Inserting
+and Removing Compact Flash Cards</span><span style='font-size:12.0pt;
+font-family:"Times New Roman";mso-fareast-font-family:"MS Mincho";mso-no-proof:
+yes'><o:p></o:p></span></p>
+
+<p class=MsoToc1 style='tab-stops:30.0pt right dotted 6.0in'><span
+style='mso-no-proof:yes'>13.</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";text-transform:none;
+font-weight:normal;mso-no-proof:yes'><span style='mso-tab-count:1'>      </span></span><span
+style='mso-no-proof:yes'>Changing Your Hardware Configuration</span><span
+style='font-size:12.0pt;font-family:"Times New Roman";mso-fareast-font-family:
+"MS Mincho";text-transform:none;font-weight:normal;mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc1 style='tab-stops:30.0pt right dotted 6.0in'><span
+style='mso-no-proof:yes'>14.</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";text-transform:none;
+font-weight:normal;mso-no-proof:yes'><span style='mso-tab-count:1'>      </span></span><span
+style='mso-no-proof:yes'>Configtool and the Nios II IDE</span><span
+style='font-size:12.0pt;font-family:"Times New Roman";mso-fareast-font-family:
+"MS Mincho";text-transform:none;font-weight:normal;mso-no-proof:yes'><o:p></o:p></span></p>
+
+<p class=MsoToc1 style='tab-stops:30.0pt right dotted 6.0in'><span
+style='mso-no-proof:yes'>15.</span><span style='font-size:12.0pt;font-family:
+"Times New Roman";mso-fareast-font-family:"MS Mincho";text-transform:none;
+font-weight:normal;mso-no-proof:yes'><span style='mso-tab-count:1'>      </span></span><span
+style='mso-no-proof:yes'>Limitations</span><span style='font-size:12.0pt;
+font-family:"Times New Roman";mso-fareast-font-family:"MS Mincho";text-transform:
+none;font-weight:normal;mso-no-proof:yes'><o:p></o:p></span></p>
+
+<h1 style='margin-left:0in;text-indent:0in'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]><!--[if supportFields]><span style='font-size:
+12.0pt;mso-bidi-font-size:10.0pt;mso-fareast-font-family:"Times New Roman";
+text-transform:uppercase;mso-font-kerning:0pt'><span style='mso-element:field-end'></span></span><![endif]--><a
+name="_Toc120958816"></a><a name="_Toc120958788"><span style='mso-bookmark:
+_Toc120958816'>Introduction</span></a></h1>
+
+<p class=MsoNormal>This is a port of the eCos operating system for the Nios II
+processor. The eCos operating system provides an effective software development
+platform for the Nios II family that incorporates an extensive range of
+middleware. </p>
+
+<p class=MsoNormal>eCos is an open source operating system specifically
+designed for use in the embedded environment. The licensing of the operating
+system is such that while changes to the kernel must be made public, the
+application does not. For more details see <a
+href="http://ecos.sourceware.org/license-overview.html">http://ecos.sourceware.org/license-overview.html</a>.</p>
+
+<h1 style='margin-left:0in;text-indent:0in'><a name="_Toc120958817"></a><a
+name="_Toc120958789"><span style='mso-bookmark:_Toc120958817'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]>About eCos</span></a></h1>
+
+<p class=MsoNormal>eCos has been designed to support applications with
+real-time requirements, providing features such as full preemptability, minimal
+interrupt latencies, and all the necessary synchronization primitives,
+scheduling policies and interrupt handling mechanisms. eCos also provides all
+the functionality required for general embedded application support including
+device drivers, memory management, exception handling, C, math libraries, etc.
+In addition to runtime support, the eCos system includes all the tools necessary
+to develop embedded applications, including eCos software configuration and
+build tools, and GNU-based compilers, assemblers, linkers, debuggers, and
+simulators.</p>
+
+<p class=MsoNormal>eCos provides the following functionality:</p>
+
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='margin-top:0in;mso-list:l3 level1 lfo3;tab-stops:
+     list .5in'>Hardware Abstraction Layer (HAL) </li>
+ <li class=MsoNormal style='margin-top:0in;mso-list:l3 level1 lfo3;tab-stops:
+     list .5in'>Real-time kernel </li>
+ <li class=MsoNormal style='margin-top:0in;mso-list:l3 level1 lfo3;tab-stops:
+     list .5in'>Interrupt handling </li>
+ <li class=MsoNormal style='margin-top:0in;mso-list:l3 level1 lfo3;tab-stops:
+     list .5in'>Exception handling </li>
+ <li class=MsoNormal style='margin-top:0in;mso-list:l3 level1 lfo3;tab-stops:
+     list .5in'>Choice of schedulers </li>
+ <li class=MsoNormal style='margin-top:0in;mso-list:l3 level1 lfo3;tab-stops:
+     list .5in'>Thread support </li>
+ <li class=MsoNormal style='margin-top:0in;mso-list:l3 level1 lfo3;tab-stops:
+     list .5in'>Rich set of synchronization primitives </li>
+ <li class=MsoNormal style='margin-top:0in;mso-list:l3 level1 lfo3;tab-stops:
+     list .5in'>Timers, counters and alarms </li>
+ <li class=MsoNormal style='margin-top:0in;mso-list:l3 level1 lfo3;tab-stops:
+     list .5in'>Choice of memory allocators </li>
+ <li class=MsoNormal style='margin-top:0in;mso-list:l3 level1 lfo3;tab-stops:
+     list .5in'>Debug and instrumentation support </li>
+ <li class=MsoNormal style='margin-top:0in;mso-list:l3 level1 lfo3;tab-stops:
+     list .5in'><a href="http://www.ertl.jp/ITRON/home-e.html"><span
+     style='color:windowtext;text-decoration:none;text-underline:none'>µITRON</span></a>
+     3.0 compatible API </li>
+ <li class=MsoNormal style='margin-top:0in;mso-list:l3 level1 lfo3;tab-stops:
+     list .5in'>POSIX compatible API </li>
+ <li class=MsoNormal style='margin-top:0in;mso-list:l3 level1 lfo3;tab-stops:
+     list .5in'>ISO C and math libraries </li>
+ <li class=MsoNormal style='margin-top:0in;mso-list:l3 level1 lfo3;tab-stops:
+     list .5in'>Serial, Ethernet, wall-clock and watchdog device drivers</li>
+ <li class=MsoNormal style='margin-top:0in;mso-list:l3 level1 lfo3;tab-stops:
+     list .5in'>USB slave support </li>
+ <li class=MsoNormal style='margin-top:0in;mso-list:l3 level1 lfo3;tab-stops:
+     list .5in'>TCP/IP networking stacks, including Bootp/DHCP, DNS, TFTP/FTP,
+     SNMP, IPv6 </li>
+ <li class=MsoNormal style='margin-top:0in;mso-list:l3 level1 lfo3;tab-stops:
+     list .5in'>HTTPD </li>
+ <li class=MsoNormal style='margin-top:0in;mso-list:l3 level1 lfo3;tab-stops:
+     list .5in'>File systems: </li>
+ <ul style='margin-top:0in' type=circle>
+  <li class=MsoNormal style='margin-top:0in;mso-list:l3 level2 lfo3;tab-stops:
+      list 1.0in'><a href="http://sources.redhat.com/jffs2/"><span
+      style='color:windowtext;text-decoration:none;text-underline:none'>Journaling
+      Flash File System (JFFS2)</span></a> </li>
+  <li class=MsoNormal style='margin-top:0in;mso-list:l3 level2 lfo3;tab-stops:
+      list 1.0in'>RAM filing system </li>
+  <li class=MsoNormal style='margin-top:0in;mso-list:l3 level2 lfo3;tab-stops:
+      list 1.0in'>ROM filing system </li>
+  <li class=MsoNormal style='margin-top:0in;mso-list:l3 level2 lfo3;tab-stops:
+      list 1.0in'>FAT</li>
+ </ul>
+ <li class=MsoNormal style='margin-top:0in;mso-list:l3 level1 lfo3;tab-stops:
+     list .5in'>Graphics libraries, including </li>
+ <ul style='margin-top:0in' type=circle>
+  <li class=MsoNormal style='margin-top:0in;mso-list:l3 level2 lfo3;tab-stops:
+      list 1.0in'><a href="http://www.microwindows.org/"><span
+      style='color:windowtext;text-decoration:none;text-underline:none'>Microwindows</span></a>
+      </li>
+  <li class=MsoNormal style='margin-top:0in;mso-list:l3 level2 lfo3;tab-stops:
+      list 1.0in'><a href="http://www.realvnc.com/what.html"><span
+      style='color:windowtext;text-decoration:none;text-underline:none'>VNC
+      Server</span></a> </li>
+ </ul>
+ <li class=MsoNormal style='margin-top:0in;mso-list:l3 level1 lfo3;tab-stops:
+     list .5in'>Power management </li>
+ <li class=MsoNormal style='margin-top:0in;mso-list:l3 level1 lfo3;tab-stops:
+     list .5in'>GDB debug support </li>
+</ul>
+
+<h1 style='margin-left:0in;text-indent:0in'><a name="_Toc120958818"></a><a
+name="_Toc120958790"><span style='mso-bookmark:_Toc120958818'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>3.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]>About the Nios II eCos port</span></a></h1>
+
+<p class=MsoNormal>The Nios II port of eCos is similar to other eCos
+architecture ports; however, there is one important difference. No platform or
+variant port is required for Nios II systems. Instead, hardware parameters and
+device drivers are automatically configured based on your SOPC builder system
+configuration. This greatly eases the task of beginning eCos development for
+Nios II on your own custom systems.</p>
+
+<p class=MsoNormal>This port provides support for the following Avalon
+peripheral components:</p>
+
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l2 level1 lfo4;tab-stops:list .5in'>Timer</li>
+ <li class=MsoNormal style='mso-list:l2 level1 lfo4;tab-stops:list .5in'>UART</li>
+ <li class=MsoNormal style='mso-list:l2 level1 lfo4;tab-stops:list .5in'>JTAG
+     UART</li>
+ <li class=MsoNormal style='mso-list:l2 level1 lfo4;tab-stops:list .5in'>LAN91C111
+     Ethernet chip</li>
+ <li class=MsoNormal style='mso-list:l2 level1 lfo4;tab-stops:list .5in'>LCD
+     16207 panel</li>
+ <li class=MsoNormal style='mso-list:l2 level1 lfo4;tab-stops:list .5in'>Compact
+     flash</li>
+</ul>
+
+<p class=MsoNormal>In addition, a driver is provided for the AM29LV065D flash
+device, included on the Nios Cyclone and Stratix development boards, and
+AM29LV128 flash device, used on the Nios Cyclone II and Stratix II. Drivers for
+other flash parts are provided with the eCos operating system, however these
+require manual configuration.</p>
+
+<p class=MsoNormal>The automatic configuration of your eCos project to match
+your SOPC builder system configuration is achieved using the <i
+style='mso-bidi-font-style:normal'>nios2configtool</i> utility. This is a
+wrapper for the standard eCos <i style='mso-bidi-font-style:normal'>configtool</i>
+utility. Using the <i style='mso-bidi-font-style:normal'>nios2configtool</i>
+constrains system configuration parameters and sets defaults to ensure they are
+valid for your hardware. The Getting Started section covers this in more
+detail.</p>
+
+<h1 style='margin-left:0in;text-indent:0in'><a name="_Toc120958819"></a><a
+name="_Toc120958791"></a><a name="_Ref82492711"><span style='mso-bookmark:_Toc120958791'><span
+style='mso-bookmark:_Toc120958819'><![if !supportLists]><span style='mso-fareast-font-family:
+Arial;mso-bidi-font-family:Arial'><span style='mso-list:Ignore'>4.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp; </span></span></span><![endif]>Getting
+help</span></span></a></h1>
+
+<p class=MsoNormal>There is wealth of documentation available for eCos. The
+best place to start is in the online documentation beneath your installation,
+found in <a href="ecos-current/doc/html/index.html">ecos-current\doc\html\index.html</a>.
+This also contains a link to the most up to date version of these manuals. In
+addition there is a book available <u>Embedded<i style='mso-bidi-font-style:
+normal'> </i>Software Development with eCos</u> by Anthony J. Massa (ISBN
+0-13-035473-2).</p>
+
+<p class=MsoNormal>There is a large community of developers working on eCos and
+you can direct questions to the mailing lists at <a
+href="http://ecos.sourceware.org/intouch.html">http://ecos.sourceware.org/intouch.html</a>.
+In addition, the developers of this port monitor the Nios Community Forum <a
+href="http://www.niosforum.com/">www.niosforum.com</a>. There are also many
+companies who provide consultancy services based around eCos.</p>
+
+<p class=MsoNormal>For general Nios II issues, refer to the documentation
+provided with the <a href="../../documents/index.htm">Nios II kit</a>.</p>
+
+<h1 style='margin-left:0in;text-indent:0in'><a name="_Toc120958820"></a><a
+name="_Toc120958792"><span style='mso-bookmark:_Toc120958820'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>5.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]>Installation requirements</span></a></h1>
+
+<p class=MsoNormal>This release of the Nios II port for eCos requires that you
+have the following software installed on your system:</p>
+
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l5 level1 lfo5;tab-stops:list .5in'>Quartus
+     II version 5.1</li>
+ <li class=MsoNormal style='mso-list:l5 level1 lfo5;tab-stops:list .5in'>The
+     Altera Nios II Development Kit version 5.1</li>
+</ul>
+
+<p class=MsoNormal>By default, the eCos installer will install eCos into you
+Nios II development kit. These instructions assume that this is the location
+you have selected.</p>
+
+<h1 style='margin-left:0in;text-indent:0in'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>6.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]><span style='mso-spacerun:yes'> </span><a
+name="_Toc120958821"></a><a name="_Toc120958793"><span style='mso-bookmark:
+_Toc120958821'>Getting started</span></a></h1>
+
+<p class=MsoNormal>The following section describes how to build, download, and
+run an eCos application using Nios II. More extensive information on how to
+configure and use eCos can be found in the help sources detailed in section <span
+style='mso-field-code:" REF _Ref82492711 \\r \\h "'>4<!--[if gte mso 9]><xml>
+ <w:data>08D0C9EA79F9BACE118C8200AA004BA90B02000000080000000D0000005F00520065006600380032003400390032003700310031000000</w:data>
+</xml><![endif]--></span>.</p>
+
+<p class=MsoNormal>This discussion assumes that you are already familiar with
+the concepts involved in Nios II system design; you should first follow the
+tutorials provided with the <a href="../../documents/index.htm">Nios II kit</a>
+if you are not already familiar with Nios II design.</p>
+
+<h2 style='margin-left:0in;text-indent:0in'><a name="_Toc120958822"></a><a
+name="_Toc120958794"></a><a name="_Ref82503130"><span style='mso-bookmark:_Toc120958794'><span
+style='mso-bookmark:_Toc120958822'><![if !supportLists]><span style='mso-fareast-font-family:
+Arial;mso-bidi-font-family:Arial'><span style='mso-list:Ignore'>6.1<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp; </span></span></span><![endif]>Step
+1: Create the eCos library</span></span></a></h2>
+
+<p class=MsoNormal>The eCos operating system is normally configured using the
+eCos configuration tool, <i style='mso-bidi-font-style:normal'>configtool</i>.
+While this is still possible for Nios II, it is advisable instead to use the <i
+style='mso-bidi-font-style:normal'>nios2configtool</i> utility. This is a
+wrapper for <i style='mso-bidi-font-style:normal'>configtool</i>, which will
+set the default values of parameters to match your hardware configuration. It
+will also constrain the options presented for some parameters to ensure the
+value you select is appropriate for your hardware configuration.</p>
+
+<p class=MsoNormal><i style='mso-bidi-font-style:normal'>nios2configtool</i> is
+invoked from a Nios II SDK shell as follows:</p>
+
+<p class=MsoNormal align=center style='text-align:center'><span
+style='font-family:"Courier New"'>nios2configtool –-ptf=&lt;SOPC builder PTF
+file&gt; --cpu=&lt;name of CPU&gt;<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='mso-spacerun:yes'> </span>For example, if you
+are targeting the Cyclone 1C20 <i style='mso-bidi-font-style:normal'>standard</i>
+reference design included in your Nios II kit installation you should use:</p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt; nios2configtool
+--ptf=$SOPC_KIT_NIOS2/examples/verilog/niosII_cyclone_1c20/standard/std_1c20.ptf
+--cpu=cpu<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='mso-bidi-font-family:Arial'>The <i
+style='mso-bidi-font-style:normal'>configtool</i> window will then appear. You
+can find full documentation on how to use <i style='mso-bidi-font-style:normal'>configtool</i>
+under the configtool Help menu. You may need to select the internal documentation
+viewer: from View-&gt;Settings, on the Viewers tab, set “View documentation
+using” to “Built-in viewer”.<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='mso-bidi-font-family:Arial'>Note: For the
+purposes of the following tutorial steps, you should select a hardware design
+whose Nios II reset address is set to a flash memory device. This will allow
+you to program the application into flash and boot the application on reset.
+The <i style='mso-bidi-font-style:normal'>standard</i></span> and <i
+style='mso-bidi-font-style:normal'>full_featured</i> example designs for each
+Nios development board are already configured in this way.</p>
+
+<p class=MsoNormal><span style='mso-bidi-font-family:Arial'>To configure a
+project for a Nios II development board, select Build-&gt;Templates… from the
+tabs at the top of <i style='mso-bidi-font-style:normal'>configtool</i>. Set
+the hardware to be “Nios II Development Board (Altera)” and the packages to be
+“default”.<o:p></o:p></span></p>
+
+<p class=MsoNormal align=center style='text-align:center;page-break-after:avoid'><span
+style='mso-bidi-font-family:Arial'><!--[if gte vml 1]><v:shapetype id="_x0000_t75"
+ coordsize="21600,21600" o:spt="75" o:preferrelative="t" path="m@4@5l@4@11@9@11@9@5xe"
+ filled="f" stroked="f">
+ <v:stroke joinstyle="miter"/>
+ <v:formulas>
+  <v:f eqn="if lineDrawn pixelLineWidth 0"/>
+  <v:f eqn="sum @0 1 0"/>
+  <v:f eqn="sum 0 0 @1"/>
+  <v:f eqn="prod @2 1 2"/>
+  <v:f eqn="prod @3 21600 pixelWidth"/>
+  <v:f eqn="prod @3 21600 pixelHeight"/>
+  <v:f eqn="sum @0 0 1"/>
+  <v:f eqn="prod @6 1 2"/>
+  <v:f eqn="prod @7 21600 pixelWidth"/>
+  <v:f eqn="sum @8 21600 0"/>
+  <v:f eqn="prod @7 21600 pixelHeight"/>
+  <v:f eqn="sum @10 21600 0"/>
+ </v:formulas>
+ <v:path o:extrusionok="f" gradientshapeok="t" o:connecttype="rect"/>
+ <o:lock v:ext="edit" aspectratio="t"/>
+</v:shapetype><v:shape id="_x0000_i1025" type="#_x0000_t75" style='width:298.5pt;
+ height:220.5pt'>
+ <v:imagedata src="image001.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=398 height=294
+src="image002.jpg" v:shapes="_x0000_i1025"><![endif]></span></p>
+
+<p class=MsoCaption align=center style='text-align:center'><a
+name="_Ref83543255">Figure </a><!--[if supportFields]><span style='mso-bookmark:
+_Ref83543255'></span><span style='mso-element:field-begin'></span><span
+style='mso-bookmark:_Ref83543255'><span style='mso-spacerun:yes'> </span>SEQ
+Figure \* ARABIC <span style='mso-element:field-separator'></span></span><![endif]--><span
+style='mso-bookmark:_Ref83543255'><span style='mso-no-proof:yes'>1</span></span><!--[if supportFields]><span
+style='mso-bookmark:_Ref83543255'></span><span style='mso-element:field-end'></span><![endif]--><span
+style='mso-bookmark:_Ref83543255'></span>: the configtool Templates window<span
+style='mso-bidi-font-family:Arial'><o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='mso-bidi-font-family:Arial'><o:p>&nbsp;</o:p></span></p>
+
+<p class=MsoNormal><span style='mso-bidi-font-family:Arial'>This will create
+project settings for your board using the standard set of eCos software
+packages.<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='mso-bidi-font-family:Arial'>For this tutorial,
+you will create a system that boots directly from flash and copied to RAM for
+execution. This option is located within the “Nios2 architecture” package,
+which is located beneath the “eCos HAL” package in <i style='mso-bidi-font-style:
+normal'>configtool</i>, as illustrated in <span style='mso-field-code:" REF _Ref82502150 \\h "'><span
+style='mso-bidi-font-family:"Times New Roman"'>Figure <span style='mso-no-proof:
+yes'>2</span></span><!--[if gte mso 9]><xml>
+ <w:data>08D0C9EA79F9BACE118C8200AA004BA90B02000000080000000D0000005F00520065006600380032003500300032003100350030000000</w:data>
+</xml><![endif]--></span>.<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='mso-bidi-font-family:Arial'>One thing to note
+here is that <i style='mso-bidi-font-style:normal'>configtool</i> has a quirk
+where after changing parameters it is necessary to click somewhere else in the
+display, for the change to take effect.<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='mso-bidi-font-family:Arial'>Having configured
+the operating system as required, you can now build the eCos library. To do
+this select the Build-&gt;Library tab in configtool. You will be asked for a
+location to save the project. When you provide this, be aware that <i
+style='mso-bidi-font-style:normal'>configtool</i> will create folders in the
+same directory. These will be used to store the build products.<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='mso-bidi-font-family:Arial'>Once the build is
+complete, you will have constructed an eCos library tailored to your hardware configuration.
+Be sure to scroll back in the output window to ensure that the build procedure
+did complete without errors.<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='mso-bidi-font-family:Arial'>Note: Making
+changes to your hardware design (i.e., in SOPC Builder) will <b
+style='mso-bidi-font-weight:normal'>not </b>rebuild the eCos library. After
+making any changes to your SOPC Builder design and Quartus II compilation, you
+should re-open <i style='mso-bidi-font-style:normal'>nios2configtool</i> and
+perform “clean” and “build” operations to refresh the eCos library. This will
+ensure that the eCos operating system and library reflect any system changes.
+This behavior differs from the Nios II IDE projects that include a system
+library (non-eCos) project, which are automatically re-compiled during builds
+after a change in the underlying hardware.<b style='mso-bidi-font-weight:normal'><o:p></o:p></b></span></p>
+
+<p class=MsoNormal align=center style='text-align:center;page-break-after:avoid'><span
+style='mso-bidi-font-family:Arial'><!--[if gte vml 1]><v:shape id="_x0000_i1026"
+ type="#_x0000_t75" style='width:369pt;height:328.5pt'>
+ <v:imagedata src="image003.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=492 height=438
+src="image004.jpg" v:shapes="_x0000_i1026"><![endif]></span></p>
+
+<p class=MsoCaption align=center style='text-align:center'><a
+name="_Ref82502150">Figure </a><!--[if supportFields]><span style='mso-bookmark:
+_Ref82502150'></span><span style='mso-element:field-begin'></span><span
+style='mso-bookmark:_Ref82502150'><span style='mso-spacerun:yes'> </span>SEQ
+Figure \* ARABIC <span style='mso-element:field-separator'></span></span><![endif]--><span
+style='mso-bookmark:_Ref82502150'><span style='mso-no-proof:yes'>2</span></span><!--[if supportFields]><span
+style='mso-bookmark:_Ref82502150'></span><span style='mso-element:field-end'></span><![endif]--><span
+style='mso-bookmark:_Ref82502150'></span>: Illustration of the location of the
+&quot;startup type&quot; option<span style='mso-bidi-font-family:Arial'><o:p></o:p></span></p>
+
+<h2 style='margin-left:0in;text-indent:0in'><a name="_Toc120958823"></a><a
+name="_Toc120958795"><span style='mso-bookmark:_Toc120958823'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>6.2<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]>Step 2: Build the application</span></a></h2>
+
+<p class=MsoNormal>eCos includes some simple example applications. You can find
+these in the examples directory beneath the eCos install directory. First, copy
+the contents of this example directory to a location outside of the Nios II kit
+directory. You can now build these examples, using the library created in
+section 6.1. To do so, open a Nios II SDK shell. Then change into the directory
+containing your copy of the examples.</p>
+
+<p class=MsoNormal>The examples are built using the GNU <i style='mso-bidi-font-style:
+normal'>make</i> utility. You will need to provide on the command line the
+location of the eCos install directory. This was created when you built your
+eCos library. For example, if you saved your eCos project in /<i
+style='mso-bidi-font-style:normal'>cygdrive/c/ecos/example.ecc</i>, then you
+should build the examples using:</p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt; make
+INSTALL_DIR=/cygdrive/c/ecos/example_install <o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='mso-bidi-font-family:Arial'>This will build a
+number of example applications, including an application named “hello”. This
+example will send the message, </span>“Hello, eCos world!” <span
+style='mso-bidi-font-family:Arial'>to the console device. The following
+discussion explains how to run and debug this application. You can use the same
+procedure for any of the other examples as well.<o:p></o:p></span></p>
+
+<h2 style='margin-left:0in;text-indent:0in'><a name="_Toc120958824"></a><a
+name="_Toc120958796"></a><a name="_Ref83548101"><span style='mso-bookmark:_Toc120958796'><span
+style='mso-bookmark:_Toc120958824'><![if !supportLists]><span style='mso-fareast-font-family:
+Arial;mso-bidi-font-family:Arial'><span style='mso-list:Ignore'>6.3<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp; </span></span></span><![endif]>Step
+3: Run the application</span></span></a></h2>
+
+<p class=MsoNormal>You can program an application into flash using the <i
+style='mso-bidi-font-style:normal'><span style='mso-bidi-font-family:Arial'>program_flash</span></i>
+script. This is an automatically generated shell script built with your eCos
+library. This script is only built if you are targeting either a “ROM” or
+“ROMRAM” configuration.</p>
+
+<p class=MsoNormal>This script uses the Altera <i style='mso-bidi-font-style:
+normal'>nios2-flash-programmer</i> utility to program your executable into
+flash. The first argument (required) to the script is the name of the
+executable (.elf) file to use. The second argument (optional) is the name of an
+FPGA programming (.sof) file to download to the target FPGA before programming
+flash. If you do not provide the optional .sof argument, you must configure the
+target using some other means (Quartus II Programmer utility, power-on flash
+configuration, etc.) before programming flash. The <i style='mso-bidi-font-style:
+normal'>program_flash</i> script is located in the install directory associated
+with your eCos <i style='mso-bidi-font-style:normal'>configtool</i> project.</p>
+
+<p class=MsoNormal>To program the “hello” example created in section 6.2,
+execute the command:</p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt;
+/cygdrive/c/ecos/example_install/program_flash hello <o:p></o:p></span></p>
+
+<p class=MsoNormal>The path to the install directory is the path to the project
+you created in section 5.1.</p>
+
+<p class=MsoNormal>Note that you must not have any <i style='mso-bidi-font-style:
+normal'>nios2-terminal</i> or JTAG based debug session connected to your board
+when you attempt to run <i style='mso-bidi-font-style:normal'>program_flash</i>.</p>
+
+<p class=MsoNormal>Having run the <i style='mso-bidi-font-style:normal'>program_flash</i>
+utility, you will need to reset the Nios II CPU to start eCos execution. This
+is done by pressing the “CPU Reset” button on your development board.
+Alternatively, you may power-cycle the board. Your hardware design’s .sof file
+must then be downloaded again using the Quartus II Programmer, unless the FPGA
+configuration is also stored in flash.</p>
+
+<p class=MsoNormal>By default, Nios II eCos projects use a JTAG UART as the
+console device. This is a configurable option, which is set using <i
+style='mso-bidi-font-style:normal'>nios2configtool</i>. To view the output from
+the JTAG UART, you will need to open a terminal for the device. This is done by
+running:</p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt; nios2-terminal<o:p></o:p></span></p>
+
+<p class=MsoNormal>Having opened a terminal, you should see the message:
+“Hello, eCos world!” appear.</p>
+
+<h1 style='margin-left:0in;text-indent:0in'><a name="_Toc120958825"></a><a
+name="_Toc120958797"><span style='mso-bookmark:_Toc120958825'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>7.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]>Using the Nios II IDE</span></a></h1>
+
+<p class=MsoNormal>It is possible to build eCos applications from within the
+Nios II IDE using an “Advanced C/C++ Project”. To illustrate this, the steps
+detailed below describe how to import and build the example eCos applications.</p>
+
+<p class=MsoNormal>Note that for this procedure to succeed, you must use a copy
+of the examples directory located outside of the Nios II kit directory. It is
+not possible to directly import the examples installed with eCos.</p>
+
+<p class=MsoNormal>From the “File” menu at the top of the Nios II IDE, select
+New-&gt;Project… This will display the new project wizard. Select “Altera Nios
+II” in the pane on the left, and “Advanced C/C++ Project” in the pane on the
+right, and then click “Next”. Give your project a name, e.g. <i
+style='mso-bidi-font-style:normal'>ecos_hello</i>, and unselect the “Use
+Default Location” check box. You can then use the browse button to browse to
+the location of the example project you built following the instructions above.
+Then click “Next”.</p>
+
+<p class=MsoNormal>Select the “Make Builder” tab, and then set the build
+command to be the make command as described above, for example:</p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>make
+INSTALL_DIR=/cygdrive/c/ecos/example_install <o:p></o:p></span></p>
+
+<p class=MsoNormal>Then click “Finish”.</p>
+
+<p class=MsoNormal>You will then be able to build the project from the IDE as
+you would any other IDE based software project. Instructions for creating a
+Run/Debug configuration are given in the next section.</p>
+
+<h1 style='margin-left:0in;text-indent:0in'><a name="_Toc120958826"></a><a
+name="_Toc120958798"><span style='mso-bookmark:_Toc120958826'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>8.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]>Debug over JTAG</span></a></h1>
+
+<p class=MsoNormal>Applications built using a “ROMRAM” (boot from flash, copy to
+RAM) configuration can be debugged using the Altera JTAG-based debugger.
+Applications that built using a “ROM” (boot and execute from flash)
+configuration can also be debugged, but this will require use of hardware
+breakpoints. Details on how to use hardware breakpoints are discussed in the
+FS2 System Analyzer documentation supplied with the Nios II kit (see <a
+href="../../documents/html_content/documentation.htm">documents\html_content\documentation.htm</a>).</p>
+
+<p class=MsoNormal>The following discussion assumes you are using a “ROMRAM”
+configuration.</p>
+
+<p class=MsoNormal>There are three approaches available for using the Altera
+JTAG debugger for Nios II. You can either debug the application using: the Nios
+II IDE, <i style='mso-bidi-font-style:normal'>nios2-elf-insight</i>, or <i
+style='mso-bidi-font-style:normal'>nios2-elf-gdb</i>. Full documentation for
+these debuggers is provided with the Nios II kit, and can be accessed from the
+documentation page referenced above.</p>
+
+<p class=MsoNormal>Detailed here is how to launch a debug session using the
+Nios II IDE, and the <i style='mso-bidi-font-style:normal'>nios2-elf-insight</i>
+application.</p>
+
+<p class=MsoNormal>Note that when debugging an application in this way, you do
+not need to program the application into flash. The application is directly
+loaded into RAM by the debugger.</p>
+
+<h2 style='margin-left:0in;text-indent:0in'><a name="_Toc120958827"></a><a
+name="_Toc120958799"><span style='mso-bookmark:_Toc120958827'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>8.1<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]>JTAG debug using the Nios II IDE</span></a></h2>
+
+<p class=MsoNormal>The first step in debugging an application using the Nios II
+IDE is to import your application project into the IDE, as described in section
+7. You can then create a debug configuration associated with this project. </p>
+
+<p class=MsoNormal>From the “Run” menu, select “Debug…” (not “Debug”). This
+will then display the available set of debug launch configurations. Click “New”
+to create a new Nios II Hardware configuration. Set the project to be the
+project you created following the instructions given above, and set the
+executable to be “hello”. Specify the SOPC builder system, and the CPU name to
+match the parameters you passed to <i style='mso-bidi-font-style:normal'>nios2configtool</i>.
+Then select the “Target Connection” tab.</p>
+
+<p class=MsoNormal>On the “Target Connection” tab, set the Nios II terminal
+communication device to be the device you are using for the console, e.g.
+“jtag_uart”. Then click “Debug”.</p>
+
+<p class=MsoNormal>This will launch the debug session. You can then proceed to
+debug your eCos application as you would any other Nios II application. See the
+Nios II IDE online help for further information.</p>
+
+<h2 style='margin-left:0in;text-indent:0in'><a name="_Toc120958828"></a><a
+name="_Toc120958800"><span style='mso-bookmark:_Toc120958828'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>8.2<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]>JTAG debug using </span></a>Insight</h2>
+
+<p class=MsoNormal>To debug an application using <i style='mso-bidi-font-style:
+normal'>nios2-elf-insight</i>, you should first launch <i style='mso-bidi-font-style:
+normal'>nios2-gdb-server</i> to establish a JTAG connection to the board. This
+is done by running the following command from within an SDK shell:</p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt;
+nios2-gdb-server –-tcpport=2343 &amp;<o:p></o:p></span></p>
+
+<p class=MsoNormal>To debug an application named “hello” in the current
+directory, you should then run:</p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt; nios2-elf-insight
+hello<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='mso-bidi-font-family:Arial'>This will launch
+the insight debug interface. To connect to the board, open the GDB console by
+selecting “Console” from the “view” menu. Then type the following commands:<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt; target remote
+:2343<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt; load<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt; break main<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt; jump *_start <o:p></o:p></span></p>
+
+<p class=MsoNormal>This will: establish a connection to the target; download
+the executable; set a breakpoint at main; and then begin execution.</p>
+
+<p class=MsoNormal>You can use these same commands when using <i
+style='mso-bidi-font-style:normal'>nios2-elf-gdb</i> in place of <i
+style='mso-bidi-font-style:normal'>nios2-elf-insight</i>.</p>
+
+<p class=MsoNormal>From here, it is then possible to step, break, continue etc.
+You can find further information the Insight online help (select “help” at the
+top of the Insight window).</p>
+
+<h1 style='margin-left:0in;text-indent:0in'><a name="_Toc120958829"></a><a
+name="_Toc120958801"><span style='mso-bookmark:_Toc120958829'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>9.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]>Network-based example</span></a>s</h1>
+
+<p class=MsoNormal>eCos provides an HTTP web server component that can be used
+to serve web pages which include dynamically generated content. Additional
+details of how to use this feature can be found in the “Embedded HTTP Server”
+chapter of the <a href="ecos-current/doc/html/ref/ecos-ref.html">eCos Reference
+Manual</a>. The following instructions describe how to run the web server demo
+on a Nios II based system. These instructions assume you have an <i
+style='mso-bidi-font-style:normal'>altera_avalon_lan91c111</i> Ethernet device
+within your SOPC builder system.</p>
+
+<p class=MsoNormal>First, you should create a new project by selecting “New”
+beneath the “File” menu in <i style='mso-bidi-font-style:normal'>configtool</i>.
+Then, select “Templates…” beneath the “Build” menu. Within the Templates
+window, set the Hardware to “Nios II Development Board (Altera)” and select the
+“net” packages. Select “OK” and accept any suggested conflict resolutions by
+pressing continue.</p>
+
+<p class=MsoNormal>You can then add the HTTP server package by selecting
+“Packages” beneath the “Build” menu. Add the “HTTP Server” package, and the
+click “OK”.</p>
+
+<p class=MsoNormal>You can then save, and build this library. You can use this
+library can be used to build and run examples such as the <i style='mso-bidi-font-style:
+normal'>hello</i> application. However, you must do a make clean to delete the
+old files. For example:</p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt; make
+INSTALL_DIR=/cygdrive/c/ecos/example_net_install clean<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt; make
+INSTALL_DIR=/cygdrive/c/ecos/example_net_install</span></p>
+
+<p class=MsoNormal>When you run the <i style='mso-bidi-font-style:normal'>hello</i>
+application, an additional monitor thread will be created which is used to
+serve the example web content. For this to function correctly, you must have
+correctly configured your network. By default, the internet protocol (IP)
+address of the board will be determined automatically at boot time using the
+DHCP protocol. If you do not have a DHCP server available, or you want to use a
+fixed IP address, you must configure your eCos library with the appropriate
+parameters. You can find these parameters in <i style='mso-bidi-font-style:
+normal'>configtool</i> within the “Basic networking framework” package, as
+illustrated in <span style='mso-field-code:" REF _Ref83543261 \\h "'>Figure <span
+style='mso-no-proof:yes'>3</span><!--[if gte mso 9]><xml>
+ <w:data>08D0C9EA79F9BACE118C8200AA004BA90B02000000080000000D0000005F00520065006600380033003500340033003200360031000000</w:data>
+</xml><![endif]--></span>.</p>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+<p class=MsoNormal align=center style='text-align:center;page-break-after:avoid'><!--[if gte vml 1]><v:shape
+ id="_x0000_i1027" type="#_x0000_t75" style='width:333pt;height:337.5pt'>
+ <v:imagedata src="image005.png" o:title=""/>
+</v:shape><![endif]--><![if !vml]><img border=0 width=444 height=450
+src="image006.jpg" v:shapes="_x0000_i1027"><![endif]></p>
+
+<p class=MsoCaption align=center style='text-align:center'><a
+name="_Ref83543261">Figure </a><!--[if supportFields]><span style='mso-bookmark:
+_Ref83543261'></span><span style='mso-element:field-begin'></span><span
+style='mso-bookmark:_Ref83543261'><span style='mso-spacerun:yes'> </span>SEQ
+Figure \* ARABIC <span style='mso-element:field-separator'></span></span><![endif]--><span
+style='mso-bookmark:_Ref83543261'><span style='mso-no-proof:yes'>3</span></span><!--[if supportFields]><span
+style='mso-bookmark:_Ref83543261'></span><span style='mso-element:field-end'></span><![endif]--><span
+style='mso-bookmark:_Ref83543261'></span>: Location of the network
+configuration parameters</p>
+
+<p class=MsoNormal>When your application is running, and correctly connected to
+the network, you can access the example monitor web content using a web
+browser. The URL is the IP address of your board followed by “/monitor”, e.g. <a
+href="http://192.168.1.2/monitor">http://192.168.1.2/monitor</a>.</p>
+
+<p class=MsoNormal>For further information on the eCos HTTP server, refer to
+the <a href="ecos-current/doc/html/ref/ecos-ref.html">eCos Reference Manual</a>.</p>
+
+<h1 style='margin-left:0in;text-indent:0in'><a name="_Toc120958830"></a><a
+name="_Toc120958802"></a><a name="_Ref82501518"><span style='mso-bookmark:_Toc120958802'><span
+style='mso-bookmark:_Toc120958830'><![if !supportLists]><span style='mso-fareast-font-family:
+Arial;mso-bidi-font-family:Arial'><span style='mso-list:Ignore'>10.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp; </span></span></span><![endif]>Using
+Redboot</span></span></a></h1>
+
+<p class=MsoNormal>Redboot is an eCos application that provides a complete
+bootstrap environment for a range of embedded operating systems, such as
+embedded Linux and eCos, and includes facilities such as network downloading
+and debugging. It also provides a simple flash file system for boot images. You
+can find full documentation on the use of Redboot in the <a
+href="ecos-current/doc/html/ref/ecos-ref.html">eCos Reference Manual</a>.</p>
+
+<p class=MsoNormal>Redboot can be a useful tool during eCos development, where
+it acts as a GDB debug stub. It is also useful in production systems where
+field upgradeability is important.</p>
+
+<p class=MsoNormal>This section describes how to build and run Redboot for Nios
+II. In addition, it describes how it can be used to provide thread aware debug
+for eCos applications.</p>
+
+<h2 style='margin-left:0in;text-indent:0in'><a name="_Toc120958831"></a><a
+name="_Toc120958803"></a><a name="_Ref83548311"><span style='mso-bookmark:_Toc120958803'><span
+style='mso-bookmark:_Toc120958831'><![if !supportLists]><span style='mso-fareast-font-family:
+Arial;mso-bidi-font-family:Arial'><span style='mso-list:Ignore'>10.1<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp; </span></span></span><![endif]>Configuring
+and building Redboot</span></span></a></h2>
+
+<p class=MsoNormal>If you are targeting your own custom hardware design, it is
+advisable to create a basic Redboot configuration using the “Redboot” template
+in <i style='mso-bidi-font-style:normal'>configtool</i>. You can then add
+additional packages, such as flash or networking support as required.</p>
+
+<p class=MsoNormal>However, if you are using one of the Altera <i
+style='mso-bidi-font-style:normal'>standard</i> or <i style='mso-bidi-font-style:
+normal'>full_featured</i> reference designs, you can start with the Redboot
+configuration files supplied with eCos. These can be found in the directory:
+$ECOS_REPOSITORY/hal/nios2/arch/current/misc. $ECOS_REPOSITORY is an
+environment variable pointing at your eCos packages, for example the default
+install can be found at c:\altera\kits\nios2\components\eCos\ecos-current\packages.</p>
+
+<p class=MsoNormal>There are two configurations available: <i style='mso-bidi-font-style:
+normal'>redboot_ROM.ecm</i> and <i style='mso-bidi-font-style:normal'>redboot_ROMRAM.ecm</i>.
+As their names suggest, the first can be used to create a “ROM” based Redboot
+configuration, and the second can be used to create a “ROMRAM” based
+configuration.</p>
+
+<p class=MsoNormal>To create a project using one of these configurations, first
+select “New” from the “File” menu to create a new project. Then select the
+“redboot” template in the configtool “Build-&gt;Templates…” window, a window
+will pop up asking you to resolve conflicts, just take the recommended solution
+by pressing continue . Having done this, you can import the configuration by
+selecting “Import…” from the configtool “File” menu, and then browse to the
+required configuration file, again a window will pop up asking you to Resolve
+conflicts, once again take the recommended solution by pressing continue.</p>
+
+<p class=MsoNormal>Having created the Redboot configuration, save and build the
+project using <i style='mso-bidi-font-style:normal'>configtool</i> as before.</p>
+
+<p class=MsoNormal>Building the project will create an executable (elf) file, <i
+style='mso-bidi-font-style:normal'>redboot.elf</i>. You can program this into
+flash by opening an SDK shell, and changing into the install directory created
+when you built your Redboot project. Then issue the command:</p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt; ./program_flash
+bin/redboot.elf<o:p></o:p></span></p>
+
+<p class=MsoNormal>Following this, you will need to re-program your FPGA
+configuration (if necessary) and connect a terminal, as described in section <span
+style='mso-field-code:" REF _Ref83548101 \\r \\h "'>6.3<!--[if gte mso 9]><xml>
+ <w:data>08D0C9EA79F9BACE118C8200AA004BA90B02000000080000000D0000005F00520065006600380033003500340038003100300031000000</w:data>
+</xml><![endif]--></span>.</p>
+
+<p class=MsoNormal>The first time you run Redboot, the program will fail to
+find valid configuration data in flash. You can set the flash configuration
+data by running the command:</p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt; fconfig<o:p></o:p></span></p>
+
+<p class=MsoNormal>at the Redboot prompt. This configuration data includes
+network configuration parameters, if you wish to debug over Ethernet you will
+need to set up an IP Address.<span style='font-family:"Courier New"'><o:p></o:p></span></p>
+
+<p class=MsoNormal>For details on the use and meanings of the options that are
+presented, see the Redboot documentation. This is contained within the eCos
+Reference Manual.</p>
+
+<p class=MsoNormal>Running the command:</p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt; help <o:p></o:p></span></p>
+
+<p class=MsoNormal>at the Redboot prompt will display a list of the available
+commands.</p>
+
+<h2 style='margin-left:0in;text-indent:0in'><a name="_Toc120958832"></a><a
+name="_Toc120958804"><span style='mso-bookmark:_Toc120958832'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>10.2<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]>Debugging applications with Redboot</span></a></h2>
+
+<p class=MsoNormal>The configuration files: <i style='mso-bidi-font-style:normal'>redboot_ROM.ecm</i>
+and <i style='mso-bidi-font-style:normal'>redboot_ROMRAM.ecm</i> will configure
+your Redboot application to include the GDB stubs. Using this rather than the
+JTAG based debugger will allow you to access thread information and set thread
+specific breakpoints while debugging.</p>
+
+<p class=MsoNormal>If you wish to build an application that is suitable for
+downloading via Redboot, you should select the “RAM” configuration. You can
+then build the application as described above. The executable can be loaded
+directly by Redboot, for example over the network using TFTP, or through a GDB
+based debugger.</p>
+
+<p class=MsoNormal>Currently the only available debuggers are <i
+style='mso-bidi-font-style:normal'>nios2-elf-insight</i> and <i
+style='mso-bidi-font-style:normal'>nios2-elf-gdb</i>. You cannot use the
+debugger in the Nios II IDE, since this does not support debug over either
+serial or Ethernet, required by Redboot.</p>
+
+<h3 style='margin-left:0in;text-indent:0in'><a name="_Toc120958833"></a><a
+name="_Toc120958805"><span style='mso-bookmark:_Toc120958833'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>10.2.1<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]>Debug over Ethernet</span></a></h3>
+
+<p class=MsoNormal>The Redboot network configuration parameters are set using
+the <i style='mso-bidi-font-style:normal'>fconfig</i> command, as described in
+section <span style='mso-field-code:" REF _Ref83548311 \\r \\h "'>10.1<!--[if gte mso 9]><xml>
+ <w:data>08D0C9EA79F9BACE118C8200AA004BA90B02000000080000000D0000005F00520065006600380033003500340038003300310031000000</w:data>
+</xml><![endif]--></span>. You should verify that your network configuration is
+correct by using the <i style='mso-bidi-font-style:normal'>ping</i> utility.
+Ensure that you can ping from your PC to the target board and from the board to
+your PC.</p>
+
+<p class=MsoNormal>Having established that you have a valid network connection,
+you can start a debug session using <i style='mso-bidi-font-style:normal'>nios2-elf-insight</i>
+by typing:</p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt;
+nios2-elf-insight hello<o:p></o:p></span></p>
+
+<p class=MsoNormal>in an SDK shell. Note that you do not need to run <i
+style='mso-bidi-font-style:normal'>nios2-gdb-server</i>, as is required when
+debugging over JTAG.</p>
+
+<p class=MsoNormal>In the GDB console, you can then issue the following
+commands to connect to the board, download the application, and then run to a
+breakpoint at <i style='mso-bidi-font-style:normal'>main()</i>:</p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt; target remote
+11.22.33.44:9000 <o:p></o:p></span></p>
+
+<p class=MsoNormal>where “11.22.33.44” is the IP Address assigned to the board
+using the <i style='mso-bidi-font-style:normal'>fconfig</i> command in section
+9.1</p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt; load<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt; break main<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt; jump *_start <o:p></o:p></span></p>
+
+<p class=MsoNormal>This example assumes that you have configured Redboot, using
+the <i style='mso-bidi-font-style:normal'>fconfig</i> command, to have an IP
+address of “11.22.33.44” and a GDB connection port of 9000.</p>
+
+<p class=MsoNormal>See the Insight documentation for details on how to use the
+thread-aware debug features.</p>
+
+<h3 style='margin-left:0in;text-indent:0in'><a name="_Toc120958834"></a><a
+name="_Toc120958806"><span style='mso-bookmark:_Toc120958834'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>10.2.2<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]>Debug over serial</span></a></h3>
+
+<p class=MsoNormal>The procedure for debug over serial is very similar to the
+procedure for debug over Ethernet as described above. You should use this if
+you wish to debug applications that use network facilities.</p>
+
+<p class=MsoNormal>First, connect the serial port on your board (labeled
+“console” on the Altera Nios II development boards) to one of the serial ports
+in your PC. This example assumes that you are using COM1. Then launch <i
+style='mso-bidi-font-style:normal'>nios2-elf-insight</i> as before, and type
+the following commands at the GDB console:</p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt; set remotebaud
+115200<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt; target remote
+COM1<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt; load<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt; break main<o:p></o:p></span></p>
+
+<p class=MsoNormal><span style='font-family:"Courier New"'>&gt; jump *_start <o:p></o:p></span></p>
+
+<p class=MsoNormal>The baud rate of the serial port used is determined by the
+SOPC builder project. In the Altera reference designs it is set to be 115200,
+as used above.</p>
+
+<p class=MsoNormal>Note that there can be a significant delay in establishing
+the initial connection to the board when using a serial connection.</p>
+
+<h2 style='margin-left:0in;text-indent:0in'><a name="_Toc120958835"></a><a
+name="_Toc120958807"><span style='mso-bookmark:_Toc120958835'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>10.3<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]>Redboot memory assignments</span></a></h2>
+
+<p class=MsoNormal>It is important to ensure that download eCos applications do
+not use memory required by Redboot. Memory is reserved for the Redboot monitor
+by the downloaded application using options set in <i style='mso-bidi-font-style:
+normal'>configtool</i>. The options are located within the “eCos HAL” package,
+beneath the “ROM monitor support” folder. </p>
+
+<h2 style='margin-left:0in;text-indent:0in'><a name="_Toc120958836"></a><a
+name="_Toc120958808"><span style='mso-bookmark:_Toc120958836'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>10.4<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]>Booting Altera HAL applications with Redboot</span></a></h2>
+
+<p class=MsoNormal>Redboot is not restricted to booting eCos applications.
+Redboot can also boot applications built using other operating systems. This section
+describes how to use Redboot to boot applications that have been built using
+the Altera Hardware Abstraction Layer (HAL), and Altera HAL based operating
+systems such as MicroC/OS-II, ThreadX, PrKernelv4 and others.</p>
+
+<p class=MsoNormal>Booting HAL based applications using Redboot provides a
+multi-stage boot-flow that may be useful in a number of development and
+production systems. Using Redboot allows, for example, Altera HAL based
+applications to be booted over the network. It also provides a mechanism for
+remote upgrade of HAL based applications and hardware images stored in flash.</p>
+
+<p class=MsoNormal>Since the Altera HAL does not include GDB stubs support,
+Redboot cannot be used to debug HAL based systems.</p>
+
+<p class=MsoNormal>In creating a system that uses Redboot to load HAL
+applications, you must apply some constraints to your system design. Most
+importantly, it is necessary to ensure that the memory used by Redboot does not
+overlap the memory required by the downloaded code. The steps required to
+ensure this are given below.</p>
+
+<p class=MsoNormal style='margin-left:52.8pt;text-indent:-.25in;mso-list:l4 level1 lfo6;
+tab-stops:list 52.8pt'><![if !supportLists]><span style='mso-fareast-font-family:
+Arial;mso-bidi-font-family:Arial'><span style='mso-list:Ignore'>1.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span></span><![endif]>The
+hardware exceptions vector set in the SOPC builder project must be located in a
+writeable RAM region.</p>
+
+<p class=MsoNormal style='margin-left:52.8pt;text-indent:-.25in;mso-list:l4 level1 lfo6;
+tab-stops:list 52.8pt'><![if !supportLists]><span style='mso-fareast-font-family:
+Arial;mso-bidi-font-family:Arial'><span style='mso-list:Ignore'>2.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span></span><![endif]>The
+memory module used for the exception vector must not overlap the modules used
+by Redboot. The memory regions used by Redboot are set in configtool using the
+“text region”, “rodata region”, and “rwdata region”. These are located in the
+“Nios 2 architecture” package, which is located beneath “eCos HAL”.</p>
+
+<p class=MsoNormal style='margin-left:52.8pt;text-indent:-.25in;mso-list:l4 level1 lfo6;
+tab-stops:list 52.8pt'><![if !supportLists]><span style='mso-fareast-font-family:
+Arial;mso-bidi-font-family:Arial'><span style='mso-list:Ignore'>3.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span></span><![endif]>The
+memory regions used by the downloaded Altera HAL application must not overlap
+the regions used by Redboot. They can use the same region used for the
+exception vector. The memory regions used by an Altera HAL application are set
+on the System Library Properties page in the Nios II IDE.</p>
+
+<p class=MsoNormal style='margin-left:52.8pt;text-indent:-.25in;mso-list:l4 level1 lfo6;
+tab-stops:list 52.8pt'><![if !supportLists]><span style='mso-fareast-font-family:
+Arial;mso-bidi-font-family:Arial'><span style='mso-list:Ignore'>4.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span></span><![endif]>You
+should configure Redboot so that the “Validate RAM address during load” option
+is not selected. This is set in the “Redboot ROM monitor” package, beneath
+“Build Redboot ROM ELF image”. This is the default setting if you use one of
+the Redboot configuration (.ecm) files provided with eCos for Nios II.</p>
+
+<p class=MsoNormal>Having configured your system to match these criteria, it is
+possible to download and execute HAL based applications using the “load” and
+“go” commands described in the Redboot documentation.<span
+style='mso-spacerun:yes'>    </span></p>
+
+<h1 style='margin-left:0in;text-indent:0in'><a name="_Toc120958837"></a><a
+name="_Toc120958809"><span style='mso-bookmark:_Toc120958837'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>11.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]>Character device access</span></a></h1>
+
+<p class=MsoNormal>Devices drivers are supplied for three classes of Avalon
+character devices: <i style='mso-bidi-font-style:normal'>altera_avalon_jtag_uart</i>,
+<i style='mso-bidi-font-style:normal'>altera_avalon_uart</i>, and <i
+style='mso-bidi-font-style:normal'>altera_avalon_lcd_16207</i>. Devices of
+these types can be accessed using the standard eCos device access functions,
+e.g.: <i style='mso-bidi-font-style:normal'>open(), read(), write()</i> etc.
+The name of the device to use in the call to <i style='mso-bidi-font-style:
+normal'>open()</i> is the name assigned in SOPC builder with the prefix
+“/dev/”. For example, a device named “jtag_uart” in SOPC builder can be
+accessed as “/dev/jtag_uart” from eCos.</p>
+
+<p class=MsoNormal>The exceptions to this rule are those devices selected for
+the console and debug devices. The console device can instead be accessed as
+“/dev/haldiag”. </p>
+
+<h1 style='margin-left:0in;text-indent:0in'><a name="_Toc120958838"></a><a
+name="_Toc120958810"><span style='mso-bookmark:_Toc120958838'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>12.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]>Compact Flash interface</span></a></h1>
+
+<p class=MsoNormal>This release of eCos includes a driver for the <i
+style='mso-bidi-font-style:normal'>altera_avalon_cf</i> compact flash component
+provided with the Nios II kit.</p>
+
+<p class=MsoNormal>You can create projects which give read/write access to a
+compact flash interface using the FAT file system by adding the following
+packages to your project: <i style='mso-bidi-font-style:normal'>FAT file system</i>
+(CYGPKG_FS_FAT); <i style='mso-bidi-font-style:normal'>Disk Device Drivers</i>
+(CYGPKG_IO_DISK); <i style='mso-bidi-font-style:normal'>File IO</i>
+(CYPKG_IO_FILEIO); <i style='mso-bidi-font-style:normal'>Block cache and access
+library</i> (CYPKG_BLOCK_LIB); and <i style='mso-bidi-font-style:normal'>Linux
+compatibility</i> (CYGPKG_LINUX_COMPAT). This package list assumes that you are
+using the default package template.</p>
+
+<p class=MsoNormal>You can add packages to a project by selecting
+Build-&gt;Packages… in <i style='mso-bidi-font-style:normal'>configtool</i>.</p>
+
+<p class=MsoNormal>Having added the packages, you should accept any suggested
+conflict resolutions.</p>
+
+<p class=MsoNormal>An example of how to read and write a FAT file system is
+given in the file, <i style='mso-bidi-font-style:normal'>fileio1.c</i>. This is
+located in the directory <i style='mso-bidi-font-style:normal'>ecos-current\packages\fs\fat\current\tests</i>
+beneath your eCos install. Note that this example assumes the device name
+&quot;/dev/disk0/1”. You will need to changes this to match the name of the
+device you have available in your project. Device naming is discussed in the
+next section.<span style='mso-spacerun:yes'>  </span></p>
+
+<h2 style='margin-left:0in;text-indent:0in'><a name="_Toc120958839"></a><a
+name="_Toc120958811"><span style='mso-bookmark:_Toc120958839'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>12.1<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]>Compact Flash device name</span></a></h2>
+
+<p class=MsoNormal>For a given instance of the <i style='mso-bidi-font-style:
+normal'>altera_avalon_cf</i> component within an SOPC builder project, up to
+two disk drivers are available for use. These two drivers correspond to the two
+separate devices that can be managed by a single component interface.<span
+style='mso-spacerun:yes'>  </span></p>
+
+<p class=MsoNormal>The names given to these drivers are based on the name
+assigned to the component instance in SOPC builder. For example if the
+component instance is named “cf”, then the drivers will be named “/dev/cfa/”
+and “/dev/cfb/”. The suffix “a” and “b” indicate the first and second devices
+connected to the interface.<span style='mso-spacerun:yes'>  </span></p>
+
+<p class=MsoNormal>These device names can be used to give you direct IDE access
+to the device. However, it is more usual to access the device using the FAT
+file system. In this case, you will want to access a particular partition
+within the device. To do this you should append the partition number to the end
+of the device name. Partition number 1 is the first partition. Up to four
+partitions are supported.</p>
+
+<p class=MsoNormal>For example to mount a FAT file system on the first
+partition of the first device connected to a component instance named cf, you
+should make the following function call:</p>
+
+<p class=MsoNormal align=center style='text-align:center'><span
+style='font-family:"Courier New";mso-bidi-font-family:"Times New Roman"'>mount(
+&quot;/dev/cfa/1&quot;, &quot;/&quot;, &quot;fatfs&quot; );<span
+style='mso-spacerun:yes'>  </span><o:p></o:p></span></p>
+
+<p class=MsoNormal>Using partition zero gives you access to the root partition.
+This should be used if you wish to make raw IDE accesses to the device, or if
+the device has been formatted without a master boot record that would otherwise
+contain the partition table. Accessing device “/dev/cfa/0” is equivalent to
+using “/dev/cfa/”.</p>
+
+<h2 style='margin-left:0in;text-indent:0in'><a name="_Toc120958840"></a><a
+name="_Toc120958812"><span style='mso-bookmark:_Toc120958840'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>12.2<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]>Inserting and removing Compact Flash cards</span></a></h2>
+
+<p class=MsoNormal>The <i style='mso-bidi-font-style:normal'>altera_avalon_cf</i>
+component provides an interrupt on card insert and removal. This is used to
+automatically update the available device list and partition tables when a card
+is inserted or removed.</p>
+
+<p class=MsoNormal>However it is important to ensure that you call the <i
+style='mso-bidi-font-style:normal'>umount()</i> function for any mounted file
+system on a card before ejecting it. If this is not done, then the file system
+may become corrupted and the operating system may become unstable.</p>
+
+<h1 style='margin-left:0in;text-indent:0in'><a name="_Toc120958841"></a><a
+name="_Toc120958813"><span style='mso-bookmark:_Toc120958841'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>13.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]>Changing your hardware configuration</span></a></h1>
+
+<p class=MsoNormal>If you modify your SOPC builder system, then you must restart
+<i style='mso-bidi-font-style:normal'>nios2configtool</i> and re-build the eCos
+library for the changes to take effect. This will automatically update the
+available options and defaults to match your hardware configuration. However if
+you have previously changed any parameter away from its default setting, then
+you may need to update that parameter manually to match your new system
+configuration.</p>
+
+<h1 style='margin-left:0in;text-indent:0in'><a name="_Toc120958842"></a><a
+name="_Toc120958814"><span style='mso-bookmark:_Toc120958842'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>14.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]>Configtool and the Nios II IDE</span></a></h1>
+
+<p class=MsoNormal>The standard version of <i style='mso-bidi-font-style:normal'>configtool</i>
+released with eCos creates additional mount points for its build environment.
+These mount points can lead to problems when using the Nios II IDE, even for
+applications which are not based on eCos. To avoid this, the version of <i
+style='mso-bidi-font-style:normal'>configtool</i> supplied here does not create
+these mount points. </p>
+
+<p class=MsoNormal>If you wish to use the original version of <i
+style='mso-bidi-font-style:normal'>configtool</i>, it is still available as a
+part of this release. It has been renamed as configtool20.exe.<span
+style='mso-spacerun:yes'>  </span></p>
+
+<h1 style='margin-left:0in;text-indent:0in'><a name="_Toc120958843"></a><a
+name="_Toc120958815"><span style='mso-bookmark:_Toc120958843'><![if !supportLists]><span
+style='mso-fareast-font-family:Arial;mso-bidi-font-family:Arial'><span
+style='mso-list:Ignore'>15.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]>Limitations</span></a></h1>
+
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal style='mso-list:l0 level1 lfo7;tab-stops:list .5in'>This
+     port of eCos for Nios II only supports running on Windows hosts. </li>
+ <li class=MsoNormal style='mso-list:l0 level1 lfo7;tab-stops:list .5in'>No
+     exception handling is provided for the emulation of multiply and divide instructions
+     when they are not supported in hardware. You should instead use the <i
+     style='mso-bidi-font-style:normal'>--mno-hw-mul</i>, and <i
+     style='mso-bidi-font-style:normal'>--mno-hw-div</i> compiler and linker
+     flags. This is done automatically when using <i style='mso-bidi-font-style:
+     normal'>nios2configtool</i>.</li>
+ <li class=MsoNormal style='mso-list:l0 level1 lfo7;tab-stops:list .5in'>No
+     support is provided for the Redboot system call interface. This means that
+     GDB cannot be used to provide a host-based file system.</li>
+</ul>
+
+<p class=MsoNormal><o:p>&nbsp;</o:p></p>
+
+</div>
+
+</body>
+
+</html>

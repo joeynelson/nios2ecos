@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!--=========================================================================##
+ * devices.h.gtf
+ *
+ * GTF script for generating the file: devices.h.
+ *
+ *=============================================================================
+ *###ECOSGPLCOPYRIGHTBEGIN####
+ * 
+ * This file is part of eCos, the Embedded Configurable Operating System.
+ *
+ * eCos is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 or (at your option) any later version.
+ *
+ * eCos is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with eCos; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+ *
+ * As a special exception, if other files instantiate templates or use macros
+ * or inline functions from this file, or you compile this file and link it
+ * with other works to produce a work based on this file, this file does not
+ * by itself cause the resulting work to be covered by the GNU General Public
+ * License. However the source code for this file must still be made available
+ * in accordance with section (3) of the GNU General Public License.
+ *
+ * This exception does not invalidate any other reasons why a work based on
+ * this file might be covered by the GNU General Public License.
+ * 
+ *###ECOSGPLCOPYRIGHTEND####
+ *==========================================================================-->
+
+<!-- This GTF script is used to generate the Nios II macro file, devices.h.
+     This header file contains provides a macro instance for each peripheral
+     contained within the associated SOPC builder system. These macro instances
+     can then be used (for example) by device drivers to create driver instances
+     for devices created in the SOPC builder project. See the drivers in the 
+     devs/sopc directory for examples of this.-->
+
+<template name="devices.h">
+
+    <!-- After calling this script, the variable GTF_DIR will be reset to point
+         to the gtf directory of the Nios2 kit. The original value can be 
+         obtained using the variable ECOS_GTF_DIR. This allows us to reuse 
+         some of the scripts supplied with the Nios II kit. -->  
+
+    <call gtf="%GTF_DIR%/ECOS_GTF_DIR.gtf"/>
+
+    <call gtf="%GTF_DIR%/check_version.gtf"/>
+
+    <call gtf="%GTF_DIR%/CPU.gtf"/>
+
+    <call gtf="%GTF_DIR%/file_heading.h.gtf"/>
+
+    <text>
+/*
+ * Machine generated eCos initialisation source
+ * for a CPU named "%CPU%" as defined in:
+ * %PTF_NAME%
+ *
+ *
+ * Generated: %TIMESTAMP%
+ *
+ */
+
+    </text>
+
+    <include source="%GTF_DIR%/warning.h"/>
+
+    <include source="%GTF_DIR%/license.h"/>
+
+    <text>
+
+/*
+ * Provide dummy definitions for unused devices
+ */
+
+    </text>
+
+    <call gtf="%GTF_DIR%/COMPONENT_LIST.gtf"/>
+
+    <set_variable variable="ECOS_COMPONENT_LIST" to="()"/> <!-- build this for the loops below -->
+
+    <for_each variable="MODULE" ptf_path="SYSTEM/MODULE">
+        <if true="and( ptf_module_is_mastered_by( %MODULE%, %CPU% ), !=( %MODULE%, %CPU% ) )"> 
+                   <set_variable variable="MODULE_CLASS"
+                          ptf_path="SYSTEM/MODULE %MODULE%/class"/>
+                   <!-- did we already add it to ECOS_COMPONENT_LIST? (we don't want duplicate defines) -->
+                   <if true="lt list_index_of( %ECOS_COMPONENT_LIST%, %MODULE_CLASS% ), 0 )">
+                          <set_variable variable="ECOS_COMPONENT_LIST"
+                                        to="list_add( %ECOS_COMPONENT_LIST%, %MODULE_CLASS% )"/>
+                          <set_variable variable="MODULE_CLASS"
+                                        ptf_path="SYSTEM/MODULE %MODULE%/class"/>
+                          <set_variable variable="MODULE_CLASS_UPPER"
+                                        to="uppercase( %MODULE_CLASS% )"/>
+                          <text>#ifndef %MODULE_CLASS_UPPER%_INSTANCE
+#define %MODULE_CLASS_UPPER%_INSTANCE(dev, inst)
+#endif
+
+</text> 
+                   </if>
+       </if>
+    </for_each>
+
+    <text>
+/*
+ * List all device instances
+ */
+
+    </text>
+
+
+    <for_each variable="MODULE" ptf_path="SYSTEM/MODULE">
+        <if true="and( ptf_module_is_mastered_by( %MODULE%, %CPU% ), !=( %MODULE%, %CPU% ) )">
+            <set_variable variable="MODULE_CLASS"
+                          ptf_path="SYSTEM/MODULE %MODULE%/class"/>
+            <set_variable variable="MODULE_CLASS_UPPER"
+                          to="uppercase( %MODULE_CLASS% )"/>
+            <set_variable variable="MODULE_UPPER"
+                          to="uppercase( %MODULE% )"/>
+            <set_variable variable="MODULE_LOWER"
+                          to="lowercase( %MODULE% )"/>
+           <text>%MODULE_CLASS_UPPER%_INSTANCE(%MODULE_UPPER%, %MODULE_LOWER%)
+           </text> 
+        </if>
+    </for_each>
+
+
+    <text>
+/*
+ * Remove definitions to allow further use of this file
+ */
+
+    </text>
+
+    <set_variable variable="ECOS_COMPONENT_LIST" to="()"/> <!-- build this for the loops below -->
+
+    <for_each variable="MODULE" ptf_path="SYSTEM/MODULE">
+        <if true="and( ptf_module_is_mastered_by( %MODULE%, %CPU% ), !=( %MODULE%, %CPU% ) )"> 
+                   <set_variable variable="MODULE_CLASS"
+                          ptf_path="SYSTEM/MODULE %MODULE%/class"/>
+                   <!-- did we already add it to ECOS_COMPONENT_LIST? (we don't want duplicate defines) -->
+                   <if true="lt( list_index_of( %ECOS_COMPONENT_LIST%, %MODULE_CLASS% ), 0 )">
+                          <set_variable variable="ECOS_COMPONENT_LIST"
+                                        to="list_add( %ECOS_COMPONENT_LIST%, %MODULE_CLASS% )"/>
+                          <set_variable variable="MODULE_CLASS"
+                                        ptf_path="SYSTEM/MODULE %MODULE%/class"/>
+                          <set_variable variable="MODULE_CLASS_UPPER"
+                                        to="uppercase( %MODULE_CLASS% )"/>
+                          <text>#undef %MODULE_CLASS_UPPER%_INSTANCE
+</text> 
+                   </if>
+       </if>
+    </for_each>
+
+</template>

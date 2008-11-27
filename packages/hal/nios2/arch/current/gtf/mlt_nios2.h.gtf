@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!--=========================================================================##
+ * mlt_nios2.h.gtf
+ *
+ * GTF script to generate the file: mlt_nios2.h.gtf
+ *
+ *=============================================================================
+ *###ECOSGPLCOPYRIGHTBEGIN####
+ * 
+ * This file is part of eCos, the Embedded Configurable Operating System.
+ *
+ * eCos is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 or (at your option) any later version.
+ *
+ * eCos is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with eCos; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+ *
+ * As a special exception, if other files instantiate templates or use macros
+ * or inline functions from this file, or you compile this file and link it
+ * with other works to produce a work based on this file, this file does not
+ * by itself cause the resulting work to be covered by the GNU General Public
+ * License. However the source code for this file must still be made available
+ * in accordance with section (3) of the GNU General Public License.
+ *
+ * This exception does not invalidate any other reasons why a work based on
+ * this file might be covered by the GNU General Public License.
+ * 
+ *###ECOSGPLCOPYRIGHTEND####
+ *==========================================================================-->
+
+<!-- This GTF script is used to generate the Nios II memory layout header file, 
+     mlt_nios2.h. This header file is constructed to match the memory
+     configuration of the associated the SOPC builder project. -->
+
+<template name="mlt_nios2.h">
+
+    <!-- After calling this script, the variable GTF_DIR will be reset to point
+         to the gtf directory of the Nios2 kit. The original value can be 
+         obtained using the variable ECOS_GTF_DIR. This allows us to reuse 
+         some of the scripts supplied with the Nios II kit. -->
+
+    <call gtf="%GTF_DIR%/ECOS_GTF_DIR.gtf"/>
+
+    <call gtf="%GTF_DIR%/check_version.gtf"/>
+
+    <call gtf="%GTF_DIR%/CPU.gtf"/>
+
+    <call gtf="%GTF_DIR%/RESET_ADDRESS.gtf"/>
+
+    <call gtf="%GTF_DIR%/EXC_ADDRESS.gtf"/>
+
+    <set_variable variable="MEMORY_MODULES_ONLY" to="1"/>
+    <export variable="MEMORY_MODULES_ONLY"/>
+    <call gtf="%GTF_DIR%/MODULE_lists.gtf"/>
+
+    <set_variable variable="RESET_ROUTINE_SIZE" to="32"/>
+
+    <text>/* %FILE_NAME%
+ *
+ * Machine generated for a CPU named "%CPU%" as defined in:
+ * %PTF_NAME%
+ *
+ * Generated: %TIMESTAMP%
+ *
+ */
+
+    </text>
+
+    <include source="%GTF_DIR%/warning.h"/>
+
+    <include source="%GTF_DIR%/license.h"/>
+
+    <text>
+#ifndef __ASSEMBLER__
+<![CDATA[#include <cyg/infra/cyg_type.h>
+#include <stddef.h>]]>
+#endif
+    </text>
+
+    <!-- define for each memory partition... -->
+
+    <text>
+<![CDATA[#define HAL_NIOS2_PARTITION_BASE_reset]]> %RESET_ADDRESS%
+<![CDATA[#define HAL_NIOS2_PARTITION_LEN_reset]]> %RESET_ROUTINE_SIZE%
+    </text> <!-- ...always one for the reset address -->
+
+    <!-- ...and one for each MODULE/SLAVE -->
+
+    <set_variable variable="MEMORY_RANGE_LIST" to="()"/>    <!-- while we're looking at all the memories, might as well create these lists to use below -->
+    <set_variable variable="PARTITION_ADDRESS_LIST" to=""/>
+
+    <for_each variable="MODULE_SLAVE" index_variable="MODULE_SLAVE_LIST_INDEX" list="%MODULE_SLAVE_LIST%">
+        <export variable="MODULE_SLAVE"/>
+        <call gtf="%GTF_DIR%/BASE_ADDRESS_and_ADDRESS_SPAN.gtf"/>
+
+        <set_variable variable="MODULE_SLAVE_NAME" to="list_get( %MODULE_SLAVE_NAME_LIST%, %MODULE_SLAVE_LIST_INDEX% )"/>
+
+        <switch>
+            <!-- if the base address for this MODULE/SLAVE is the same as the reset address, then make room for the reset handler -->
+            <if condition="eq( %BASE_ADDRESS%, %RESET_ADDRESS% )">
+                <set_variable variable="BASE_ADDRESS" to="add( %BASE_ADDRESS%, %RESET_ROUTINE_SIZE% )"/>
+                <set_variable variable="ADDRESS_SPAN" to="sub( %ADDRESS_SPAN%, %RESET_ROUTINE_SIZE% )"/>
+                <break/>
+            </if>
+
+            <!-- if the reset address is in the address range of this MODULE/SLAVE, then we split the segment in two... -->
+            <if condition="and( gt( %RESET_ADDRESS%, %BASE_ADDRESS% ), lt( %RESET_ADDRESS%, add( %BASE_ADDRESS%, %ADDRESS_SPAN% ) ) )">
+                <!-- ...everything less than the reset address is unused -->
+                <set_variable variable="NEW_SEGMENT_ADDRESS_SPAN" to="radix( sub( %RESET_ADDRESS%, %BASE_ADDRESS% ), 10 )"/>
+                <!-- ...and start the usable segment after the reset handler -->
+                <set_variable variable="BASE_ADDRESS" to="add( %RESET_ADDRESS%, %RESET_ROUTINE_SIZE% )"/>
+                <set_variable variable="ADDRESS_SPAN" to="sub( %ADDRESS_SPAN%, %NEW_SEGMENT_ADDRESS_SPAN%, %RESET_ROUTINE_SIZE% )"/>
+            </if>
+        </switch>
+
+        <!-- ASSUME that the exception address is always higher than the reset address (if they're in the same memory) -->
+
+        <switch>
+            <!-- if the exception address is the same as the base address (for this MODULE/SLAVE), then the exception section is at the start of this segment -->
+            <if condition="eq( %EXC_ADDRESS%, %BASE_ADDRESS% )">
+                <set_variable variable="EXCEPTIONS_SEGMENT" to="%MODULE_SLAVE_NAME%"/>
+                <break/>
+            </if>
+            <!-- if the exception address is in the address range of this MODULE/SLAVE, then we split the segment in two... -->
+            <if condition="and( gt( %EXC_ADDRESS%, %BASE_ADDRESS% ), lt( %EXC_ADDRESS%, add( %BASE_ADDRESS%, %ADDRESS_SPAN% ) ) )">
+                <!-- ...everything less than the exception address is unused -->
+                <set_variable variable="NEW_SEGMENT_ADDRESS_SPAN" to="radix( sub( %EXC_ADDRESS%, %BASE_ADDRESS% ), 10 )"/>
+                <!-- ...and start the usable segment at the exception address -->
+                <set_variable variable="BASE_ADDRESS" to="%EXC_ADDRESS%"/>
+                <set_variable variable="ADDRESS_SPAN" to="sub( %ADDRESS_SPAN%, %NEW_SEGMENT_ADDRESS_SPAN% )"/>
+                <set_variable variable="EXCEPTIONS_SEGMENT" to="%MODULE_SLAVE_NAME%"/>
+            </if>
+        </switch>
+
+        <set_variable variable="PHYSICAL_END"
+                      to="add( %BASE_ADDRESS%, %ADDRESS_SPAN% )"/>
+        <set_variable variable="PARTITION_ADDRESS_LIST"
+                      to='list_add( %PARTITION_ADDRESS_LIST%, %PHYSICAL_END% )'/>
+        <set_variable variable="MEMORY_RANGE_LIST"
+                      to='list_add( %MEMORY_RANGE_LIST%, "(%BASE_ADDRESS%,%PHYSICAL_END%)" )'/>
+
+        <text>
+<![CDATA[#define HAL_NIOS2_PARTITION_BASE_]]>%MODULE_SLAVE_NAME% %BASE_ADDRESS%
+<![CDATA[#define HAL_NIOS2_PARTITION_LEN_]]>%MODULE_SLAVE_NAME% %ADDRESS_SPAN%
+        </text>
+    </for_each>
+
+    <text>
+#define _HAL_NIOS2_PARTITION_BASE(p) HAL_NIOS2_PARTITION_BASE_##p
+#define HAL_NIOS2_PARTITION_BASE(p) _HAL_NIOS2_PARTITION_BASE(p)
+#define _HAL_NIOS2_PARTITION_LEN(p) HAL_NIOS2_PARTITION_LEN_##p
+#define HAL_NIOS2_PARTITION_LEN(p) _HAL_NIOS2_PARTITION_LEN(p)
+
+#define CYGMEM_REGION_ram HAL_NIOS2_PARTITION_BASE(CYGHWR_HAL_NIOS2_RWDATA_REGION)
+#define CYGMEM_REGION_ram_SIZE HAL_NIOS2_PARTITION_LEN(CYGHWR_HAL_NIOS2_RWDATA_REGION)
+#define CYGMEM_REGION_ram_ATTR (CYGMEM_REGION_ATTR_R | CYGMEM_REGION_ATTR_W)
+#ifndef __ASSEMBLER__
+extern char CYG_LABEL_NAME (__heap1) [];
+#endif
+#define CYGMEM_SECTION_heap1 (CYG_LABEL_NAME (__heap1))
+#define CYGMEM_SECTION_heap1_SIZE (CYGMEM_REGION_ram + CYGMEM_REGION_ram_SIZE  - CYGNUM_HAL_COMMON_INTERRUPTS_STACK_SIZE - (size_t) CYG_LABEL_NAME (__heap1))
+    </text>
+
+</template>

@@ -1,0 +1,234 @@
+#=============================================================================
+#
+#    ecos.db
+#
+#    This file is a temporary database for eCos package information.
+#    It replaces the old packages and targets files, and will in turn
+#    be subsumed by another file containing more inormation.
+#
+#=============================================================================
+#####ECOSGPLCOPYRIGHTBEGIN####
+## -------------------------------------------
+## This file is part of eCos, the Embedded Configurable Operating System.
+## Copyright (C) 1998, 1999, 2000, 2001, 2002 Red Hat, Inc.
+## Copyright (C) 2004 eCosCentric Limited
+##
+## eCos is free software; you can redistribute it and/or modify it under
+## the terms of the GNU General Public License as published by the Free
+## Software Foundation; either version 2 or (at your option) any later version.
+##
+## eCos is distributed in the hope that it will be useful, but WITHOUT ANY
+## WARRANTY; without even the implied warranty of MERCHANTABILITY or
+## FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+## for more details.
+##
+## You should have received a copy of the GNU General Public License along
+## with eCos; if not, write to the Free Software Foundation, Inc.,
+## 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+##
+## As a special exception, if other files instantiate templates or use macros
+## or inline functions from this file, or you compile this file and link it
+## with other works to produce a work based on this file, this file does not
+## by itself cause the resulting work to be covered by the GNU General Public
+## License. However the source code for this file must still be made available
+## in accordance with section (3) of the GNU General Public License.
+##
+## This exception does not invalidate any other reasons why a work based on
+## this file might be covered by the GNU General Public License.
+## -------------------------------------------
+#####ECOSGPLCOPYRIGHTEND####
+#=============================================================================
+######DESCRIPTIONBEGIN####
+#
+# Author(s):	bartv
+# Date:		1999-06-13
+#
+# This file contains three lots of information. It details the packages
+# in the component repository, the target boards supported by those
+# packages, and a set of templates that can be used to instantiate
+# configuration.
+# 
+#####DESCRIPTIONEND####
+#===============================================================================
+
+
+# --------------------------------------------------------------------------
+# SOPC targets
+
+package CYGPKG_ALTERA_AVALON_UART {
+    alias 	      { "Altera Avalon UART driver" }
+    hardware
+    directory	      devs/serial/sopc/altera_avalon_uart
+    script	      altera_avalon_uart.cdl	
+    description       "Altera Avalon UART driver"
+}
+
+package CYGPKG_ALTERA_AVALON_JTAG_UART {
+    alias 	      { "Altera Avalon JTAG UART driver" }
+    hardware
+    directory	      devs/serial/sopc/altera_avalon_jtag_uart
+    script	      altera_avalon_jtag_uart.cdl	
+    description       "Altera Avalon JTAG UART driver"
+}
+
+package CYGPKG_ALTERA_AVALON_LAN91C111 {
+    alias 	      { "Altera Avalon LAN91C111 driver" }
+    hardware
+    directory	      devs/eth/sopc/altera_avalon_lan91c111
+    script	      altera_avalon_lan91c111.cdl	
+    description       "Altera Avalon LAN91C111 driver"
+}
+
+package CYGPKG_ALTERA_AVALON_AM29LV065D_FLASH {
+    alias 	      { "Altera Avalon AM29LV065D flash driver" }
+    hardware
+    directory	      devs/flash/sopc/altera_avalon_am29lv065d_flash
+    script	      altera_avalon_am29lv065d_flash.cdl	
+    description       "Altera Avalon AM29LV065D flash driver"
+}
+
+package CYGPKG_ALTERA_AVALON_LCD_16207 {
+    alias 	      { "Altera Avalon LCD 16207 driver" }
+    hardware
+    directory	      devs/serial/sopc/altera_avalon_lcd_16207
+    script	      altera_avalon_lcd_16207.cdl	
+    description       "Altera Avalon LCD 16207 driver"
+}
+
+package CYGPKG_ALTERA_AVALON_CF {
+    alias 	      { "Altera Avalon Compact Flash Driver" }
+    hardware
+    directory	      devs/disk/sopc/altera_avalon_cf
+    script	      altera_avalon_cf.cdl	
+    description       "Altera Avalon CF driver"
+}
+
+package CYGPKG_HAL_SOPC {
+        alias		{ "HAL SOPC drivers" }
+	directory	hal/sopc/common
+	script		hal_sopc.cdl
+	description "
+Drivers contained within this package use automatic configuartion 
+information derived from an associated SOPC builder project."
+}
+
+package CYGPKG_ALTERA_AVALON_UART_COMM {
+    alias 	      { "Altera Avalon UART comm driver" }
+    hardware
+    directory	      hal/sopc/altera_avalon_uart_comm
+    script	      altera_avalon_uart_comm.cdl	
+    description       "Altera Avalon UART comm driver"
+}
+
+package CYGPKG_ALTERA_AVALON_JTAG_UART_COMM {
+    alias 	      { "Altera Avalon JTAG UART comm driver" }
+    hardware
+    directory	      hal/sopc/altera_avalon_jtag_uart_comm
+    script	      altera_avalon_jtag_uart_comm.cdl	
+    description       "Altera Avalon JTAG UART comm driver"
+}
+
+package CYGPKG_ALTERA_AVALON_TIMER {
+    alias 	      { "Altera Avalon Timer driver" }
+    hardware
+    directory	      hal/sopc/altera_avalon_timer
+    script	      altera_avalon_timer.cdl	
+    description       "Altera Avalon Timer driver"
+}
+
+
+package CYGPKG_DEVS_ETH_OPENCORES_ETHERMAC {
+        alias           { "opencore's ethermac support" devs_eth_opencores_ethermac }
+        hardware
+        directory       devs/eth/opencores/ethermac
+        script          opencores_ethermac_drivers.cdl
+        description "This package contains hardware support for Opencores
+                     ethermac."
+}
+
+package CYGPKG_DEVS_ETH_NIOS_OPENCORES_PHI {
+        alias           { "ethernet support for opencores on Zylin ZY1010 NIOS" devs_eth_nios_opencores_phi }
+	hardware
+	directory       devs/eth/nios/opencores/phi
+	script          phi_opencores_ethmac_drivers.cdl
+	description	"This package contains hardware support for Opencores Ethermac
+		    ethernet device on Phi."
+}
+
+
+
+# --------------------------------------------------------------------------
+# Nios II targets
+
+package CYGPKG_HAL_NIOS2 {
+	alias		{ "Nios II common HAL"}
+	directory	hal/nios2/arch/
+	script		hal_nios2.cdl
+	hardware
+	description "
+    	    The Nios II architecture HAL package provides generic support
+    	    for this processor architecture. It is also necessary to
+    	    select a specific target platform HAL package."
+}
+
+
+target nios2_dev_board {
+        alias		{ "Nios II Development Board (Altera)" }
+	packages        { CYGPKG_HAL_NIOS2
+                          CYGPKG_HAL_SOPC
+                          CYGPKG_ALTERA_AVALON_UART_COMM
+                          CYGPKG_ALTERA_AVALON_JTAG_UART_COMM
+                          CYGPKG_ALTERA_AVALON_UART
+                          CYGPKG_ALTERA_AVALON_JTAG_UART
+                          CYGPKG_ALTERA_AVALON_TIMER
+		          CYGPKG_DEVS_ETH_SMSC_LAN91CXX
+                          CYGPKG_ALTERA_AVALON_LAN91C111
+                          CYGPKG_ALTERA_AVALON_LCD_16207
+                          CYGPKG_ALTERA_AVALON_CF
+                          CYGPKG_ALTERA_AVALON_AM29LV065D_FLASH
+                          CYGPKG_DEVS_FLASH_AMD_AM29XXXXX
+        }
+        description "
+            This target provides the packages needed to run
+            eCos on a Nios II. In addition, components are included
+            which support the flash devices found on the Altera
+            Nios II development boards."
+}
+
+target nios2 {
+        alias		{ "Nios II Generic" }
+	packages        { CYGPKG_HAL_NIOS2
+                          CYGPKG_HAL_SOPC
+                          CYGPKG_ALTERA_AVALON_UART_COMM
+                          CYGPKG_ALTERA_AVALON_JTAG_UART_COMM
+                          CYGPKG_ALTERA_AVALON_UART
+                          CYGPKG_ALTERA_AVALON_JTAG_UART
+                          CYGPKG_ALTERA_AVALON_TIMER
+		          CYGPKG_DEVS_ETH_SMSC_LAN91CXX
+                          CYGPKG_ALTERA_AVALON_LAN91C111
+                          CYGPKG_ALTERA_AVALON_LCD_16207
+                          CYGPKG_ALTERA_AVALON_CF
+        }
+        description "
+            This target provides the packages needed to run
+            eCos on any Nios II system."
+}
+
+
+target nios2_neek {
+        alias		{ "Base NEEK board" }
+	packages        { CYGPKG_HAL_NIOS2
+                          CYGPKG_HAL_SOPC
+                          CYGPKG_ALTERA_AVALON_UART_COMM
+                          CYGPKG_ALTERA_AVALON_JTAG_UART_COMM
+                          CYGPKG_ALTERA_AVALON_UART
+                          CYGPKG_ALTERA_AVALON_JTAG_UART
+                          CYGPKG_ALTERA_AVALON_TIMER
+                          CYGPKG_ALTERA_AVALON_AM29LV065D_FLASH
+                          CYGPKG_DEVS_FLASH_AMD_AM29XXXXX
+        }
+        description "
+            Base NEEK Board"
+}
+
+
