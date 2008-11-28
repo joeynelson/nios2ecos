@@ -1,0 +1,4 @@
+2008-11-29 oyvind.harboe@zylin.com
+	- allow TxNum to be set to 1(useful for test purposes)
+	- tx/rxnum no longer needs to be powers of two
+	- cache lines are now flushed for buffer rather than *all* of the cache.

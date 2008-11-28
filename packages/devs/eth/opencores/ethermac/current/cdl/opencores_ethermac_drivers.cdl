@@ -93,7 +93,7 @@ cdl_package CYGPKG_DEVS_ETH_OPENCORES_ETHERMAC {
     cdl_option CYGINT_DEVS_ETH_OPENCORES_ETHERMAC_TxNUM {
         display       "Number of output buffers"
         flavor        data
-        legal_values  2 to 64
+        legal_values  1 to 64
         default_value 4
         description   "
             This option specifies the number of output buffer packets

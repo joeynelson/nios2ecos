@@ -229,7 +229,7 @@ static void openeth_start( struct eth_drv_sc *sc, unsigned char *enaddr, int fla
   }
 
   /* Enable receiver and transmiter  */
-  OETH_REGORIN(regs->moder , OETH_MODER_RXEN | OETH_MODER_TXEN);  //regs->moder |= OETH_MODER_RXEN | OETH_MODER_TXEN;
+  OETH_REGORIN(regs->moder , OETH_MODER_RXEN | ((OETH_TXBD_NUM>1)?OETH_MODER_TXEN:0));  //regs->moder |= OETH_MODER_RXEN | OETH_MODER_TXEN;
 }
 
 
@@ -345,7 +345,7 @@ static void oeth_tx(struct eth_drv_sc *sc)
 
   //db_printf ("oeth_tx()\n");
 
-  for (;; cep->tx_last = (cep->tx_last + 1) & OETH_TXBD_NUM_MASK) {
+  for (;; cep->tx_last = (cep->tx_last + 1) % OETH_TXBD_NUM) {
 
     bdp = cep->tx_bd_base + cep->tx_last;
     OETH_REGLOAD(bdp->len_status,status);
@@ -614,7 +614,7 @@ static void openeth_send(struct eth_drv_sc *sc,
   OETH_REGLOAD(bdp->len_status,status);
   OETH_REGSAVE(bdp->len_status , (status & 0x0000ffff) | (total_len << 16));   //bdp->len_status = (bdp->len_status & 0x0000ffff) | (skb->len << 16);
 
-  cep->tx_next = (cep->tx_next + 1) & OETH_TXBD_NUM_MASK;
+  cep->tx_next = (cep->tx_next + 1) % OETH_TXBD_NUM;
 
   if (cep->tx_next == cep->tx_last)
     cep->tx_full = 1;
@@ -624,8 +624,20 @@ static void openeth_send(struct eth_drv_sc *sc,
   HAL_DCACHE_FLUSH(bdp->addr, total_len );
 #endif
 
+  /* KLUDGE!!!! there is something wrong with buffer descriptors,
+   * start/stop receive wif we are using only one descriptor */
+  if (OETH_TXBD_NUM==1)
+  {
+	  OETH_REGANDIN(cep->regs->moder , ~OETH_MODER_TXEN);
+  }
+
   /* Send it on its way.  Tell controller its ready, interrupt when done, and to put the CRC on the end.  */
   OETH_REGORIN(bdp->len_status , (OETH_TX_BD_READY | OETH_TX_BD_IRQ | OETH_TX_BD_CRC)); //bdp->len_status |= (OETH_TX_BD_READY | OETH_TX_BD_IRQ | OETH_TX_BD_CRC);
+
+  if (OETH_TXBD_NUM==1)
+  {
+	  OETH_REGORIN(cep->regs->moder , OETH_MODER_TXEN);
+  }
   return;
 }
 
@@ -799,17 +811,16 @@ static void openeth_rxready(struct eth_drv_sc *sc) {
 
 		//diag_printf("rx=%d",cep->rx_cur);
 
-#ifdef CYGPKG_DEVS_ETH_OPENCORES_ETHERMAC_FLUSH
-    	/* the DMA will read memory directly.. */
-    	HAL_DCACHE_FLUSH(bdp->addr, pkt_len );
-#endif
-
-
 		(sc->funs->eth_drv->recv)( sc, pkt_len );
 		//diag_printf("\n");
     }
 
     cep->rx_cur=(cep->rx_cur + 1) & OETH_RXBD_NUM_MASK;
+
+#ifdef CYGPKG_DEVS_ETH_OPENCORES_ETHERMAC_FLUSH
+   	/* the DMA will fill the memory, so we must invalidate the cache lines. */
+    HAL_DCACHE_INVALIDATE(bdp->addr, pkt_len );
+#endif
 
     OETH_REGSAVE(bdp->len_status , OETH_RX_BD_EMPTY | OETH_RX_BD_IRQ | ((cep->rx_cur==0)?OETH_RX_BD_WRAP:0)); //bdp->len_status &= ~OETH_RX_BD_STATS;
   }
@@ -1021,6 +1032,7 @@ bool openeth_device_init(struct eth_drv_sc *sc, cyg_uint32 idx, cyg_uint32 base,
 
   /* Promisc, IFG, CRCEn, do not receive small packets */
   OETH_REGSAVE(regs->moder , OETH_MODER_HUGEN | OETH_MODER_PAD | OETH_MODER_IFG | OETH_MODER_CRCEN); //regs->moder |= OETH_MODER_PAD | OETH_MODER_IFG | OETH_MODER_CRCEN;
+
   OETH_REGANDIN(regs->moder , ~OETH_MODER_FULLD); // ensure half duplex
 
   /* Enable interrupt sources. */
