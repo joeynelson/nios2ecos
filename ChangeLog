@@ -1,3 +1,8 @@
+2008-12-01 Graham Henderson <graham615@yahoo.com>
+
+	* contributed first cut of TSE and SGMA driver. Wip, needs
+	testing + it won't compile out of the box...
+	 
 2008-11-27 Øyvind Harboe <oyvind.harboe@zylin.com>
 
 	* Started Nios2 eCos repository, tools & docs
