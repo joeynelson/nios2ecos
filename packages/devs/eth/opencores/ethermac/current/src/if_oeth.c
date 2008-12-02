@@ -791,12 +791,12 @@ static void openeth_rxready(struct eth_drv_sc *sc) {
 	/* discard manually. Why???? The hw should do this for us!!!  */
 	if (pkt_len < 64)
 	{
-//	    diag_printf ("openeth: manual discard error\n");
+	    diag_printf ("openeth: manual discard error\n");
 	    cep->stats.rx_crc_errors++;
 		bad=1;
 	} else if (status & OETH_RX_BD_MISS)
 	{
-//		diag_printf ("openeth: miss error\n");
+		diag_printf ("openeth: miss error\n");
 	    cep->stats.rx_crc_errors++;
 	    bad = 1;
 	}

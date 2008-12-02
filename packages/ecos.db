@@ -156,21 +156,22 @@ package CYGPKG_DEVS_ETH_NIOS_OPENCORES_PHI {
 }
 
 
-package CYGPKG_ALTERA_AVALON_TSE {
-    alias           { "Altera Avalon Triple Speed Ethernet driver" }
-    hardware
-    directory          devs/eth/sopc/altera_avalon_tse
-    script          altera_avalon_tse.cdl
-    description       "Altera Avalon Triple Speed Ethernet driver"
-}
+#package CYGPKG_ALTERA_AVALON_TSE {
+#    alias           { "Altera Avalon Triple Speed Ethernet driver" }
+#    hardware
+#    directory          devs/eth/sopc/altera_avalon_tse
+#    script          altera_avalon_tse.cdl
+#    description       "Altera Avalon Triple Speed Ethernet driver"
+#}
+#
+#package CYGPKG_ALTERA_AVALON_SGDMA {
+#    alias           { "Altera Avalon SGDMA driver" }
+#    hardware
+#    directory          devs/dma/sopc/altera_avalon_sgdma
+#    script          altera_avalon_sgdma.cdl
+#    description       "Altera Avalon SG DMA driver"
+#}
 
-package CYGPKG_ALTERA_AVALON_SGDMA {
-    alias           { "Altera Avalon SGDMA driver" }
-    hardware
-    directory          devs/dma/sopc/altera_avalon_sgdma
-    script          altera_avalon_sgdma.cdl
-    description       "Altera Avalon SG DMA driver"
-}
 # --------------------------------------------------------------------------
 # Nios II targets
 
