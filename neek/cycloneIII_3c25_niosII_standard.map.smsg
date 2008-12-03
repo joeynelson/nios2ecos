@@ -1,2 +1,0 @@
-Info (10281): Verilog HDL Declaration information at eth_avalon_rxdma.v(47): object "rx_eop" differs only in case from object "RX_EOP" in the same scope
-Warning (10262): Verilog HDL Event Control warning at pll.v(101): event expression is a constant
