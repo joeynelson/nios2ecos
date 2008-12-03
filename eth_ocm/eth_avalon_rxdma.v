@@ -45,6 +45,7 @@ module  eth_avalon_rxdma   #(  parameter FIFO_DEPTH = 4096) (
     input       [8:0]   rx_err,             //error bits
     input               rx_sop,             //start of data packet
     input               rx_eop,             //end of data packet
+    input               rx_abort,           //abort packet
 
     //Interrupt outputs
     output  reg         RxB_IRQ,
@@ -113,7 +114,8 @@ reg     [15:0]  len;        //Length counter
 reg     [5:0]   state;      //One-hot state machine bits
 wire    [1:0]   cnt;        //Valid byte count (out of FIFO);
 wire            eop;        //End of packet flag (out of FIFO)
-wire            err_r;
+wire            abort;      //Abort flag (out of FIFO)
+reg             err_r;
 
 reg             first_write;//First write to memory
 wire    [3:0]   lsb_be;     //LSB byteenable (First write)
@@ -149,6 +151,7 @@ reg     [1:0]   rx_cnt;     // # of valid bytes in data word
 reg             rx_wr;      // indicates normal write to FIFO
 wire            rx_rdy;     // indicates FIFO is ready to receive (not full)
 reg             rx_overrun; // an overrun as occurred
+reg             rx_abort_r; // latch rx_abort flag at end of packet
 wire    [8:0]   rx_res;     // RX result (errors and status)
 
 //*****************************************************************************
@@ -169,7 +172,7 @@ always @(posedge clk)
 //*****************************************************************************
 //************************** DMA Interface Logic ******************************
 
-assign  err_r       = dff_dout_r [35];
+assign  abort       = dff_dout_r [35];
 assign  eop         = dff_dout   [34];
 assign  cnt         = dff_dout   [33:32];
 
@@ -241,7 +244,7 @@ always @(posedge clk)
 //****************************************************************************
 //********************** Descriptor Interface Logic **************************
 assign  bd_read     = state[ST_BD_RD];
-assign  bd_write    = state[ST_BD_WR];
+assign  bd_write    = state[ST_BD_WR] & ~abort;
 assign  bd_writedata= {len[15:0],1'b0,desc[BIT_IRQ:BIT_WRAP],4'b000,eff_dout_r};
 
 //Load pointer and descriptor data in BD Read state
@@ -251,8 +254,10 @@ always @(posedge clk) begin
 end
 
 always @(posedge clk)
-    if(state[ST_DMA2 ] & valid_rx_wr)   
+    if(state[ST_DMA2 ] & valid_rx_wr)  begin  
                                 eff_dout_r  <= eff_dout;
+                                err_r       <= |{eff_dout[8:3],eff_dout[1:0]};
+    end
 
 //bd_index decoder
 always @(posedge clk or posedge reset)
@@ -272,7 +277,7 @@ always @(posedge clk or posedge reset)
     end else begin              
                                 RxE_IRQ <= 1'b0;
                                 RxB_IRQ <= 1'b0;              
-        if(state[ST_BD_WR ] & ~bd_wait)  begin
+        if(bd_write & ~bd_wait)  begin
                                 RxE_IRQ <= desc[BIT_IRQ] & err_r;
                                 RxB_IRQ <= desc[BIT_IRQ] & ~err_r;
         end 
@@ -382,6 +387,11 @@ always @(posedge rxclk or posedge reset)
     else if(rx_state[RX_REC])           rx_overrun      <= rx_dv & ~rx_rdy;
     else if(rx_state[RX_EOP] & rx_rdy)  rx_overrun      <= 1'b0;      
 
+always @(posedge rxclk)
+    if(rx_state[RX_IDLE])               rx_abort_r      <= 1'b0;
+    else if(rx_state[RX_REC] | rx_state[RX_DISC])
+                                        rx_abort_r      <= rx_dv & rx_eop & rx_abort;
+
 //We'll allow this to overrun
 always @(posedge rxclk or posedge reset)
     if(reset)                               rx_cnt      <= 2'd0;
@@ -407,7 +417,7 @@ always @(posedge rxclk or posedge reset)
 
 //We'll alow these to overrun
 always @* begin             dff_stat[2]     = rx_state[RX_EOP ];
-    if(rx_state[RX_EOP])    dff_stat[3]     = |{rx_res[8:3],rx_res[1:0]};
+    if(rx_state[RX_EOP])    dff_stat[3]     = rx_abort_r;
     else                    dff_stat[3]     = 1'b0;
 end
 

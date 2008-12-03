@@ -1,2 +1,5 @@
+2008-12-03 jakobjones
+	* RX fixes: aborted packets are now discarded by hw
+	* TX fixes: problems with packets not being put onto the wire
 2008-12-03 Øyvind Harboe
 	* committed eth_ocm_80_2.zip

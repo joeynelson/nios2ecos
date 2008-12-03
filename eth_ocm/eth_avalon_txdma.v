@@ -341,7 +341,7 @@ eth_dc_reg stat_ack_dc_reg(
 //words in the FIFO or when the DMA transfer
 //has finished.
 eth_dc_reg tx_start_dc_reg(
-	.d      ((dff_wrused >= 8) | state[ST_DMA2]   ),
+	.d      ((dff_wrused >= 8) | (state[ST_DMA2] & ~first_write) ),
 	.inclk  (clk            ),
 	.outclk (txclk          ),
 	.reset  (reset          ),

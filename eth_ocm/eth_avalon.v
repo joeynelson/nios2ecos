@@ -292,6 +292,7 @@ eth_avalon_rxdma    #(.FIFO_DEPTH(RX_FIFO_DEPTH)    )   eth_rxdma_inst(
     .rx_err             (RxStatus_r         ),  // error bits
     .rx_sop             (RxStartFrm         ),  // start of data packet
     .rx_eop             (RxEndFrm | RxAbort ),  // end of data packet
+    .rx_abort           (RxAbort            ),  // abort packet
 
     //Interrupt outputs
     .RxB_IRQ            (RxB_IRQ            ),  // Receive success IRQ
