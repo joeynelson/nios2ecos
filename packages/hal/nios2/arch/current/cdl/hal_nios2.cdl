@@ -79,6 +79,21 @@ cdl_package CYGPKG_HAL_NIOS2 {
     implements    CYGINT_HAL_VIRTUAL_VECTOR_SUPPORT
     implements    CYGINT_HAL_DEBUG_GDB_STUBS
     implements    CYGINT_HAL_DEBUG_GDB_STUBS_BREAK
+    
+	implements CYGINT_PROFILE_HAL_TIMER
+
+
+    cdl_option CYGPKG_HAL_NIOS2_CFLAGS_ADD {
+        display       "Additional compiler flags"
+        flavor        data
+        no_define
+        default_value { "-I`cygpath -u $$QUARTUS_ROOTDIR`/../ip/altera/sopc_builder_ip/altera_avalon_timer/inc  -I$(PREFIX)/include/cyg/hal" }
+        description   "
+            Extra compilation flags for HAL
+            These flags are used in addition
+            to the set of global flags."
+    }
+
 
 #
 #   Provide the rule used to construct the vectors.o object file. This file

@@ -72,8 +72,8 @@ void hal_platform_init(void)
 
 #ifndef CYGSEM_HAL_USE_ROM_MONITOR
   hal_vsr_table[0] = (CYG_ADDRWORD) &_software_exception_handler;
-#endif // CYGSEM_HAL_USE_ROM_MONITOR 
-  hal_vsr_table[1] = (CYG_ADDRWORD) &_interrupt_handler; 
+#endif // CYGSEM_HAL_USE_ROM_MONITOR
+  hal_vsr_table[1] = (CYG_ADDRWORD) &_interrupt_handler;
 
 }
 
@@ -88,7 +88,7 @@ cyg_uint32 cyg_hal_exception_handler(HAL_SavedRegisters *regs)
   // Set the pointer to the registers of the current exception
   // context. At entry the GDB stub will expand the
   // HAL_SavedRegisters structure into a (bigger) register array.
-   
+
   _hal_registers = regs;
   __handle_exception();
 
@@ -159,7 +159,7 @@ void hal_copy_data(void)
     *p++ = *q++;
   }
 
-  // Copy the exception handler if necessary 
+  // Copy the exception handler if necessary
 
   p = (char *)&__ram_exc_start;
   q = (char *)&__rom_exc_start;
@@ -182,7 +182,7 @@ cyg_uint32 hal_lsbit_index(cyg_uint32 mask)
   cyg_uint32 n = mask;
 
   static const signed char tab[64] =
-  { 
+  {
     -1, 0, 1, 12, 2, 6, 0, 13, 3, 0, 7, 0, 0, 0, 0, 14, 10,
      4, 0, 0, 8, 0, 0, 25, 0, 0, 0, 0, 0, 21, 27 , 15, 31, 11,
      5, 0, 0, 0, 0, 0, 9, 0, 0, 24, 0, 0 , 20, 26, 30, 0, 0, 0,
@@ -198,7 +198,7 @@ cyg_uint32 hal_lsbit_index(cyg_uint32 mask)
 }
 
 //------------------------------------------------------------------------
-// Determine the index of the ms bit of the supplied mask.                
+// Determine the index of the ms bit of the supplied mask.
 
 cyg_uint32 hal_msbit_index(cyg_uint32 mask)
 {
@@ -230,16 +230,16 @@ void hal_delay_us(int us)
   int i;
   int big_loops;
   unsigned int cycles_per_loop;
-  
+
   if (!__builtin_strcmp(NIOS2_CPU_IMPLEMENTATION,"tiny"))
   {
     cycles_per_loop = 9;
   }
-  else  
+  else
   {
     cycles_per_loop = 3;
   }
-  
+
   big_loops = us / (INT_MAX/
   (ALT_CPU_FREQ/(cycles_per_loop * 1000000)));
 
@@ -248,7 +248,7 @@ void hal_delay_us(int us)
     for(i=0;i<big_loops;i++)
     {
       //
-      // Do NOT Try to single step the asm statement below 
+      // Do NOT Try to single step the asm statement below
       // (single step will never return)
       // Step out of this function or set a breakpoint after the asm statements
       //
@@ -258,7 +258,7 @@ void hal_delay_us(int us)
     }
 
     //
-    // Do NOT Try to single step the asm statement below 
+    // Do NOT Try to single step the asm statement below
     // (single step will never return)
     // Step out of this function or set a breakpoint after the asm statements
     //
@@ -267,7 +267,7 @@ void hal_delay_us(int us)
   else
   {
     //
-    // Do NOT Try to single step the asm statement below 
+    // Do NOT Try to single step the asm statement below
     // (single step will never return)
     // Step out of this function or set a breakpoint after the asm statements
     //
@@ -291,7 +291,7 @@ cyg_hal_invoke_constructors(void)
 {
 #ifdef CYGSEM_HAL_STOP_CONSTRUCTORS_ON_FLAG
   static pfunc *p = &__CTOR_END__[-1];
-    
+
   cyg_hal_stop_constructors = 0;
   for (; p >= __CTOR_LIST__; p--) {
       (*p) ();
@@ -324,6 +324,90 @@ void hal_idle_thread_action( cyg_uint32 count )
 void cyg_hal_plf_comms_init(void)
 {
 }
+
+
+#ifdef CYGPKG_PROFILE_GPROF
+//--------------------------------------------------------------------------
+//
+// Profiling support - uses a separate high-speed timer
+//
+
+#include <cyg/hal/hal_arch.h>
+#include <cyg/hal/hal_intr.h>
+#include <cyg/hal/system.h>
+#include <cyg/profile/profile.h>
+#include <altera_avalon_timer_regs.h>
+
+
+
+
+/*---------------------------------------------------------------------
+ * hal_clock_initialize
+ *
+ * Initialise the timer device. The period used is the period defined in the
+ * SOPC builder project.
+ */
+
+void hal_clock_initialize1 (cyg_uint32 _period_)
+{
+  IOWR_ALTERA_AVALON_TIMER_CONTROL(HIGH_RES_TIMER_BASE,
+            ALTERA_AVALON_TIMER_CONTROL_ITO_MSK  |
+            ALTERA_AVALON_TIMER_CONTROL_CONT_MSK |
+            ALTERA_AVALON_TIMER_CONTROL_START_MSK);
+}
+
+/*---------------------------------------------------------------------
+ * hal_clock_reset
+ *
+ * hal_clock_reset() is called by the interrupt service routine to clear an
+ * interrupt for this device.
+ */
+
+void hal_clock_reset1 (cyg_uint32 _vector_, cyg_uint32 _period_)
+{
+  IOWR_ALTERA_AVALON_TIMER_STATUS (HIGH_RES_TIMER_BASE, 0);
+}
+
+
+// Can't rely on Cyg_Interrupt class being defined.
+#define Cyg_InterruptHANDLED 1
+
+static int  profile_period  = 0;
+
+// Profiling timer ISR
+static cyg_uint32
+profile_isr(CYG_ADDRWORD vector, CYG_ADDRWORD data, HAL_SavedRegisters *regs)
+{
+    //__profile_hit(address);
+	__profile_hit(regs->pc);
+
+	/* we don't want to starve normal execution completely, so
+	 * restart timer after we've done the work.
+	 */
+	hal_clock_reset1(HIGH_RES_TIMER_IRQ, profile_period);
+    HAL_INTERRUPT_ACKNOWLEDGE(HIGH_RES_TIMER_IRQ);
+
+    return Cyg_InterruptHANDLED;
+}
+
+int
+hal_enable_profile_timer(int resolution)
+{
+    // Run periodic timer interrupt for profile
+    // The resolution is specified in us
+
+
+	// Set period and enable timer interrupts
+    hal_clock_initialize1(0);
+
+    // Attach ISR.
+    HAL_INTERRUPT_ATTACH(HIGH_RES_TIMER_IRQ, &profile_isr, 0x1111, 0);
+    HAL_INTERRUPT_UNMASK(HIGH_RES_TIMER_IRQ);
+
+
+    return resolution;
+}
+#endif
 
 //------------------------------------------------------------------------
 // End of hal_misc.
