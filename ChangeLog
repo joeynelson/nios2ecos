@@ -1,3 +1,10 @@
+2008-12-04 Øyvind Harboe <oyvind.harboe@zylin.com>
+
+	* devs/eth/opencores/ethermac/current/src/if_oeth.c: update
+	driver error handling to match fixed HDL code.
+	* hal/nios2/arch/current/src/hal_misc.c+vector.S: fix 
+	profiling. 
+
 2008-12-01 Graham Henderson <graham615@yahoo.com>
 
 	* contributed first cut of TSE and SGMA driver. Wip, needs

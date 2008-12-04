@@ -44,7 +44,7 @@
 #include <pkgconf/hal.h>
 
 /*
- * Set up some useful defines that locate the top and the bottom of the 
+ * Set up some useful defines that locate the top and the bottom of the
  * initial/interrupt stack.
  */
 
@@ -61,8 +61,8 @@
     /*
      * GCC 3.4.1 defines a C++ exception handler that is incompatible with eCos.
      * To avoid pulling this in, an alternative is provided here.
-     */ 
-	
+     */
+
 #if __GNUC__ == 3
 #if __GNUC_MINOR__ == 4
 #if __GNUC_PATCHLEVEL__ == 1
@@ -74,13 +74,13 @@
      * ========================================================================
      * _hardware_reset
      *
-     * This is the reset entry point for Nios II. 
+     * This is the reset entry point for Nios II.
      *
      * At reset, only the cache line which contain the reset vector is
      * initialized. Therefore the code within the first cache line is required
-     * to initialize the instruction cache for the remainder of the code. 
+     * to initialize the instruction cache for the remainder of the code.
      *
-     * Note that the automatically generated linker script requires that 
+     * Note that the automatically generated linker script requires that
      * the .init section is less than 0x20 bytes long.
      */
 
@@ -89,7 +89,7 @@
 
     /*
      * Some tools want to know where the reset vector is.
-     */ 
+     */
 
     .globl _hardware_reset
 
@@ -109,17 +109,17 @@ _hardware_reset:
 
 #if NIOS2_ICACHE_SIZE > 0
 
-    /* 
+    /*
      * The assumption here is that the instruction cache size is always
      * a power of two.
      */
 
 #if NIOS2_ICACHE_SIZE > 0x8000
     movhi r1, %hi(NIOS2_ICACHE_SIZE)
-#else 
+#else
     movui r1, NIOS2_ICACHE_SIZE
 #endif
-    
+
     movui r2, NIOS2_ICACHE_LINE_SIZE
 
 0:
@@ -128,7 +128,7 @@ _hardware_reset:
     bgt r1, zero, 0b
 #endif /* NIOS2_ICACHE_SIZE > 0 */
 
-    /* 
+    /*
      * Having initialised the cache, call the entry point for the .text
      * section.
      */
@@ -161,7 +161,7 @@ _start:
 
 #if NIOS2_DCACHE_SIZE > 0
 
-    /* 
+    /*
      * The assumption here is that the data cache size is always
      * a power of two.
      */
@@ -180,8 +180,8 @@ _start:
 
 #endif /* NIOS2_DCACHE_SIZE > 0 */
 
-    /* 
-     * Now that the caches have been cleaned, set up the stack pointer. 
+    /*
+     * Now that the caches have been cleaned, set up the stack pointer.
      * The value is assumed to be correctly aligned.
      */
 
@@ -196,10 +196,10 @@ _start:
     /*
      * Clear bss.
      *
-     * This uses the symbols: __bss_start and __bss_end, which are defined 
-     * by the linker script. They mark the begining and the end of the bss 
-     * region. The linker script guarantees that these values are word 
-     * aligned. 
+     * This uses the symbols: __bss_start and __bss_end, which are defined
+     * by the linker script. They mark the begining and the end of the bss
+     * region. The linker script guarantees that these values are word
+     * aligned.
      */
 
     movhi r1, %hiadj(__bss_start)
@@ -220,7 +220,7 @@ _start:
 #ifdef CYG_HAL_STARTUP_ROM
 
     /*
-     * When running from flash, the initial values for the read/write 
+     * When running from flash, the initial values for the read/write
      * data must be copied to RAM.
      */
 
@@ -228,7 +228,7 @@ _start:
     call hal_copy_data
 #endif /* CYG_HAL_STARTUP_ROM */
 
-     /* 
+     /*
       * Call the platform initialisation. This initialises the virtual
       * vector and VSR tables.
       */
@@ -248,7 +248,7 @@ _start:
     call    initialize_stub
 #endif
 
-     /* 
+     /*
       * Initialise ctrl-C support. This is used to implement the gdb
       * 'stop'.
       */
@@ -282,12 +282,12 @@ _cyg_start_end:
 
 _exception_vector:
 
-    /* 
+    /*
      * First, re-wind so we're pointed to the instruction where the exception
      * occurred.
      */
 
-    addi ea, ea, -4 
+    addi ea, ea, -4
 
     /*
      * Now test to determine the cause of the exception.
@@ -302,7 +302,7 @@ _exception_vector:
     /*
      * Falling through to here means that this was a hardware interrupt.
      * In this case r24 is set to 4 to indicate that this exception
-     * should be handled using the VSR table entry at offset 4. 
+     * should be handled using the VSR table entry at offset 4.
      * In the case of a software exception, r24 will be left with the
      * value zero.
      */
@@ -341,10 +341,10 @@ _exception_vector:
     .type _interrupt_handler, @function
 _interrupt_handler:
 
-    /* 
-     * Process an external hardware interrupt. 
+    /*
+     * Process an external hardware interrupt.
      *
-     * First, preserve all callee saved registers on 
+     * First, preserve all callee saved registers on
      * the stack. (See the Nios2 ABI documentation for details).
      */
 
@@ -370,6 +370,14 @@ _interrupt_handler:
     stw gp,  8(sp)
     stw r24, 4(sp)
     stw ea,  0(sp)
+
+    /*
+     * Move into r6 a pointer to the current saved registers.
+     *
+     * Do this here so it is accessible by both ISR and interrupt_end
+     */
+
+    mov r6, sp
 
     /*
      * Obtain a bitlist of the pending interrupts.
@@ -466,7 +474,7 @@ _interrupt_handler:
      * Having located the interrupt source, r4 contains the index of the
      * interrupt to be handled.
      *
-     * This is converted into an offset into the handler table, 
+     * This is converted into an offset into the handler table,
      * and stored in r15.
      */
 
@@ -492,7 +500,7 @@ _interrupt_handler:
     add r5, r5, r15
     ldw r5, (r5)
 
-    /* 
+    /*
      * Call the interrupt handler  The input arguments are the interrupt number
      * and the associated data obtained above. Save off r15 explicitly since
      * its a caller-saved register and is used below.
@@ -520,14 +528,14 @@ _interrupt_handler:
     /* Begin DSR processing. */
 
     /*
-     * Move the interrupt handlers return value into r4, so that it is the first 
+     * Move the interrupt handlers return value into r4, so that it is the first
      * input argument to the DSR.
      */
 
     mov r4, r2
 
     /*
-     * Load the interrupt object for DSR processing from the table: 
+     * Load the interrupt object for DSR processing from the table:
      * hal_interrupt_objects. The offset into this table has previously been
      * calculated using the index of the interrupt, and is stored in r15.
      */
@@ -537,26 +545,20 @@ _interrupt_handler:
     add r5, r5, r15
     ldw r5, (r5)
 
-    /*
-     * Move into r6 a pointer to the current saved registers.
-     */
-
-    mov r6, sp
-
-    /* Call the DSR 
+    /* Call the DSR
      *
-     * interrupt_end (isr_ret, intr, regs) ; 
+     * interrupt_end (isr_ret, intr, regs) ;
      */
 
     call interrupt_end
 
-    /* 
+    /*
      * Now that the interrupt processing is complete, prepare to return to
      * the interrupted code.
      */
 
     /*
-     * Restore the saved registers, so that all general purpose registers 
+     * Restore the saved registers, so that all general purpose registers
      * have been restored to their state at the time the interrupt occured.
      */
 
@@ -578,7 +580,7 @@ _interrupt_handler:
     ldw r15, 12(sp)
     ldw gp,  8(sp)
 
-    /* 
+    /*
      * Disable interrupts, so that we can safely update the
      * exception registers.
      */
@@ -635,11 +637,11 @@ _software_exception_handler:
     movhi sp, %hiadj(STACK_BASE)
     addi sp, sp, %lo(STACK_BASE)
 8:
-    ldw r2, -4(r24) 
+    ldw r2, -4(r24)
 
 #endif /* defined(CYGIMP_HAL_COMMON_INTERRUPTS_USE_INTERRUPT_STACK) */
 
-    /* 
+    /*
      * Store all the registers on the stack, so that their current
      * values are available to GDB.
      */
@@ -659,7 +661,7 @@ _software_exception_handler:
     stw r13, 112(sp)
     stw r12, 108(sp)
 
-    /* 
+    /*
      * Read the control registers long before using the results.
      * This avoid pipeline stalls.
      */
@@ -719,7 +721,7 @@ _software_exception_handler:
     addi gp, gp, %lo(_gp)
 
     /*
-     * Pass a pointer to the stack frame as the input argument of the 
+     * Pass a pointer to the stack frame as the input argument of the
      * exception handler
      */
 
@@ -732,8 +734,8 @@ _software_exception_handler:
     .extern cyg_hal_exception_handler
     call    cyg_hal_exception_handler
 
-    /* 
-     * Restore the saved registers, so that all general purpose registers 
+    /*
+     * Restore the saved registers, so that all general purpose registers
      * have been restored to their state at the time the interrupt occured.
      */
 
@@ -794,7 +796,7 @@ _software_exception_handler:
 
     .section .text
     .align 2
-    .globl hal_interrupt_stack_call_pending_DSRs 
+    .globl hal_interrupt_stack_call_pending_DSRs
     .type hal_interrupt_stack_call_pending_DSRs, @function
 
 hal_interrupt_stack_call_pending_DSRs:
@@ -831,7 +833,7 @@ __gccmain:
     /*
      * GCC 3.4.1 defines a C++ exception handler that is incompatible with eCos.
      * To avoid pulling this in, an alternative is provided here.
-     */ 
+     */
 
 	.section .sdata
 	.align 4

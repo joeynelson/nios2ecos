@@ -354,6 +354,7 @@ void hal_clock_initialize1 (cyg_uint32 _period_)
             ALTERA_AVALON_TIMER_CONTROL_ITO_MSK  |
             ALTERA_AVALON_TIMER_CONTROL_CONT_MSK |
             ALTERA_AVALON_TIMER_CONTROL_START_MSK);
+
 }
 
 /*---------------------------------------------------------------------
@@ -378,7 +379,6 @@ static int  profile_period  = 0;
 static cyg_uint32
 profile_isr(CYG_ADDRWORD vector, CYG_ADDRWORD data, HAL_SavedRegisters *regs)
 {
-    //__profile_hit(address);
 	__profile_hit(regs->pc);
 
 	/* we don't want to starve normal execution completely, so
@@ -387,7 +387,7 @@ profile_isr(CYG_ADDRWORD vector, CYG_ADDRWORD data, HAL_SavedRegisters *regs)
 	hal_clock_reset1(HIGH_RES_TIMER_IRQ, profile_period);
     HAL_INTERRUPT_ACKNOWLEDGE(HIGH_RES_TIMER_IRQ);
 
-    return Cyg_InterruptHANDLED;
+	return Cyg_InterruptHANDLED;
 }
 
 int
