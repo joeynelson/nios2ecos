@@ -1,4 +1,7 @@
-2008-12-04 Øyvind Harboe <oyvind.harboe@zylin.com>
+2009-06-15 Edgar Grimberg <edgar.grimberg@zylin.com>
+	* /nios2ecos/packages/hal/nios2/arch/current/cdl/hal_nios2.cdl: tail needs --line in Linux
+	
+2008-12-04 ï¿½yvind Harboe <oyvind.harboe@zylin.com>
 
 	* devs/eth/opencores/ethermac/current/src/if_oeth.c: update
 	driver error handling to match fixed HDL code.
@@ -10,6 +13,6 @@
 	* contributed first cut of TSE and SGMA driver. Wip, needs
 	testing + it won't compile out of the box...
 	 
-2008-11-27 Øyvind Harboe <oyvind.harboe@zylin.com>
+2008-11-27 ï¿½yvind Harboe <oyvind.harboe@zylin.com>
 
 	* Started Nios2 eCos repository, tools & docs
