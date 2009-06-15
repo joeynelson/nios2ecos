@@ -51,8 +51,10 @@ else
 		else
       ptf_name=`echo "$1" | cut -c 7-`
 			cpu_name=`echo "$2" | cut -c 7-` 
-
-			ptf_name=`cygpath -a -u "$ptf_name"`
+			if [ "`uname`" != "Linux" ] 
+			then
+				ptf_name=`cygpath -a -u "$ptf_name"`
+			fi
 
 			if [ -f "$ptf_name" ] 
 			  then
@@ -65,10 +67,11 @@ else
                 echo "Close down the other application before starting this instance. "
 				echo -e "If you are not running nios2configtool or nios2ecosconfig, please delete the \nfile ""$TMP/nios2_auto.cdl"
               else
-		sopc_builder --update_classes_and_exit --no_splash -s --projectpath `cygpath -m $ptf_name`
+				sopc_builder --update_classes_and_exit --no_splash -s --projectpath `cygpath -m $ptf_name`
                 `cygpath -m \`which gtf-generate\`` \
                 --gtf=`cygpath -m $NIOS_ECOS/hal/nios2/arch/current/gtf/nios2_auto.cdl.gtf` \
                 --output-directory=`cygpath -m $TMP` --ptf="$ptf_name" --cpu="$cpu_name" 
+                
 								shift 
 								shift 
                 ecosconfig $* 

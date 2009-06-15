@@ -1,5 +1,7 @@
 2009-06-15 Edgar Grimberg <edgar.grimberg@zylin.com>
 	* /nios2ecos/packages/hal/nios2/arch/current/cdl/hal_nios2.cdl: tail needs --line in Linux
+	* /nios2ecos/packages/hal/nios2/arch/current/host/nios_env.sh and 
+	/nios2ecos/packages/hal/nios2/arch/current/host/nios2ecosconfig Linux friendly modifications 
 	
 2008-12-04 �yvind Harboe <oyvind.harboe@zylin.com>
 
