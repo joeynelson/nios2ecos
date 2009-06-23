@@ -7,14 +7,12 @@
 # 
 # See setup.sh
 
-if [ "`uname`" != "Linux" ] then
-	export CYGWIN=nontsec
-fi
 
 export NIOS_ECOS=`pwd`/../../nios2ecos/packages
 
-if [ "`uname`" != "Linux" ] then
+if [ "`uname`" != "Linux" ]; then
 
+export CYGWIN=nontsec
 # DANGER!!! here we need windows-like paths for compatibility.
 export QUARTUS_ROOTDIR=c:/altera/81/quartus
 export SOPC_KIT_NIOS2=c:/altera/81/nios2eds
@@ -29,6 +27,7 @@ export PATH=$PATH:/cygdrive/c/altera/81/nios2eds/bin/nios2-gnutools/H-i686-pc-cy
 
 else
 
+export TMP=/tmp
 export QUARTUS_ROOTDIR=/opt/altera9.0/quartus
 export SOPC_KIT_NIOS2=/opt/altera9.0/nios2eds
 export PERL5LIB=/usr/bin:/opt/altera9.0/quartus/sopc_builder/bin/perl_lib:/opt/altera9.0/quartus/sopc_builder/bin/europa:/opt/altera9.0/quartus/sopc_builder/bin
