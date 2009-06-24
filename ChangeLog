@@ -1,5 +1,7 @@
-2009-06-15 Edgar Grimberg <edgar.grimberg@zylin.com>
+2009-06-24 Edgar Grimberg <edgar.grimberg@zylin.com>
 	* remove empty folder 
+	* WIP TSE and SGDMA
+	
 2009-06-15 Edgar Grimberg <edgar.grimberg@zylin.com>
 	* Ubuntu does not have TMP defined
 	

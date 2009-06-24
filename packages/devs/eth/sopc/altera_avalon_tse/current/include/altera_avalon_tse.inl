@@ -50,7 +50,11 @@
 
 extern void CYGDAT_TSE_GET_ESA(unsigned char   enaddr[],
                                unsigned short* base,
-                               int             irq);
+                               int             irq)
+{
+	unsigned char   static_esa[] = CYGDAT_TSE_MAC_DEFAULT;
+	memcpy(enaddr, static_esa, 6);
+};
 
 /*
  * Nios Development Boards are programmed on the production line with a unique
@@ -183,8 +187,8 @@ void altera_avalon_tse_get_esa(unsigned char   enaddr[],
 /*
  *
  */
-
-static void altera_avalon_tse_get_esa_wrapper(struct lan91cxx_priv_data* cpd)
+struct tse_priv_data;
+static void altera_avalon_tse_get_esa_wrapper(struct tse_priv_data* cpd)
 {
   CYGDAT_TSE_GET_ESA(cpd->enaddr, cpd->base, cpd->interrupt);
 }
@@ -194,11 +198,12 @@ static void altera_avalon_tse_get_esa_wrapper(struct lan91cxx_priv_data* cpd)
  * devices.h.
  */
 
+
 #define TRIPLE_SPEED_ETHERNET_INSTANCE(name, dev)					\
 static tse_priv_data dev##_priv_data = {                       		\
     config_enaddr : altera_avalon_tse_get_esa_wrapper,        		\
-    base : (name##_BASE + name##_TSE_REGISTERS_OFFSET),       		\
-    interrupt: name##_IRQ                                           \
+    base : (name##_BASE),       		\
+    interrupt: SGDMA_RX_IRQ                                           \
 };                                                                  \
                                                                     \
 ETH_DRV_SC( dev##_sc,                                               \

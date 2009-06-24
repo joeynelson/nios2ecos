@@ -66,7 +66,7 @@
 #include <cyg/hal/hal_io.h>
 #include <cyg/hal/hal_endian.h>
 
-#include <triple_speed_ethernet_regs.h>
+#include <cyg/io/triple_speed_ethernet_regs.h>
 #include <cyg/hal/sopc/altera_avalon_sgdma.h>
 
 /* System Constant Definition Used in the TSE Driver Code */

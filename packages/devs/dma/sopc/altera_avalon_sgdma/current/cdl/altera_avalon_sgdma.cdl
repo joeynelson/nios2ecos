@@ -60,7 +60,7 @@ cdl_package CYGPKG_ALTERA_AVALON_SGDMA {
         display       "Additional compiler flags"
         flavor        data
         no_define
-        default_value { "-I c:/altera/72/ip/sopc_builder_ip/altera_avalon_sgdma/inc -I$(PREFIX)/include/cyg/hal" }
+        default_value { "" }
         description   "
             This option modifies the set of compiler flags for
             building the Altera Avalon SGDMA driver.

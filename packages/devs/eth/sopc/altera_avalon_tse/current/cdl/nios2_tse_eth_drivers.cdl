@@ -56,15 +56,16 @@ cdl_package CYGPKG_DEVS_ETH_NIOS2_TSE {
     parent        CYGPKG_IO_ETH_DRIVERS
     active_if	  CYGPKG_IO_ETH_DRIVERS
 
-    active_if     CYGINT_DEVS_ETH_NIOS2_TSE_REQUIRED
+#    active_if     CYGINT_DEVS_ETH_NIOS2_TSE_REQUIRED
 
-    include_dir   .
-    include_files ; # none _exported_ whatsoever
+    include_dir   cyg/io
+    define_proc {
+        puts $::cdl_system_header "#define CYGDAT_DEVS_ETH_NIOS2_TSE_INL <cyg/io/altera_avalon_tse.inl>"
+    }
     compile       -library=libextras.a if_tse.c
 
     define_proc {
         puts $::cdl_header "#include <pkgconf/system.h>";
-        puts $::cdl_header "#include CYGDAT_DEVS_ETH_NIOS2_TSE_CFG";
     }
 
     cdl_option CYGSEM_DEVS_ETH_NIOS2_TSE_WRITE_EEPROM {
@@ -111,12 +112,23 @@ cdl_package CYGPKG_DEVS_ETH_NIOS2_TSE {
             display "Additional compiler flags"
             flavor  data
             no_define
-            default_value { "-D_KERNEL -D__ECOS -I$(PREFIX)/include/cyg/hal -I c:/altera/72/ip/triple_speed_ethernet/lib/sopc_builder/altera_triple_speed_ethernet/inc" }
+            default_value { "-D_KERNEL -D__ECOS" }
             description   "
                 This option modifies the set of compiler flags for
                 building the Nios-II TSE ethernet driver package.
                 These flags are used in addition
                 to the set of global flags."
         }
+    }
+    
+    cdl_option CYGDAT_TSE_MAC_DEFAULT {
+        display       "MAC address used if none in flash"
+        flavor        data
+        default_value {"{0x12, 0x13, 0x14, 0x15, 0x16, 0x17}"}
+        description   "
+            A static ethernet station address. 
+            Used if this is not an Altera Development Board, or fi there is no MAC address found in the flash by the MAC address function.
+            Caution: Booting two systems with the same MAC on the same
+            network, will cause severe conflicts."
     }
 }

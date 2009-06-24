@@ -103,7 +103,7 @@ int tse_txfifo_good = 0;
 int tse_txfifo_bad = 0;
 #endif
 
-#include "nios2_tse.h"
+#include <cyg/io/nios2_tse.h>
 
 // Set to perms of:
 // 0 disables all debug output
@@ -179,7 +179,7 @@ static void db_printf( char *fmt, ... )
 #define INCR_STAT( _x_ )        CYG_EMPTY_STATEMENT
 #endif
 
-#include "nios2_tse.h"
+#include <cyg/io/nios2_tse.h>
 
 #ifdef LAN91CXX_IS_TSE
 static void tse_write_phy(struct eth_drv_sc *sc, cyg_uint8 phyaddr,

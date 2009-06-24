@@ -48,7 +48,7 @@
 
 #include <cyg/hal/io.h>
 #include <cyg/hal/sopc/altera_avalon_sgdma.h>
-
+#include <cyg/hal/hal_cache.h>
 
 #ifdef CYGPKG_ALTERA_AVALON_SGDMA
 
@@ -612,7 +612,8 @@ void alt_avalon_sgdma_construct_descriptor(
    * individual cache-bypassed writes to take advantage of any
    * burst-capabilities in the memory we're writing to
    */
-  alt_remap_uncached(desc, sizeof(alt_sgdma_descriptor));
+  //alt_remap_uncached(desc, sizeof(alt_sgdma_descriptor));
+  HAL_DCACHE_FLUSH(desc, sizeof(alt_sgdma_descriptor));
 }
 
 /*
