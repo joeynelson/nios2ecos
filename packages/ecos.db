@@ -239,11 +239,19 @@ target nios2_neek {
                           CYGPKG_ALTERA_AVALON_UART
                           CYGPKG_ALTERA_AVALON_JTAG_UART
                           CYGPKG_ALTERA_AVALON_TIMER
-                          CYGPKG_ALTERA_AVALON_AM29LV065D_FLASH
-                          CYGPKG_DEVS_FLASH_AMD_AM29XXXXX
+                          CYGPKG_DEVS_FLASH_NEEK                          
         }
         description "
             Base NEEK Board"
 }
 
 
+package CYGPKG_DEVS_FLASH_NEEK {
+	alias 		{ "FLASH memory support for Altera NEEK board" flash_neek }
+	directory	devs/flash/neek
+	script		flash_neek.cdl
+	hardware
+        description "
+           This package contains hardware support for FLASH memory
+	   on the Altera NEEK platform."
+}
