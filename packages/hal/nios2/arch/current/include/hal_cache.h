@@ -189,7 +189,7 @@ CYG_MACRO_START                                               \
     }                                                         \
                                                               \
     __asm__ volatile ("flushp");                              \
-CYG_MACRO_S
+CYG_MACRO_END
 
 #define HAL_ICACHE_FLUSH( _base_ , _asize_ ) HAL_ICACHE_INVALIDATE( _base_ , _asize_ ) 
 #else
