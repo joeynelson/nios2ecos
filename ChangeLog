@@ -1,3 +1,6 @@
+2009-07-22 Edgar Grimberg <edgar.grimberg@zylin.com>
+	* Added __ decorations to the macro variables in hal_cache.h
+
 2009-07-03 Laurentiu Cocanu <laurentiu.cocanu@zylin.com>
 	* Replaced ALTERA_AVALON_AM29LV065D_FLASH with CYGHWR_DEVS_FLASH_INTEL_28F128P30 in NEEK
 

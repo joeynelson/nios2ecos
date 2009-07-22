@@ -98,8 +98,9 @@
 
 #define HAL_DCACHE_FLUSH( _base_ , _asize_ )                     \
 CYG_MACRO_START                                                  \
-    char* i;                                                     \
-    char* end;                                                   \
+    char* __i__;        											 \
+    char* __start__ = (char*)(_base_);                               \
+    char* __end__;                                                   \
     cyg_uint32 size = _asize_;                                   \
                                                                  \
     if (size > NIOS2_DCACHE_SIZE)                                \
@@ -107,16 +108,16 @@ CYG_MACRO_START                                                  \
       size = NIOS2_DCACHE_SIZE;                                  \
     }                                                            \
                                                                  \
-    end = ((char*) _base_) + size;                               \
+    __end__ = ((char*)(__start__)) + size;                               \
                                                                  \
-    for (i = _base_; i < end; i+= NIOS2_DCACHE_LINE_SIZE)        \
+    for (__i__ = (__start__); __i__ < __end__; __i__+= NIOS2_DCACHE_LINE_SIZE)       \
     {                                                            \
-      __asm__ volatile ("flushd (%0)" :: "r" (i));               \
+      __asm__ volatile ("flushd (%0)" :: "r" (__i__));               \
     }                                                            \
                                                                  \
-    if (((cyg_uint32) _base_) & (NIOS2_DCACHE_LINE_SIZE - 1))    \
+    if (((cyg_uint32)(__start__)) & (NIOS2_DCACHE_LINE_SIZE - 1))    \
     {                                                            \
-      __asm__ volatile ("flushd (%0)" :: "r" (i));               \
+      __asm__ volatile ("flushd (%0)" :: "r" (__i__));               \
     }                                                            \
 CYG_MACRO_END
 
@@ -165,8 +166,9 @@ CYG_MACRO_END
 #if NIOS2_ICACHE_SIZE > 0
 #define HAL_ICACHE_INVALIDATE( _base_ , _asize_ )             \
 CYG_MACRO_START                                               \
-    char* i;                                                  \
-    char* end;                                                \
+    char* __i__;                                                  \
+    char* __start__ = _base_;                                     \
+    char* __end__;                                                \
     cyg_uint32 size = _asize_;                                \
                                                               \
     if (size > NIOS2_ICACHE_SIZE)                             \
@@ -174,20 +176,20 @@ CYG_MACRO_START                                               \
       size = NIOS2_ICACHE_SIZE;                               \
    }                                                          \
                                                               \
-    end = ((char*) _base_) + size;                            \
+    __end__ = ((char*) __start__) + size;                            \
                                                               \
-    for (i = _base_; i < end; i+= NIOS2_ICACHE_LINE_SIZE)     \
+    for (__i__ = __start__; __i__ < __end__; __i__+= NIOS2_ICACHE_LINE_SIZE)     \
     {                                                         \
-      __asm__ volatile ("initi %0" :: "r" (i));               \
+      __asm__ volatile ("initi %0" :: "r" (__i__));               \
     }                                                         \
                                                               \
-    if (((cyg_uint32) _base_) & (NIOS2_ICACHE_LINE_SIZE - 1)) \
+    if (((cyg_uint32) __start__) & (NIOS2_ICACHE_LINE_SIZE - 1)) \
     {                                                         \
-      __asm__ volatile ("initi %0" :: "r" (i));               \
+      __asm__ volatile ("initi %0" :: "r" (__i__));               \
     }                                                         \
                                                               \
     __asm__ volatile ("flushp");                              \
-CYG_MACRO_END
+CYG_MACRO_S
 
 #define HAL_ICACHE_FLUSH( _base_ , _asize_ ) HAL_ICACHE_INVALIDATE( _base_ , _asize_ ) 
 #else
