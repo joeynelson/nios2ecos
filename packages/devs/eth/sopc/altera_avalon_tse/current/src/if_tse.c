@@ -90,6 +90,9 @@
 #include <cyg/hal/drv_api.h>
 #include <cyg/io/eth/netdev.h>
 #include <cyg/io/eth/eth_drv.h>
+
+#include <cyg/hal/hal_cache.h>
+
 #ifdef CYGPKG_NET
 #include <pkgconf/net.h>
 #include <cyg/kernel/kapi.h>
@@ -220,13 +223,13 @@ static int tse_rxd_isr(cyg_vector_t vector, cyg_addrword_t data)
 	struct eth_drv_sc *sc = (struct eth_drv_sc *) data;
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
 
-	DEBUG_FUNCTION();
+//	DEBUG_FUNCTION();
 
 	//    INCR_STAT( interrupts );
 
 	cyg_drv_interrupt_mask(cpd->rx_sgdma.irq);
 
-	alt_avalon_sgdma_set_control(&cpd->rx_sgdma, 0x80000000);
+	alt_avalon_sgdma_set_control(&cpd->rx_sgdma, ALTERA_AVALON_SGDMA_CONTROL_CLEAR_INTERRUPT_MSK);
 	alt_avalon_sgdma_set_control(&cpd->rx_sgdma, 0x0);
 	alt_avalon_sgdma_status(&cpd->rx_sgdma);
 
@@ -299,7 +302,7 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 	cpd->tx_sgdma.irq = SGDMA_TX_IRQ;
 	cpd->tx_sgdma.descriptor_base
 			= &((alt_sgdma_descriptor *) DESCRIPTOR_MEMORY_BASE)[ALTERA_TSE_FIRST_TX_SGDMA_DESC_OFST];
-	cpd->tx_sgdma.isr = (cyg_ISR_t *) NULL; //tse_txd_isr	   ; // isr
+	cpd->tx_sgdma.isr = (cyg_ISR_t *) NULL; // tse_txd_isr	   ; // isr
 	cpd->tx_sgdma.dsr = (cyg_DSR_t *) NULL;
 	cpd->tx_sgdma.isr_data = (cyg_addrword_t) sc; // data item passed to interrupt handler
 	cpd->tx_sgdma.chain_control = 0;
@@ -338,13 +341,36 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 #if DEBUG & 9
 	db_printf("TSE - static ESA: %02x:%02x:%02x:%02x:%02x:%02x\n", cpd->enaddr[0], cpd->enaddr[1], cpd->enaddr[2], cpd->enaddr[3], cpd->enaddr[4], cpd->enaddr[5] );
 #endif // DEBUG
-	IOWR_ALTERA_TSEMAC_0( cpd->base, (int)cpd->enaddr[0] | (int)( cpd->enaddr[1] << 8 ) | (int)( cpd->enaddr[2] << 16) | (int)( cpd->enaddr[3] << 24));
-	IOWR_ALTERA_TSEMAC_1( cpd->base, (int)cpd->enaddr[4] | (int)( cpd->enaddr[5] << 8 ) & 0xffff));
+	IOWR_ALTERA_TSEMAC_MAC_0( cpd->base, (int)cpd->enaddr[0] | (int)( cpd->enaddr[1] << 8 ) | (int)( cpd->enaddr[2] << 16) | (int)( cpd->enaddr[3] << 24));
+	IOWR_ALTERA_TSEMAC_MAC_1( cpd->base, ((int)cpd->enaddr[4] | (int)( cpd->enaddr[5] << 8 ) & 0xffff));
+
+	//If your system does not require the use of multiple addresses, Altera recommends
+	//that you configure all supplemental addresses to the primary MAC address.
+	IOWR_ALTERA_TSEMAC_SMAC_0_0( cpd->base, ((int)cpd->enaddr[0] | (int)( cpd->enaddr[1] << 8 ) | (int)( cpd->enaddr[2] << 16) | (int)( cpd->enaddr[3] << 24)));
+	IOWR_ALTERA_TSEMAC_SMAC_0_1( cpd->base, ((int)cpd->enaddr[4] | (int)( cpd->enaddr[5] << 8 ) & 0xffff));
+	IOWR_ALTERA_TSEMAC_SMAC_1_0( cpd->base, ((int)cpd->enaddr[0] | (int)( cpd->enaddr[1] << 8 ) | (int)( cpd->enaddr[2] << 16) | (int)( cpd->enaddr[3] << 24)));
+	IOWR_ALTERA_TSEMAC_SMAC_1_1( cpd->base, ((int)cpd->enaddr[4] | (int)( cpd->enaddr[5] << 8 ) & 0xffff));
+	IOWR_ALTERA_TSEMAC_SMAC_2_0( cpd->base, ((int)cpd->enaddr[0] | (int)( cpd->enaddr[1] << 8 ) | (int)( cpd->enaddr[2] << 16) | (int)( cpd->enaddr[3] << 24)));
+	IOWR_ALTERA_TSEMAC_SMAC_2_1( cpd->base, ((int)cpd->enaddr[4] | (int)( cpd->enaddr[5] << 8 ) & 0xffff));
+	IOWR_ALTERA_TSEMAC_SMAC_3_0( cpd->base, ((int)cpd->enaddr[0] | (int)( cpd->enaddr[1] << 8 ) | (int)( cpd->enaddr[2] << 16) | (int)( cpd->enaddr[3] << 24)));
+	IOWR_ALTERA_TSEMAC_SMAC_3_1( cpd->base, ((int)cpd->enaddr[4] | (int)( cpd->enaddr[5] << 8 ) & 0xffff));
 
 #else // not CYGINT_DEVS_ETH_SMSC_LAN91CXX_STATIC_ESA
 	//some other way
-	IOWR_ALTERA_TSEMAC_0( cpd->base, ((int)cpd->enaddr[0] | (int)( cpd->enaddr[1] << 8 ) | (int)( cpd->enaddr[2] << 16) | (int)( cpd->enaddr[3] << 24)) );
-	IOWR_ALTERA_TSEMAC_1( cpd->base, ((int)cpd->enaddr[4] | (int)( cpd->enaddr[5] << 8 ) & 0xffff) );
+	IOWR_ALTERA_TSEMAC_MAC_0( cpd->base, ((int)cpd->enaddr[0] | (int)( cpd->enaddr[1] << 8 ) | (int)( cpd->enaddr[2] << 16) | (int)( cpd->enaddr[3] << 24)));
+	IOWR_ALTERA_TSEMAC_MAC_1( cpd->base, ((int)cpd->enaddr[4] | (int)( cpd->enaddr[5] << 8 ) & 0xffff));
+
+	//If your system does not require the use of multiple addresses, Altera recommends
+	//that you configure all supplemental addresses to the primary MAC address.
+	IOWR_ALTERA_TSEMAC_SMAC_0_0( cpd->base, ((int)cpd->enaddr[0] | (int)( cpd->enaddr[1] << 8 ) | (int)( cpd->enaddr[2] << 16) | (int)( cpd->enaddr[3] << 24)));
+	IOWR_ALTERA_TSEMAC_SMAC_0_1( cpd->base, ((int)cpd->enaddr[4] | (int)( cpd->enaddr[5] << 8 ) & 0xffff));
+	IOWR_ALTERA_TSEMAC_SMAC_1_0( cpd->base, ((int)cpd->enaddr[0] | (int)( cpd->enaddr[1] << 8 ) | (int)( cpd->enaddr[2] << 16) | (int)( cpd->enaddr[3] << 24)));
+	IOWR_ALTERA_TSEMAC_SMAC_1_1( cpd->base, ((int)cpd->enaddr[4] | (int)( cpd->enaddr[5] << 8 ) & 0xffff));
+	IOWR_ALTERA_TSEMAC_SMAC_2_0( cpd->base, ((int)cpd->enaddr[0] | (int)( cpd->enaddr[1] << 8 ) | (int)( cpd->enaddr[2] << 16) | (int)( cpd->enaddr[3] << 24)));
+	IOWR_ALTERA_TSEMAC_SMAC_2_1( cpd->base, ((int)cpd->enaddr[4] | (int)( cpd->enaddr[5] << 8 ) & 0xffff));
+	IOWR_ALTERA_TSEMAC_SMAC_3_0( cpd->base, ((int)cpd->enaddr[0] | (int)( cpd->enaddr[1] << 8 ) | (int)( cpd->enaddr[2] << 16) | (int)( cpd->enaddr[3] << 24)));
+	IOWR_ALTERA_TSEMAC_SMAC_3_1( cpd->base, ((int)cpd->enaddr[4] | (int)( cpd->enaddr[5] << 8 ) & 0xffff));
+
 #if DEBUG & 9
 	db_printf("TSE - ESA: %02x:%02x:%02x:%02x:%02x:%02x\n", cpd->enaddr[0],
 			cpd->enaddr[1], cpd->enaddr[2], cpd->enaddr[3], cpd->enaddr[4],
@@ -355,14 +381,14 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 	/* reset the mac */
 	IOWR_ALTERA_TSEMAC_CMD_CONFIG(cpd->base, mmac_cc_SW_RESET_mask | mmac_cc_TX_ENA_mask | mmac_cc_RX_ENA_mask);
 
-	// reset is comlete when the sw reset bit is cleared by the mac
+	// reset is complete when the sw reset bit is cleared by the MAC
 	i = 0;
 	while (IORD_ALTERA_TSEMAC_CMD_CONFIG(cpd->base)
 			& ALTERA_TSEMAC_CMD_SW_RESET_MSK)
 	{
 		if (i++ > 10000)
 		{
-//			diag_printf("ERROR: Cannot reset MAC");
+			diag_printf("ERROR: Cannot reset MAC");
 			return false;
 		}
 	}
@@ -372,13 +398,13 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 
 	if ((dat & 0x03) != 0)
 	{
-//		diag_printf("WARN: RX/TX not disabled after reset... missing PHY clock? CMD_CONFIG=0x%08x\n",
-//				dat);
+		db_printf("WARN: RX/TX not disabled after reset... missing PHY clock? CMD_CONFIG=0x%08x\n",
+				dat);
 		return false;
 	}
 	else
 	{
-//		diag_printf("OK, CMD_CONFIG=0x%08x\n", dat);
+		db_printf("OK, CMD_CONFIG=0x%08x\n", dat);
 	}
 
 	/* Initialize MAC registers */
@@ -392,7 +418,8 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 	IOWR_ALTERA_TSEMAC_RX_SECTION_EMPTY(cpd->base, TSE_MAC_RECEIVE_FIFO_DEPTH - 16); //4000/4);
 	IOWR_ALTERA_TSEMAC_RX_SECTION_FULL( cpd->base, 0);
 
-	//	IOWR_ALTERA_TSEMAC_RX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_RX_CMD_STAT_RXSHIFT16_MSK);
+//	IOWR_ALTERA_TSEMAC_RX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_RX_CMD_STAT_RXSHIFT16_MSK);
+	IOWR_ALTERA_TSEMAC_TX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_TX_CMD_STAT_TXSHIFT16_MSK);
 
 	// Initialize upper level driver
 	(sc->funs->eth_drv->init)(sc, cpd->enaddr);
@@ -424,7 +451,7 @@ static void tse_stop(struct eth_drv_sc *sc)
 	/* Disable Receive path on the device*/
 	state = IORD_ALTERA_TSEMAC_CMD_CONFIG( cpd->base);
 
-	IOWR_ALTERA_TSEMAC_CMD_CONFIG( cpd->base, state & ~ALTERA_TSEMAC_CMD_RX_ENA_MSK);
+	IOWR_ALTERA_TSEMAC_CMD_CONFIG( cpd->base, state & ~(ALTERA_TSEMAC_CMD_RX_ENA_MSK | ALTERA_TSEMAC_CMD_TX_ENA_MSK));
 }
 
 //
@@ -444,14 +471,13 @@ static void tse_start(struct eth_drv_sc *sc, unsigned char *enaddr, int flags)
 	alt_sgdma_descriptor *desc_base = cpd->rx_sgdma.descriptor_base;
 
 	/* enable MAC */
-	dat = ALTERA_TSEMAC_CMD_TX_ENA_MSK | ALTERA_TSEMAC_CMD_RX_ENA_MSK
-			| mmac_cc_RX_ERR_DISCARD_mask |
+	dat = ALTERA_TSEMAC_CMD_TX_ENA_MSK | ALTERA_TSEMAC_CMD_RX_ENA_MSK |
 #if ENABLE_PHY_LOOPBACK
 			ALTERA_TSEMAC_CMD_PROMIS_EN_MSK | ALTERA_TSEMAC_CMD_LOOPBACK_MSK | // promiscuous mode
 #endif
-			//        ALTERA_TSEMAC_CMD_PAD_EN_MSK       |
-			ALTERA_TSEMAC_CMD_TX_ADDR_INS_MSK
-			| ALTERA_TSEMAC_CMD_RX_ERR_DISC_MSK; /* automatically discard frames with CRC errors */
+			ALTERA_TSEMAC_CMD_PAD_EN_MSK       |
+//			ALTERA_TSEMAC_CMD_TX_ADDR_INS_MSK |
+			ALTERA_TSEMAC_CMD_RX_ERR_DISC_MSK; /* automatically discard frames with CRC errors */
 
 	is1000 = ((cpd->speed) >> 1) & 0x01;
 	duplex = (cpd->speed) & 0x01;
@@ -475,12 +501,13 @@ static void tse_start(struct eth_drv_sc *sc, unsigned char *enaddr, int flags)
 	}
 
 	IOWR_ALTERA_TSEMAC_CMD_CONFIG(cpd->base, dat);
-//	printf("\nMAC post-initialization: CMD_CONFIG=0x%08x\n",
-//			IORD_ALTERA_TSEMAC_CMD_CONFIG(cpd->base));
+	printf("\nMAC post-initialization: CMD_CONFIG=0x%08x\n",
+			IORD_ALTERA_TSEMAC_CMD_CONFIG(cpd->base));
 
 	/* enable the interrupt for the rx*/
 	cyg_drv_interrupt_unmask(cpd->rx_sgdma.irq);
-//	    cyg_drv_interrupt_unmask(cpd->tx_sgdma.irq);
+
+//	cyg_drv_interrupt_unmask(cpd->tx_sgdma.irq);
 
 	// start the dma transfer
 	// Make sure SGDMA controller is not busy from a former command
@@ -511,17 +538,83 @@ static void tse_start(struct eth_drv_sc *sc, unsigned char *enaddr, int flags)
 	result = alt_avalon_sgdma_do_async_transfer(&(cpd->rx_sgdma), desc_base);
 
 	//	} while (( result != 0) && ( timeout++  < ALTERA_TSE_SGDMA_BUSY_TIME_OUT_CNT));
+
 }
 
 //
-// This routine is called to perform special "control" opertions
+// This function is called for low level "control" operations
 //
-static int tse_control(struct eth_drv_sc *sc, unsigned long key, void *data,
-		int data_length)
+static int tse_control(struct eth_drv_sc *sc, unsigned long key,
+		void *data, int length)
 {
+	int retVal = 0;
+	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
+
+
 	DEBUG_FUNCTION();
-//	printf("tse_control\n");
-	return 1;
+
+	switch (key)
+	{
+		case ETH_DRV_SET_MAC_ADDRESS:
+		{
+			memcpy(cpd->enaddr, data, 6); //MAC address has 6 bytes.
+			IOWR_ALTERA_TSEMAC_MAC_0( cpd->base, ((cyg_uint32)cpd->enaddr[0] | (cyg_uint32)( cpd->enaddr[1] << 8 ) | (cyg_uint32)( cpd->enaddr[2] << 16) | (cyg_uint32)( cpd->enaddr[3] << 24)) );
+			IOWR_ALTERA_TSEMAC_MAC_1( cpd->base, ((cyg_uint32)cpd->enaddr[4] | (cyg_uint32)( cpd->enaddr[5] << 8 ) & 0xffff) );
+
+			break;
+		}
+		case ETH_DRV_SET_MC_LIST:
+		case ETH_DRV_SET_MC_ALL:
+		{
+			IOWR_ALTERA_TSEMAC_HASH_TABLE(cpd->base, 0, 0xffffffff);
+			break;
+		}
+//		{
+//			struct eth_drv_mc_list list = *((struct eth_drv_mc_list*)data);
+//			cyg_uint32 dat;
+//
+//			if(list.len > 0)
+//			{
+//				//enable promiscuous mode
+//				dat = IORD_ALTERA_TSEMAC_CMD_CONFIG(cpd->base);
+//				dat |= ALTERA_TSEMAC_CMD_PROMIS_EN_MSK;
+//				IOWR_ALTERA_TSEMAC_CMD_CONFIG(cpd->base, dat);
+//			}
+//			else
+//			{
+//				//disable promiscuous mode
+//				dat = IORD_ALTERA_TSEMAC_CMD_CONFIG(cpd->base);
+//				dat &= ~ALTERA_TSEMAC_CMD_PROMIS_EN_MSK;
+//				IOWR_ALTERA_TSEMAC_CMD_CONFIG(cpd->base, dat);
+//			}
+
+
+
+		//DEBUG CODE
+//			int i = 0;
+//			diag_printf("addresses: \n");
+//			for(; i<list.len; i++)
+//			{
+//				diag_printf("\t%02x:%02x:%02x:%02x:%02x:%02x\n",
+//						list.addrs[i][0],
+//						list.addrs[i][1],
+//						list.addrs[i][2],
+//						list.addrs[i][3],
+//						list.addrs[i][4],
+//						list.addrs[i][5]);
+//			}
+//END OF DEBUG CODE
+//			break;
+//		}
+
+		default:
+		{
+			retVal = 1;
+			break;
+		}
+	}
+
+	return retVal;
 }
 
 //
@@ -547,9 +640,10 @@ static void tse_send(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 		int sg_len, int total_len, unsigned long key)
 {
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
-	int i, len, plen, tcr;
-
-	cyg_uint8 *sdata;
+	int i, j, k, len, plen, tcr;
+	cyg_uint32 timeout = 0;
+	cyg_uint32 send_buffer[( 1528 + 16) / 4];
+	cyg_uint8* mem = (cyg_uint8 *)( ((cyg_uint32)((cyg_uint8*)send_buffer + 2)) | 0x80000000);
 	cyg_uint16 data = 0;
 	int dpos = 0;
 	unsigned short ints, control;
@@ -559,29 +653,92 @@ static void tse_send(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 
 	alt_sgdma_descriptor *desc_base = cpd->tx_sgdma.descriptor_base;
 
+	//malloc from hell
+
+	plen = 0;
+	k = 0;
+//	for (i = 0; i < sg_len; i++)
+//	{
+//		plen += sg_list[i].len;
+//		for(j = 0; j < sg_list[i].len; j++)
+//		{
+//			db_printf("%02x ", ((unsigned char *)sg_list[i].buf)[j]);
+//			k++;
+//			if ( (k % 0x10) == 0 )
+//			{
+//				db_printf("\n");
+//				k = 0;
+//			}
+//		}
+//	}
+
+//	db_printf("\n len = %d\n", plen);
+	k = 0;
 	// for all of the buf/len pairs in the scatter gather list
 	for (i = 0; i < sg_len; i++)
 	{
+
+		memcpy(mem,  sg_list[i].buf, sg_list[i].len);
+
+//		for(j = 0; j < sg_list[i].len; j++)
+//		{
+//			db_printf("%02x ", (mem)[j]);
+//			k++;
+//			if ( (k % 0x10) == 0 )
+//			{
+//				db_printf("\n");
+//				k = 0;
+//			}
+//		}
+
+		//flush sglist memory
+		HAL_DCACHE_FLUSH( mem, sg_list[i].len + 4);
+
 		/* Construct the descriptor */
-		alt_avalon_sgdma_construct_mem_to_stream_desc(desc_base + i, /* Descriptor */
-		desc_base + i + 1, /* Next descriptor */
-		//      		(cyg_uint32*)( (cyg_uint8*)buffer_no_cache_bypass +
-				sg_list[i].buf, /* Read Address */
-				sg_list[i].len, /* Transfer length */
+		alt_avalon_sgdma_construct_mem_to_stream_desc(
+				desc_base + i, /* Descriptor */
+				desc_base + i + 1, /* Next descriptor */
+				mem,
+				sg_list[i].len + 2,
 				0, /* Don't read fixed addr */
 				i == 0 ? 1 : 0, /* Generate SOP @ first desc */
 				i == (sg_len - 1) ? 1 : 0, /* Generate EOP @ last desc */
 				0 /* Streaming channel: N/A */
 		);
+		mem += sg_list[i].len;
 	}
 
 	//    alt_avalon_sgdma_set_control( &cpd->tx_sgdma, 0x18);
+
+	// Make sure DMA controller is not busy from a former command
+	// and TX is able to accept data
+	timeout = 0;
+	//tse_dprintf("\nWaiting while tx SGDMA is busy......... ");
+	while ((IORD_ALTERA_AVALON_SGDMA_STATUS(cpd->tx_sgdma.base)
+			& ALTERA_AVALON_SGDMA_STATUS_BUSY_MSK))
+	{
+		if (timeout++ == 1000)
+		{
+			db_printf("WARNING : TX SGDMA Timeout\n");
+			return ; // avoid being stuck here
+		}
+	}
+
+	// Set up the SGDMA
+	// Clear the status and control bits of the SGDMA descriptor
+	IOWR_ALTERA_AVALON_SGDMA_CONTROL(cpd->tx_sgdma.base, 0);
+	IOWR_ALTERA_AVALON_SGDMA_STATUS(cpd->tx_sgdma.base, 0xFF);
+
+
+
 
 	// Start SGDMA (blocking call)
 	alt_avalon_sgdma_do_async_transfer(&cpd->tx_sgdma, desc_base);
 
 	/* perform cache save read to obtain actual bytes transferred for current sgdma descriptor */
 	//actualBytesTransferred = IORD_ALTERA_TSE_SGDMA_DESC_ACTUAL_BYTES_TRANSFERRED( cpd->tx_sgdma.descriptor_base);
+//	IOWR_ALTERA_TSEMAC_RX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_RX_CMD_STAT_RXSHIFT16_MSK);
+	IOWR_ALTERA_TSEMAC_TX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_TX_CMD_STAT_TXSHIFT16_MSK);
 
 }
 
@@ -782,6 +939,7 @@ static void tse_recv(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 	cyg_uint32 from, status, i;
 	int pkt_len, total_len;
 
+	HAL_DCACHE_INVALIDATE(cpd->rx_buffer, cpd->bytesReceived);
 	from_addr = ((cyg_uint8 *) cpd->rx_buffer) + 2;
 
 	DEBUG_FUNCTION();
@@ -823,6 +981,9 @@ static void tse_recv(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 
 	// SGDMA operation invoked for RX (non-blocking call)
 	alt_avalon_sgdma_do_async_transfer(&cpd->rx_sgdma, desc_base);
+
+//	IOWR_ALTERA_TSEMAC_RX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_RX_CMD_STAT_RXSHIFT16_MSK);
+	IOWR_ALTERA_TSEMAC_TX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_TX_CMD_STAT_TXSHIFT16_MSK);
 
 }
 

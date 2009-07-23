@@ -183,6 +183,7 @@ typedef struct tse_priv_data {
 #ifdef KEEP_STATISTICS
     struct nios2_tse_stats stats;
 #endif
+    cyg_uint32 speed;
 } tse_priv_data;
 
 // ------------------------------------------------------------------------

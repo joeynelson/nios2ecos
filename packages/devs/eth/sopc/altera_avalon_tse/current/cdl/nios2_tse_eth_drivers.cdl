@@ -56,6 +56,9 @@ cdl_package CYGPKG_DEVS_ETH_NIOS2_TSE {
     parent        CYGPKG_IO_ETH_DRIVERS
     active_if	  CYGPKG_IO_ETH_DRIVERS
 
+    implements    CYGHWR_NET_DRIVERS
+    implements    CYGHWR_NET_DRIVER_ETH0
+
 #    active_if     CYGINT_DEVS_ETH_NIOS2_TSE_REQUIRED
 
     include_dir   cyg/io
@@ -119,12 +122,24 @@ cdl_package CYGPKG_DEVS_ETH_NIOS2_TSE {
                 These flags are used in addition
                 to the set of global flags."
         }
+        
+        cdl_option CYGPKG_DEVS_ETH_NIOS2_TSE_CFLAGS_REMOVE {
+            display "Suppressed compiler flags"
+            flavor  data
+            no_define
+            default_value { "" }
+            description   "
+                This option modifies the set of compiler flags for
+                building the Nios-II TSE ethernet driver package. 
+                These flags are removed from the set of global flags if present."
+        }
+        
     }
     
     cdl_option CYGDAT_TSE_MAC_DEFAULT {
         display       "MAC address used if none in flash"
         flavor        data
-        default_value {"{0x12, 0x13, 0x14, 0x15, 0x16, 0x17}"}
+        default_value {"{0x00, 0x23, 0x23, 0xaa, 0xbb, 0xcc}"}
         description   "
             A static ethernet station address. 
             Used if this is not an Altera Development Board, or fi there is no MAC address found in the flash by the MAC address function.
