@@ -518,7 +518,7 @@
         parent        CYGBLD_GLOBAL_OPTIONS
         flavor        data
         no_define
-        default_value { "-g -O3 -ffunction-sections -fdata-sections -fno-rtti -fno-exceptions -fvtable-gc -DSYSTEM_BUS_WIDTH=32 ]]>%PTF_CFLAGS%<![CDATA[" }
+        default_value { "-g -O2 -ffunction-sections -fdata-sections -fno-rtti -fno-exceptions -fvtable-gc -DSYSTEM_BUS_WIDTH=32 ]]>%PTF_CFLAGS%<![CDATA[" }
         description   "
             This option controls the global compiler flags which
             are used to compile all packages by
