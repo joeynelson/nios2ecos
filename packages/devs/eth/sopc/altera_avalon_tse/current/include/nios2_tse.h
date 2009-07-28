@@ -86,10 +86,14 @@
 #define TIME_OUT                                0x3E80
 #endif 
 
-#define ALTERA_TSE_SGDMA_RX_DESC_CHAIN_SIZE		1
+#define ALTERA_TSE_SGDMA_RX_DESC_CHAIN_SIZE		16
 
 //#define ALTERA_TSE_IRQ_R                        fake_tse_isr
-#define ALTERA_TSE_SGDMA_INTR_MASK              ALTERA_AVALON_SGDMA_CONTROL_IE_CHAIN_COMPLETED_MSK | ALTERA_AVALON_SGDMA_CONTROL_IE_GLOBAL_MSK
+#if ALTERA_TSE_SGDMA_RX_DESC_CHAIN_SIZE > 1
+	#define ALTERA_TSE_SGDMA_INTR_MASK              ALTERA_AVALON_SGDMA_CONTROL_IE_DESC_COMPLETED_MSK | ALTERA_AVALON_SGDMA_CONTROL_IE_CHAIN_COMPLETED_MSK | ALTERA_AVALON_SGDMA_CONTROL_IE_GLOBAL_MSK
+#else
+	#define ALTERA_TSE_SGDMA_INTR_MASK              ALTERA_AVALON_SGDMA_CONTROL_IE_CHAIN_COMPLETED_MSK | ALTERA_AVALON_SGDMA_CONTROL_IE_GLOBAL_MSK
+#endif
                  
 #define ALTERA_TSE_ADMIN_STATUS_DOWN			2
 #define ALTERA_TSE_ADMIN_STATUS_UP				1
@@ -155,6 +159,9 @@ struct nios2_tse_stats {
 };
 #endif
 
+#define TX_DESC_NUM 8
+#define RX_DESC_NUM 8
+
 struct tse_priv_data;
 typedef cyg_bool (*provide_esa_t)(struct tse_priv_data* cpd);
 
@@ -175,7 +182,6 @@ typedef struct tse_priv_data {
     int   			data_pos;
 	alt_sgdma_dev   tx_sgdma;
 	alt_sgdma_dev   rx_sgdma;
-	cyg_uint32     *rx_sgdma_desc_ram;
 	cyg_uint32      cfgflags;  // flags or'ed during initialization of COMMAND_CONFIG
 	cyg_uint32      rx_buffer[( 1528 + 16) / 4];
 	cyg_int32       bytesReceived;

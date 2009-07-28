@@ -18,7 +18,6 @@
 // Software Foundation; either version 2 or (at your option) any later version.
 //
 // eCos is distributed in the hope that it will be useful, but WITHOUT ANY
-// WARRANTY; without even the implied warranty of MERCHANTABILITY or
 // FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 // for more details.
 //
@@ -114,7 +113,7 @@ int tse_txfifo_bad = 0;
 // 2 for added data IO output: get_reg, put_reg
 // 4 for packet allocation/free output
 // 8 for only startup status, so we can tell we're installed OK
-#define DEBUG 9
+#define DEBUG 0
 cyg_uint32 getPHYSpeed(np_tse_mac *pmac);
 cyg_uint32 marvell_cfg_gmii(np_tse_mac *pmac);
 
@@ -245,7 +244,7 @@ static void tse_deliver(struct eth_drv_sc *sc)
 {
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
 
-	DEBUG_FUNCTION();
+//	DEBUG_FUNCTION();
 
 	cpd->bytesReceived = alt_avalon_sgdma_descpt_bytes_xfered(
 			(alt_sgdma_descriptor *) cpd->rx_sgdma.descriptor_base) - 2;
@@ -307,7 +306,9 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 	cpd->tx_sgdma.isr_data = (cyg_addrword_t) sc; // data item passed to interrupt handler
 	cpd->tx_sgdma.chain_control = 0;
 
-	//Clearing SGDMA desc Memory - this clears the first 8 descriptors 
+	cpd->txkey = 0;
+
+	//Clearing SGDMA desc Memory - this clears 1024 KB of descriptor space
 	for (i = 0; i < 256; i++)
 	{
 		IOWR( DESCRIPTOR_MEMORY_BASE, i, 0);
@@ -327,6 +328,11 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 	result = getPHYSpeed(cpd->base);
 	is1000 = (result >> 1) & 0x01;
 	duplex = result & 0x01;
+
+	diag_printf(
+			"[triple_speed_ethernet_init] Speed is %s\t Duplex is %s\n",
+			is1000 ? "1000 Mb/s" : "100 Mb/s", duplex ? "full" : "half");
+
 
 	cpd->speed = result;
 
@@ -379,7 +385,7 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 #endif // !CYGINT_DEVS_ETH_SOPC_ALT_AVALON_TSE_STATIC_ESA
 
 	/* reset the mac */
-	IOWR_ALTERA_TSEMAC_CMD_CONFIG(cpd->base, mmac_cc_SW_RESET_mask | mmac_cc_TX_ENA_mask | mmac_cc_RX_ENA_mask);
+	IOWR_ALTERA_TSEMAC_CMD_CONFIG(cpd->base, ALTERA_TSEMAC_CMD_SW_RESET_MSK | ALTERA_TSEMAC_CMD_TX_ENA_MSK | ALTERA_TSEMAC_CMD_RX_ENA_MSK | ALTERA_TSEMAC_CMD_ETH_SPEED_MSK);
 
 	// reset is complete when the sw reset bit is cleared by the MAC
 	i = 0;
@@ -388,7 +394,7 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 	{
 		if (i++ > 10000)
 		{
-			diag_printf("ERROR: Cannot reset MAC");
+//			diag_printf("ERROR: Cannot reset MAC");
 			return false;
 		}
 	}
@@ -398,13 +404,12 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 
 	if ((dat & 0x03) != 0)
 	{
-		db_printf("WARN: RX/TX not disabled after reset... missing PHY clock? CMD_CONFIG=0x%08x\n",
-				dat);
+//		db_printf("WARN: RX/TX not disabled after reset... missing PHY clock? CMD_CONFIG=0x%08x\n",	dat);
 		return false;
 	}
 	else
 	{
-		db_printf("OK, CMD_CONFIG=0x%08x\n", dat);
+//		db_printf("OK, CMD_CONFIG=0x%08x\n", dat);
 	}
 
 	/* Initialize MAC registers */
@@ -419,7 +424,7 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 	IOWR_ALTERA_TSEMAC_RX_SECTION_FULL( cpd->base, 0);
 
 //	IOWR_ALTERA_TSEMAC_RX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_RX_CMD_STAT_RXSHIFT16_MSK);
-	IOWR_ALTERA_TSEMAC_TX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_TX_CMD_STAT_TXSHIFT16_MSK);
+//	IOWR_ALTERA_TSEMAC_TX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_TX_CMD_STAT_TXSHIFT16_MSK);
 
 	// Initialize upper level driver
 	(sc->funs->eth_drv->init)(sc, cpd->enaddr);
@@ -447,6 +452,7 @@ static void tse_stop(struct eth_drv_sc *sc)
 //		cyg_interrupt_detach( cpd->rx_sgdma.sgdma_interrupt_handle);
 //	  	cyg_interrupt_detach( cpd->tx_sgdma.sgdma_interrupt_handle);
 
+	cpd->txkey = 0;
 
 	/* Disable Receive path on the device*/
 	state = IORD_ALTERA_TSEMAC_CMD_CONFIG( cpd->base);
@@ -501,8 +507,7 @@ static void tse_start(struct eth_drv_sc *sc, unsigned char *enaddr, int flags)
 	}
 
 	IOWR_ALTERA_TSEMAC_CMD_CONFIG(cpd->base, dat);
-	printf("\nMAC post-initialization: CMD_CONFIG=0x%08x\n",
-			IORD_ALTERA_TSEMAC_CMD_CONFIG(cpd->base));
+//	printf("\nMAC post-initialization: CMD_CONFIG=0x%08x\n", IORD_ALTERA_TSEMAC_CMD_CONFIG(cpd->base));
 
 	/* enable the interrupt for the rx*/
 	cyg_drv_interrupt_unmask(cpd->rx_sgdma.irq);
@@ -617,21 +622,41 @@ static int tse_control(struct eth_drv_sc *sc, unsigned long key,
 	return retVal;
 }
 
+static void tse_TxDone(struct eth_drv_sc *sc)
+{
+	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
+	alt_sgdma_descriptor *desc_base = cpd->tx_sgdma.descriptor_base;
+	int i;
+	int stat;
+
+	stat = alt_avalon_sgdma_check_descriptor_status(desc_base);
+	if(stat == 0)
+	{
+		(sc->funs->eth_drv->tx_done)( sc, cpd->txkey, 0 );
+		cpd->txkey = 0;
+	}
+
+}
+
 //
 // This routine is called to see if it is possible to send another packet.
 // It will return non-zero if a transmit is possible, zero otherwise.
 //
 static int tse_can_send(struct eth_drv_sc *sc)
 {
-	DEBUG_FUNCTION();
-
+	int retValue = 0;
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
+
+	DEBUG_FUNCTION();
 
 	alt_avalon_sgdma_status(&cpd->rx_sgdma);
 
-	// Make sure DMA controller is not busy from a former command	and TX is able to accept data
-	return ((alt_avalon_sgdma_status(&cpd->tx_sgdma)
-			& ALTERA_AVALON_SGDMA_STATUS_BUSY_MSK) == 0);
+	if((alt_avalon_sgdma_status(&cpd->tx_sgdma)	& ALTERA_AVALON_SGDMA_STATUS_BUSY_MSK) == 0)
+	{
+		retValue = 1;
+	}
+
+	return retValue;
 }
 
 //
@@ -640,106 +665,53 @@ static void tse_send(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 		int sg_len, int total_len, unsigned long key)
 {
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
-	int i, j, k, len, plen, tcr;
-	cyg_uint32 timeout = 0;
-	cyg_uint32 send_buffer[( 1528 + 16) / 4];
-	cyg_uint8* mem = (cyg_uint8 *)( ((cyg_uint32)((cyg_uint8*)send_buffer + 2)) | 0x80000000);
-	cyg_uint16 data = 0;
-	int dpos = 0;
-	unsigned short ints, control;
-	cyg_uint16 packet, status;
+	int i, len;
+	static cyg_uint32 send_buffer[( 1528 + 16) / 4 + 1];
+	cyg_uint8* mem = (cyg_uint8 *)( ((cyg_uint32)((cyg_uint8*)send_buffer)) | 0x80000000) + 2;
+	alt_sgdma_descriptor *desc_base = cpd->tx_sgdma.descriptor_base;
 
 	DEBUG_FUNCTION();
 
-	alt_sgdma_descriptor *desc_base = cpd->tx_sgdma.descriptor_base;
+	if(cpd->txkey)
+		(sc->funs->eth_drv->tx_done)( sc, cpd->txkey, 1 );
 
-	//malloc from hell
-
-	plen = 0;
-	k = 0;
-//	for (i = 0; i < sg_len; i++)
-//	{
-//		plen += sg_list[i].len;
-//		for(j = 0; j < sg_list[i].len; j++)
-//		{
-//			db_printf("%02x ", ((unsigned char *)sg_list[i].buf)[j]);
-//			k++;
-//			if ( (k % 0x10) == 0 )
-//			{
-//				db_printf("\n");
-//				k = 0;
-//			}
-//		}
-//	}
-
-//	db_printf("\n len = %d\n", plen);
-	k = 0;
 	// for all of the buf/len pairs in the scatter gather list
+	len = 0;
 	for (i = 0; i < sg_len; i++)
 	{
+		if(sg_list[i].buf == NULL || sg_list[i].len == 0)
+			continue;
 
-		memcpy(mem,  sg_list[i].buf, sg_list[i].len);
+		memcpy(mem + len,  sg_list[i].buf, sg_list[i].len);
+		len += sg_list[i].len;
 
-//		for(j = 0; j < sg_list[i].len; j++)
-//		{
-//			db_printf("%02x ", (mem)[j]);
-//			k++;
-//			if ( (k % 0x10) == 0 )
-//			{
-//				db_printf("\n");
-//				k = 0;
-//			}
-//		}
-
-		//flush sglist memory
-		HAL_DCACHE_FLUSH( mem, sg_list[i].len + 4);
-
+	}
 		/* Construct the descriptor */
 		alt_avalon_sgdma_construct_mem_to_stream_desc(
-				desc_base + i, /* Descriptor */
-				desc_base + i + 1, /* Next descriptor */
-				mem,
-				sg_list[i].len + 2,
+				desc_base, /* Descriptor */
+				desc_base+ 1, /* Next descriptor */
+				send_buffer,
+				len + 2,
 				0, /* Don't read fixed addr */
-				i == 0 ? 1 : 0, /* Generate SOP @ first desc */
-				i == (sg_len - 1) ? 1 : 0, /* Generate EOP @ last desc */
+				1, /* Generate SOP @ first desc */
+				1, /* Generate EOP @ last desc */
 				0 /* Streaming channel: N/A */
 		);
-		mem += sg_list[i].len;
-	}
 
-	//    alt_avalon_sgdma_set_control( &cpd->tx_sgdma, 0x18);
-
-	// Make sure DMA controller is not busy from a former command
-	// and TX is able to accept data
-	timeout = 0;
-	//tse_dprintf("\nWaiting while tx SGDMA is busy......... ");
-	while ((IORD_ALTERA_AVALON_SGDMA_STATUS(cpd->tx_sgdma.base)
-			& ALTERA_AVALON_SGDMA_STATUS_BUSY_MSK))
-	{
-		if (timeout++ == 1000)
-		{
-			db_printf("WARNING : TX SGDMA Timeout\n");
-			return ; // avoid being stuck here
-		}
-	}
+	cpd->txkey = key;
 
 	// Set up the SGDMA
 	// Clear the status and control bits of the SGDMA descriptor
 	IOWR_ALTERA_AVALON_SGDMA_CONTROL(cpd->tx_sgdma.base, 0);
 	IOWR_ALTERA_AVALON_SGDMA_STATUS(cpd->tx_sgdma.base, 0xFF);
 
-
-
-
-	// Start SGDMA (blocking call)
+	// Start SGDMA (non-blocking call)
 	alt_avalon_sgdma_do_async_transfer(&cpd->tx_sgdma, desc_base);
 
 	/* perform cache save read to obtain actual bytes transferred for current sgdma descriptor */
 	//actualBytesTransferred = IORD_ALTERA_TSE_SGDMA_DESC_ACTUAL_BYTES_TRANSFERRED( cpd->tx_sgdma.descriptor_base);
 //	IOWR_ALTERA_TSEMAC_RX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_RX_CMD_STAT_RXSHIFT16_MSK);
-	IOWR_ALTERA_TSEMAC_TX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_TX_CMD_STAT_TXSHIFT16_MSK);
-
+//	IOWR_ALTERA_TSEMAC_TX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_TX_CMD_STAT_TXSHIFT16_MSK);
 }
 
 static void tse_TxEvent(struct eth_drv_sc *sc, int stat)
@@ -939,7 +911,6 @@ static void tse_recv(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 	cyg_uint32 from, status, i;
 	int pkt_len, total_len;
 
-	HAL_DCACHE_INVALIDATE(cpd->rx_buffer, cpd->bytesReceived);
 	from_addr = ((cyg_uint8 *) cpd->rx_buffer) + 2;
 
 	DEBUG_FUNCTION();
@@ -954,7 +925,7 @@ static void tse_recv(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 
 		if (to_addr == 0 || len <= 0)
 		{
-			return; // out of mbufs
+			break; // out of mbufs
 		}
 
 		///    	if ( len > pkt_len )
@@ -962,6 +933,7 @@ static void tse_recv(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 		//      		len = pkt_len;
 		//		}
 
+		HAL_DCACHE_INVALIDATE(from_addr, len);
 		memcpy(to_addr, (void *) from_addr, len);
 
 		from_addr += len;
@@ -1277,9 +1249,6 @@ cyg_uint32 getPHYSpeed(np_tse_mac *pmac)
 		duplex = ALTERA_TSE_DUPLEX_MODE_DEFAULT;
 		usleep(ALTERA_NOMDIO_TIMEOUT_THRESHOLD);
 		result = ((is1000 & 0x01) << 1) | (duplex & 0x01);
-//		printf(
-//				"[triple_speed_ethernet_init] Speed is 1000 is %d\t Full Duplex is %d\n",
-//				is1000, duplex);
 		return result;
 
 	}
@@ -1291,15 +1260,15 @@ cyg_uint32 getPHYSpeed(np_tse_mac *pmac)
 
 	for (phyadd = 0x00; phyadd < 0xff; phyadd++)
 	{
-		IOWR(&pmac->MDIO_ADDR0,0, phyadd);
-		phyid = IORD(&pmac->mdio0.PHY_ID1,0); // read PHY ID
-		phyid2 = IORD(&pmac->mdio0.PHY_ID2,0); // read PHY ID
+		IOWR(&pmac->MDIO_ADDR1,0, phyadd);
+		phyid = IORD(&pmac->mdio1.PHY_ID1,0); // read PHY ID
+		phyid2 = IORD(&pmac->mdio1.PHY_ID2,0); // read PHY ID
 		//                    dprintf("[phyID] 0x%x %x %x\n",phyadd, phyid, phyid2);
 
 		if (phyid != phyid2)
 		{
 //			printf("[phyID] 0x%x %x %x\n", phyadd, phyid, phyid2);
-			phyadd = 0xff;
+			break;
 		}
 	}
 
@@ -1330,9 +1299,9 @@ cyg_uint32 getPHYSpeed(np_tse_mac *pmac)
 
 			// If there is no link yet, we enable auto crossover and reset the PHY
 
-			if ((IORD(&pmac->mdio0.STATUS,0) & PCS_ST_an_done) == 0)
+			if ((IORD(&pmac->mdio1.STATUS,0) & PCS_ST_an_done) == 0)
 			{
-				IOWR(&pmac->mdio0.reg10,0,0x0078); // 6:5=11 = AUTO MDIX crossover
+				IOWR(&pmac->mdio1.reg10,0,0x0078); // 6:5=11 = AUTO MDIX crossover
 
 			}
 		}
@@ -1359,19 +1328,19 @@ cyg_uint32 getPHYSpeed(np_tse_mac *pmac)
 		// To enable PHY loopback
 #if ENABLE_PHY_LOOPBACK
 //		printf("Putting PHY in loopback\n");
-		dat = IORD(&pmac->mdio0.CONTROL,0) & 0x001f; // keep bits 5:0
+		dat = IORD(&pmac->mdio1.CONTROL,0) & 0x001f; // keep bits 5:0
 #ifdef GIGABIT
 		if( isMVL )
 		{
-			IOWR(&pmac->mdio0.CONTROL,0, dat | 0xc140); // enable loopback, 1000Mbps mode, fulldup
+			IOWR(&pmac->mdio1.CONTROL,0, dat | 0xc140); // enable loopback, 1000Mbps mode, fulldup
 		}
-		IOWR(&pmac->mdio0.CONTROL,0, dat | 0x4140); // enable loopback, 1000Mbps mode, fulldup
+		IOWR(&pmac->mdio1.CONTROL,0, dat | 0x4140); // enable loopback, 1000Mbps mode, fulldup
 #else
 		if( isMVL )
 		{
-			IOWR(&pmac->mdio0.CONTROL,0,dat | 0xe100); // enable loopback, 100Mbps mode, fulldup
+			IOWR(&pmac->mdio1.CONTROL,0,dat | 0xe100); // enable loopback, 100Mbps mode, fulldup
 		}
-		IOWR(&pmac->mdio0.CONTROL,0,dat | 0x6100); // enable loopback, 100Mbps mode, fulldup
+		IOWR(&pmac->mdio1.CONTROL,0,dat | 0x6100); // enable loopback, 100Mbps mode, fulldup
 #endif
 
 #else
@@ -1381,30 +1350,30 @@ cyg_uint32 getPHYSpeed(np_tse_mac *pmac)
 
 		// perform this when PHY is configured in loopback or has no link yet.
 
-		if (((IORD(&pmac->mdio0.CONTROL,0) & PCS_CTL_rx_slpbk) != 0)
-				|| ((IORD(&pmac->mdio0.STATUS,0) & PCS_ST_an_done) == 0))
+		if (((IORD(&pmac->mdio1.CONTROL,0) & PCS_CTL_rx_slpbk) != 0)
+				|| ((IORD(&pmac->mdio1.STATUS,0) & PCS_ST_an_done) == 0))
 		{
 
-			IOWR(&pmac->mdio0.CONTROL,0,PCS_CTL_an_enable | PCS_CTL_sw_reset); // send PHY reset command
+			IOWR(&pmac->mdio1.CONTROL,0,PCS_CTL_an_enable | PCS_CTL_sw_reset); // send PHY reset command
 //			printf("[netif_tse] PHY Reset ");
 		}
 #endif
 
 		if ((1 == TSE_MAC_ENABLE_MACLITE) && (0 == TSE_MAC_MACLITE_GIGE))
 		{
-			dat = IORD(&pmac->mdio0.CONTROL,9);
-			IOWR(&pmac->mdio0.CONTROL,9,dat & 0xFCFF);
-			dat = IORD(&pmac->mdio0.CONTROL,0);
-			IOWR(&pmac->mdio0.CONTROL,0,dat | 0x200);
+			dat = IORD(&pmac->mdio1.CONTROL,9);
+			IOWR(&pmac->mdio1.CONTROL,9,dat & 0xFCFF);
+			dat = IORD(&pmac->mdio1.CONTROL,0);
+			IOWR(&pmac->mdio1.CONTROL,0,dat | 0x200);
 
 			usleep(ALTERA_DISGIGA_TIMEOUT_THRESHOLD);
 		}
 
-		if ((IORD(&pmac->mdio0.STATUS,0) & PCS_ST_an_done) == 0)
+		if ((IORD(&pmac->mdio1.STATUS,0) & PCS_ST_an_done) == 0)
 		{
 //			printf(" waiting on PHY link..");
 			dat = 0;
-			while ((IORD(&pmac->mdio0.STATUS,0) & PCS_ST_an_done) == 0)
+			while ((IORD(&pmac->mdio1.STATUS,0) & PCS_ST_an_done) == 0)
 			{
 				if (dat++ > ALTERA_AUTONEG_TIMEOUT_THRESHOLD)
 				{
@@ -1413,14 +1382,14 @@ cyg_uint32 getPHYSpeed(np_tse_mac *pmac)
 				}
 			}
 //			printf("OK. x=%d, PHY STATUS=%04x\n", dat,
-//					IORD(&pmac->mdio0.STATUS,0));
+//					IORD(&pmac->mdio1.STATUS,0));
 		}
 
 		// retrieve link speed from PHY
 
 		if ((phyid == (NTLPHY_ID >> 16)) && (phyid2 == (NTLPHY_ID & 0xFFFF)))
 		{
-			dat = IORD(&pmac->mdio0.reg11,0); // read PHY status register (vendor specific)
+			dat = IORD(&pmac->mdio1.reg11,0); // read PHY status register (vendor specific)
 
 			duplex = (dat >> 1) & 0x01; // extract connection duplex information
 
@@ -1431,7 +1400,7 @@ cyg_uint32 getPHYSpeed(np_tse_mac *pmac)
 		else if (phyid == MVLPHY_ID)
 		{
 
-			dat = IORD(&pmac->mdio0.reg11,0); // read PHY status register (vendor specific)
+			dat = IORD(&pmac->mdio1.reg11,0); // read PHY status register (vendor specific)
 			if (dat & (1 << 6))
 			{
 //				printf("[netif_tse] PHY MDIX (crossover)\n");
@@ -1442,38 +1411,38 @@ cyg_uint32 getPHYSpeed(np_tse_mac *pmac)
 			dat = (dat >> 14) & 0x03;
 			is1000 = (dat == 2) ? 1 : 0;
 #if 0
-			printf("reg0 0x%08x\n", IORD(&pmac->mdio0.CONTROL,0));
-			printf("reg1 0x%08x\n", IORD(&pmac->mdio0.STATUS,0));
-			printf("reg2 0x%08x\n", IORD(&pmac->mdio0.PHY_ID1,0));
-			printf("reg3 0x%08x\n", IORD(&pmac->mdio0.PHY_ID2,0));
-			printf("reg4 0x%08x\n", IORD(&pmac->mdio0.ADV,0));
-			printf("reg5 0x%08x\n", IORD(&pmac->mdio0.REMADV,0));
-			printf("reg6 0x%08x\n", IORD(&pmac->mdio0.reg6,0));
-			printf("reg7 0x%08x\n", IORD(&pmac->mdio0.reg7,0));
-			printf("reg8 0x%08x\n", IORD(&pmac->mdio0.reg8,0));
-			printf("reg9 0x%08x\n", IORD(&pmac->mdio0.reg9,0));
-			printf("rega 0x%08x\n", IORD(&pmac->mdio0.rega,0));
-			printf("regb 0x%08x\n", IORD(&pmac->mdio0.regb,0));
-			printf("regc 0x%08x\n", IORD(&pmac->mdio0.regc,0));
-			printf("regd 0x%08x\n", IORD(&pmac->mdio0.regd,0));
-			printf("rege 0x%08x\n", IORD(&pmac->mdio0.rege,0));
-			printf("regf 0x%08x\n", IORD(&pmac->mdio0.regf,0));
-			printf("reg10 0x%08x\n", IORD(&pmac->mdio0.reg10,0));
-			printf("reg11 0x%08x\n", IORD(&pmac->mdio0.reg11,0));
-			printf("reg12 0x%08x\n", IORD(&pmac->mdio0.reg12,0));
-			printf("reg13 0x%08x\n", IORD(&pmac->mdio0.reg13,0));
-			printf("reg14 0x%08x\n", IORD(&pmac->mdio0.reg14,0));
-			printf("reg15 0x%08x\n", IORD(&pmac->mdio0.reg15,0));
-			printf("reg16 0x%08x\n", IORD(&pmac->mdio0.reg16,0));
-			printf("reg17 0x%08x\n", IORD(&pmac->mdio0.reg17,0));
-			printf("reg18 0x%08x\n", IORD(&pmac->mdio0.reg18,0));
-			printf("reg19 0x%08x\n", IORD(&pmac->mdio0.reg19,0));
-			printf("reg1a 0x%08x\n", IORD(&pmac->mdio0.reg1a,0));
-			printf("reg1b 0x%08x\n", IORD(&pmac->mdio0.reg1b,0));
-			printf("reg1c 0x%08x\n", IORD(&pmac->mdio0.reg1c,0));
-			printf("reg1d 0x%08x\n", IORD(&pmac->mdio0.reg1d,0));
-			printf("reg1e 0x%08x\n", IORD(&pmac->mdio0.reg1e,0));
-			printf("reg1f 0x%08x\n", IORD(&pmac->mdio0.reg1f,0));
+			printf("reg0 0x%08x\n", IORD(&pmac->mdio1.CONTROL,0));
+			printf("reg1 0x%08x\n", IORD(&pmac->mdio1.STATUS,0));
+			printf("reg2 0x%08x\n", IORD(&pmac->mdio1.PHY_ID1,0));
+			printf("reg3 0x%08x\n", IORD(&pmac->mdio1.PHY_ID2,0));
+			printf("reg4 0x%08x\n", IORD(&pmac->mdio1.ADV,0));
+			printf("reg5 0x%08x\n", IORD(&pmac->mdio1.REMADV,0));
+			printf("reg6 0x%08x\n", IORD(&pmac->mdio1.reg6,0));
+			printf("reg7 0x%08x\n", IORD(&pmac->mdio1.reg7,0));
+			printf("reg8 0x%08x\n", IORD(&pmac->mdio1.reg8,0));
+			printf("reg9 0x%08x\n", IORD(&pmac->mdio1.reg9,0));
+			printf("rega 0x%08x\n", IORD(&pmac->mdio1.rega,0));
+			printf("regb 0x%08x\n", IORD(&pmac->mdio1.regb,0));
+			printf("regc 0x%08x\n", IORD(&pmac->mdio1.regc,0));
+			printf("regd 0x%08x\n", IORD(&pmac->mdio1.regd,0));
+			printf("rege 0x%08x\n", IORD(&pmac->mdio1.rege,0));
+			printf("regf 0x%08x\n", IORD(&pmac->mdio1.regf,0));
+			printf("reg10 0x%08x\n", IORD(&pmac->mdio1.reg10,0));
+			printf("reg11 0x%08x\n", IORD(&pmac->mdio1.reg11,0));
+			printf("reg12 0x%08x\n", IORD(&pmac->mdio1.reg12,0));
+			printf("reg13 0x%08x\n", IORD(&pmac->mdio1.reg13,0));
+			printf("reg14 0x%08x\n", IORD(&pmac->mdio1.reg14,0));
+			printf("reg15 0x%08x\n", IORD(&pmac->mdio1.reg15,0));
+			printf("reg16 0x%08x\n", IORD(&pmac->mdio1.reg16,0));
+			printf("reg17 0x%08x\n", IORD(&pmac->mdio1.reg17,0));
+			printf("reg18 0x%08x\n", IORD(&pmac->mdio1.reg18,0));
+			printf("reg19 0x%08x\n", IORD(&pmac->mdio1.reg19,0));
+			printf("reg1a 0x%08x\n", IORD(&pmac->mdio1.reg1a,0));
+			printf("reg1b 0x%08x\n", IORD(&pmac->mdio1.reg1b,0));
+			printf("reg1c 0x%08x\n", IORD(&pmac->mdio1.reg1c,0));
+			printf("reg1d 0x%08x\n", IORD(&pmac->mdio1.reg1d,0));
+			printf("reg1e 0x%08x\n", IORD(&pmac->mdio1.reg1e,0));
+			printf("reg1f 0x%08x\n", IORD(&pmac->mdio1.reg1f,0));
 
 #endif
 
@@ -1482,7 +1451,7 @@ cyg_uint32 getPHYSpeed(np_tse_mac *pmac)
 				& 0xFFFF)))
 		{
 
-			dat = IORD(&pmac->mdio0.reg10,0); // read PHY status register (vendor specific)
+			dat = IORD(&pmac->mdio1.reg10,0); // read PHY status register (vendor specific)
 
 			duplex = (dat >> 2) & 0x01; // extract connection duplex information
 			is1000 = 0;
@@ -1510,9 +1479,7 @@ cyg_uint32 getPHYSpeed(np_tse_mac *pmac)
 #endif
 
 	result = ((is1000 & 0x01) << 1) | (duplex & 0x01);
-//	diag_printf(
-//			"[triple_speed_ethernet_init] Speed is 1000 is %d\t Full Duplex is %d\n",
-//			is1000, duplex);
+//	db_printf("[triple_speed_ethernet_init] Speed is 1000 is %d\t Full Duplex is %d\n", is1000, duplex);
 
 	return result;
 }
