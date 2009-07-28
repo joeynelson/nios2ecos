@@ -115,7 +115,7 @@ int alt_avalon_sgdma_do_async_transfer( alt_sgdma_dev *dev, alt_sgdma_descriptor
 		control |= ( dev->chain_control | ALTERA_AVALON_SGDMA_CONTROL_RUN_MSK | ALTERA_AVALON_SGDMA_CONTROL_STOP_DMA_ER_MSK);
 
 		IOWR_ALTERA_AVALON_SGDMA_CONTROL(dev->base, control);
-		printf("SG_DMA CONTRL: %x From: %x\n", control, dev->base);
+//		printf("SG_DMA CONTRL: %x From: %x\n", control, dev->base);
 
 	}
 	/*
@@ -131,7 +131,7 @@ int alt_avalon_sgdma_do_async_transfer( alt_sgdma_dev *dev, alt_sgdma_descriptor
 		control |= (ALTERA_AVALON_SGDMA_CONTROL_RUN_MSK |
 				ALTERA_AVALON_SGDMA_CONTROL_STOP_DMA_ER_MSK );
 		control &= ~ALTERA_AVALON_SGDMA_CONTROL_IE_GLOBAL_MSK;
-		printf("SG_DMA CONTRL: %x From: %x\n", control, dev->base);
+//		printf("SG_DMA CONTRL: %x From: %x\n", control, dev->base);
 
 		IOWR_ALTERA_AVALON_SGDMA_CONTROL(dev->base, control);
 	}
@@ -451,7 +451,7 @@ cyg_uint32 alt_avalon_sgdma_status( alt_sgdma_dev *dev)
 {
 	cyg_uint32 status = IORD_ALTERA_AVALON_SGDMA_STATUS( dev->base);
 
-	//	printf("SG_DMA STATUS: %x From: %x\n", status, dev->base);
+//		printf("SG_DMA STATUS: %x From: %x\n", status, dev->base);
 
 	IOWR_ALTERA_AVALON_SGDMA_STATUS(dev->base, 0xFF);
 
