@@ -208,7 +208,7 @@ static int tse_txd_isr(cyg_vector_t vector, cyg_addrword_t data)
 	//    INCR_STAT( interrupts );
 
 	cyg_drv_interrupt_mask(cpd->tx_sgdma.irq);
-	alt_avalon_sgdma_set_control(&cpd->tx_sgdma, 0x80000000);
+	alt_avalon_sgdma_set_control(&cpd->tx_sgdma, ALTERA_AVALON_SGDMA_CONTROL_CLEAR_INTERRUPT_MSK);
 	alt_avalon_sgdma_set_control(&cpd->tx_sgdma, 0x0);
 	cyg_drv_interrupt_acknowledge(cpd->tx_sgdma.irq);
 
@@ -225,6 +225,8 @@ static int tse_rxd_isr(cyg_vector_t vector, cyg_addrword_t data)
 //	DEBUG_FUNCTION();
 
 	//    INCR_STAT( interrupts );
+	cyg_uint32 stat = alt_avalon_sgdma_status(&cpd->rx_sgdma);
+
 
 	cyg_drv_interrupt_mask(cpd->rx_sgdma.irq);
 
@@ -245,9 +247,13 @@ static void tse_deliver(struct eth_drv_sc *sc)
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
 
 //	DEBUG_FUNCTION();
+	cyg_uint32 stat = alt_avalon_sgdma_status(&cpd->rx_sgdma);
 
-	cpd->bytesReceived = alt_avalon_sgdma_descpt_bytes_xfered(
-			(alt_sgdma_descriptor *) cpd->rx_sgdma.descriptor_base) - 2;
+	if(stat & ALTERA_AVALON_SGDMA_STATUS_ERROR_MSK)
+		cpd->bytesReceived = 0;
+	else
+		cpd->bytesReceived = alt_avalon_sgdma_descpt_bytes_xfered(
+				(alt_sgdma_descriptor *) cpd->rx_sgdma.descriptor_base) - 2;
 
 //	diag_printf("Bytes Rxd: %d\n", cpd->bytesReceived);
 
@@ -318,6 +324,8 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 
 	// reset the rx sgdma   
 	alt_avalon_sgdma_init2(&cpd->rx_sgdma);
+
+
 
 	// reset the tx sgdma
 	alt_avalon_sgdma_init2(&cpd->tx_sgdma);
@@ -424,7 +432,7 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 	IOWR_ALTERA_TSEMAC_RX_SECTION_FULL( cpd->base, 0);
 
 //	IOWR_ALTERA_TSEMAC_RX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_RX_CMD_STAT_RXSHIFT16_MSK);
-//	IOWR_ALTERA_TSEMAC_TX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_TX_CMD_STAT_TXSHIFT16_MSK);
+	IOWR_ALTERA_TSEMAC_TX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_TX_CMD_STAT_TXSHIFT16_MSK);
 
 	// Initialize upper level driver
 	(sc->funs->eth_drv->init)(sc, cpd->enaddr);
@@ -534,8 +542,8 @@ static void tse_start(struct eth_drv_sc *sc, unsigned char *enaddr, int flags)
 			0, // read until EOP
 			0); // don't write to constant address
 
-	cpd->rx_sgdma.chain_control = 0x1a;
-	alt_avalon_sgdma_set_control(&cpd->rx_sgdma, 0);
+	//stop after 2 descriptors
+	cpd->rx_sgdma.chain_control = 0x1a | 0x200 | ALTERA_AVALON_SGDMA_CONTROL_IE_MAX_DESC_PROCESSED_MSK | ALTERA_AVALON_SGDMA_CONTROL_IE_ERROR_MSK ;
 
 	//	do {
 
@@ -711,7 +719,7 @@ static void tse_send(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 	/* perform cache save read to obtain actual bytes transferred for current sgdma descriptor */
 	//actualBytesTransferred = IORD_ALTERA_TSE_SGDMA_DESC_ACTUAL_BYTES_TRANSFERRED( cpd->tx_sgdma.descriptor_base);
 //	IOWR_ALTERA_TSEMAC_RX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_RX_CMD_STAT_RXSHIFT16_MSK);
-//	IOWR_ALTERA_TSEMAC_TX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_TX_CMD_STAT_TXSHIFT16_MSK);
+	IOWR_ALTERA_TSEMAC_TX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_TX_CMD_STAT_TXSHIFT16_MSK);
 }
 
 static void tse_TxEvent(struct eth_drv_sc *sc, int stat)
@@ -949,13 +957,17 @@ static void tse_recv(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 			0, // read until EOP
 			0); // don't write to constant address
 
-	alt_avalon_sgdma_set_control(&cpd->rx_sgdma, 0x12);
+	//stop after 2 descriptors
+	cpd->rx_sgdma.chain_control = 0x1a | 0x200 | ALTERA_AVALON_SGDMA_CONTROL_IE_MAX_DESC_PROCESSED_MSK | ALTERA_AVALON_SGDMA_CONTROL_IE_ERROR_MSK ;
+
+
+//	alt_avalon_sgdma_set_control(&cpd->rx_sgdma, 0x1a | 0x200 | ALTERA_AVALON_SGDMA_CONTROL_IE_MAX_DESC_PROCESSED_MSK | ALTERA_AVALON_SGDMA_CONTROL_IE_ERROR_MSK);
 
 	// SGDMA operation invoked for RX (non-blocking call)
 	alt_avalon_sgdma_do_async_transfer(&cpd->rx_sgdma, desc_base);
 
 //	IOWR_ALTERA_TSEMAC_RX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_RX_CMD_STAT_RXSHIFT16_MSK);
-	IOWR_ALTERA_TSEMAC_TX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_TX_CMD_STAT_TXSHIFT16_MSK);
+//	IOWR_ALTERA_TSEMAC_TX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_TX_CMD_STAT_TXSHIFT16_MSK);
 
 }
 
