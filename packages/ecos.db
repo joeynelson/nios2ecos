@@ -239,7 +239,7 @@ target nios2_neek {
                           CYGPKG_ALTERA_AVALON_UART
                           CYGPKG_ALTERA_AVALON_JTAG_UART
                           CYGPKG_ALTERA_AVALON_TIMER
-                          CYGPKG_DEVS_FLASH_NEEK                          
+                          CYGPKG_DEVS_FLASH_NEEK                                            
         }
         description "
             Base NEEK Board"
@@ -254,4 +254,14 @@ package CYGPKG_DEVS_FLASH_NEEK {
         description "
            This package contains hardware support for FLASH memory
 	   on the Altera NEEK platform."
+}
+
+
+package CYGPKG_IO_EPCS {
+    alias         { "EPCS device drivers" }
+    hardware
+    directory     io/epcs
+    script        io_epcs.cdl
+    description "This package provides a driver for the SPI unit of the EPCS
+                 controller family."
 }
