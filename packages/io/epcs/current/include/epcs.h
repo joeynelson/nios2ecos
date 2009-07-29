@@ -107,7 +107,7 @@ __externC int cyg_flash_lock(const cyg_flashaddr_t flash_base,
 __externC int cyg_flash_unlock(const cyg_flashaddr_t flash_base, 
                                size_t len, 
                                cyg_flashaddr_t *err_address);
-__externC const char *cyg_flash_errmsg(const int err);
+
 #ifdef CYGPKG_KERNEL
 __externC int cyg_flash_mutex_lock(const cyg_flashaddr_t from, 
                                    size_t len);

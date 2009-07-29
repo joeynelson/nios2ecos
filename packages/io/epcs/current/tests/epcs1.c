@@ -53,7 +53,7 @@
 // #define DEBUG_PRINTFS
 
 #include <pkgconf/hal.h>
-#include <pkgconf/io_flash.h>
+#include <pkgconf/io_epcs.h>
 #include CYGHWR_MEMORY_LAYOUT_H
 
 #include <cyg/infra/diag.h>
@@ -61,7 +61,7 @@
 
 #include <cyg/io/io.h>
 #include <cyg/io/config_keys.h>
-#include <cyg/io/flash.h>
+#include <cyg/io/epcs.h>
 #include <errno.h>
 #include <string.h>
 #include <cyg/hal/hal_if.h>
@@ -79,7 +79,7 @@
 //
 // RedBoot> fis cre -b %{freememlo} -l 0x100000 flashtest
 
-#define FLASH_TEST_DEVICE "/dev/flash/fis/flashtest"
+#define FLASH_TEST_DEVICE "/dev/epcs"
 
 // If it does not exist, a FIS entry named "jffs2test" will be used
 // if present, as this may have been set up for jffs2 testing.
@@ -97,6 +97,43 @@ cyg_start( void )
 #else
 
 //=================================================================
+
+const char *
+cyg_epcs_errmsg(const int err)
+{
+    switch (err) {
+    case CYG_FLASH_ERR_OK:
+        return "No error - operation complete";
+    case CYG_FLASH_ERR_ERASE_SUSPEND:
+        return "Device is in erase suspend state";
+    case CYG_FLASH_ERR_PROGRAM_SUSPEND:
+        return "Device is in program suspend state";
+    case CYG_FLASH_ERR_INVALID:
+        return "Invalid FLASH address";
+    case CYG_FLASH_ERR_ERASE:
+        return "Error trying to erase";
+    case CYG_FLASH_ERR_LOCK:
+        return "Error trying to lock/unlock";
+    case CYG_FLASH_ERR_PROGRAM:
+        return "Error trying to program";
+    case CYG_FLASH_ERR_PROTOCOL:
+        return "Generic error";
+    case CYG_FLASH_ERR_PROTECT:
+        return "Device/region is write-protected";
+    case CYG_FLASH_ERR_NOT_INIT:
+        return "FLASH sub-system not initialized";
+    case CYG_FLASH_ERR_DRV_VERIFY:
+        return "Data verify failed after operation";
+    case CYG_FLASH_ERR_DRV_TIMEOUT:
+        return "Driver timed out waiting for device";
+    case CYG_FLASH_ERR_DRV_WRONG_PART:
+        return "Driver does not support device";
+    case CYG_FLASH_ERR_LOW_VOLTAGE:
+        return "Device reports low voltage";
+    default:
+        return "Unknown error";
+    }
+}
 
 externC void
 cyg_start( void )
@@ -188,13 +225,13 @@ cyg_start( void )
     len = sizeof(e);
     if ((stat = cyg_io_get_config(flash_handle, CYG_IO_GET_CONFIG_FLASH_ERASE, &e, &len ) ) != 0 || e.flasherr != 0)
     {
-        diag_printf("FLASH: erase failed: %s %s\n", cyg_flash_errmsg(stat),cyg_flash_errmsg(e.flasherr));
+        diag_printf("FLASH: erase failed: %s %s\n", cyg_epcs_errmsg(stat), cyg_epcs_errmsg(e.flasherr));
         ok = false;
     }
     len = FLASH_TEST_LENGTH;
     if (ok && (stat = cyg_io_bread(flash_handle, (void *)test_buf1, &len, flash_test_start)) != 0)
     {
-        diag_printf("FLASH: read/verify after erase failed: %s\n", cyg_flash_errmsg(stat));
+        diag_printf("FLASH: read/verify after erase failed: %s\n", cyg_epcs_errmsg(stat));
         ok = false;
     }    
     lp1 = (cyg_uint32 *)test_buf1;

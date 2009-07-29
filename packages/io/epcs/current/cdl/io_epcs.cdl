@@ -197,7 +197,35 @@ cdl_package CYGPKG_IO_EPCS {
                              For example /dev/flash/0/0x1000 or
                              /dev/flash/1/0,65536."
         }
-    } 
+    }
+    cdl_component CYGPKG_IO_EPCS_TESTS {
+            display "EPCS device driver tests"
+            flavor  data
+            no_define
+            calculated { (CYGPKG_IO_FLASH_BLOCK_DEVICE ? " tests/epcs1" : "") }
+            description   "
+                This option specifies the set of tests for the epcs device drivers."
+
+
+                cdl_option CYGNUM_IO_EPCS_TEST_OFFSET {
+                    display         "Start offset from flash base"
+                    flavor          data
+                    default_value   0x100000
+                    description     "
+                        This gives the offset from the base of flash where tests
+                        can be run.  It is important to set this correctly, as an
+                        incorrect value could allow the tests to write over critical
+                        portions of the FLASH device and possibly render the target
+                        board totally non-functional."
+                }
+                cdl_option CYGNUM_IO_EPCS_TEST_LENGTH {
+                    display         "Length"
+                    flavor          data
+                    default_value   0x100000
+                    description     "
+                        This gives the length of the region of flash used for testing."
+                }
+    }
 }
 
 # EOF io_epcs.cdl
