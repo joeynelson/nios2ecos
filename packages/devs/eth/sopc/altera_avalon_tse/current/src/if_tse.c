@@ -278,8 +278,8 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 	struct eth_drv_sc *sc = (struct eth_drv_sc *) tab->device_instance;
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
 
-	unsigned short val;
-	int cc;
+	unsigned short val = 0;
+	int cc = 0;
 	cyg_bool esa_configured = false;
 	alt_sgdma_descriptor *desc_pointer;
 
@@ -287,11 +287,11 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 
 	cpd->txbusy = cpd->within_send = 0;
 
-	int dat;
-	cyg_uint32 result;
-	int is1000, duplex;
+	int dat = 0;
+	cyg_uint32 result = 0;
+	int is1000 = 0, duplex = 0;
 	int status = 0;
-	int i;
+	int i = 0;
 
 	/* Get the Rx and Tx SGDMA addresses */
 	cpd->rx_sgdma.base = SGDMA_RX_BASE;
@@ -444,7 +444,7 @@ static void tse_stop(struct eth_drv_sc *sc)
 {
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
 
-	int state;
+	int state = 0;
 
 	DEBUG_FUNCTION();
 
@@ -477,8 +477,8 @@ static void tse_stop(struct eth_drv_sc *sc)
 static void tse_start(struct eth_drv_sc *sc, unsigned char *enaddr, int flags)
 {
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
-	cyg_uint32 dat, timeout, result;
-	int is1000, duplex;
+	cyg_uint32 dat = 0, timeout = 0, result = 0;
+	int is1000 = 0, duplex = 0;
 
 	DEBUG_FUNCTION();
 
@@ -489,7 +489,7 @@ static void tse_start(struct eth_drv_sc *sc, unsigned char *enaddr, int flags)
 #if ENABLE_PHY_LOOPBACK
 			ALTERA_TSEMAC_CMD_PROMIS_EN_MSK | ALTERA_TSEMAC_CMD_LOOPBACK_MSK | // promiscuous mode
 #endif
-			ALTERA_TSEMAC_CMD_PAD_EN_MSK       |
+//			ALTERA_TSEMAC_CMD_PAD_EN_MSK       |
 //			ALTERA_TSEMAC_CMD_TX_ADDR_INS_MSK |
 			ALTERA_TSEMAC_CMD_RX_ERR_DISC_MSK; /* automatically discard frames with CRC errors */
 
@@ -634,8 +634,7 @@ static void tse_TxDone(struct eth_drv_sc *sc)
 {
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
 	alt_sgdma_descriptor *desc_base = cpd->tx_sgdma.descriptor_base;
-	int i;
-	int stat;
+	int stat = 0;
 
 	stat = alt_avalon_sgdma_check_descriptor_status(desc_base);
 	if(stat == 0)
@@ -673,15 +672,18 @@ static void tse_send(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 		int sg_len, int total_len, unsigned long key)
 {
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
-	int i, len;
+	int i = 0, len = 0;
 	static cyg_uint32 send_buffer[( 1528 + 16) / 4 + 1];
 	cyg_uint8* mem = (cyg_uint8 *)( ((cyg_uint32)((cyg_uint8*)send_buffer)) | 0x80000000) + 2;
 	alt_sgdma_descriptor *desc_base = cpd->tx_sgdma.descriptor_base;
 
 	DEBUG_FUNCTION();
-
+	cpd->txbusy = 1;
 	if(cpd->txkey)
+	{
 		(sc->funs->eth_drv->tx_done)( sc, cpd->txkey, 1 );
+	}
+	cpd->within_send = 1;
 
 	// for all of the buf/len pairs in the scatter gather list
 	len = 0;
@@ -720,6 +722,7 @@ static void tse_send(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 	//actualBytesTransferred = IORD_ALTERA_TSE_SGDMA_DESC_ACTUAL_BYTES_TRANSFERRED( cpd->tx_sgdma.descriptor_base);
 //	IOWR_ALTERA_TSEMAC_RX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_RX_CMD_STAT_RXSHIFT16_MSK);
 	IOWR_ALTERA_TSEMAC_TX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_TX_CMD_STAT_TXSHIFT16_MSK);
+	cpd->txbusy = 0;
 }
 
 static void tse_TxEvent(struct eth_drv_sc *sc, int stat)
@@ -915,9 +918,9 @@ static void tse_recv(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 {
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
 
-	cyg_uint8 *from_addr;
-	cyg_uint32 from, status, i;
-	int pkt_len, total_len;
+	cyg_uint8 *from_addr = 0;
+	cyg_uint32 from = 0, status = 0, i = 0;
+	int pkt_len = 0, total_len = 0;
 
 	from_addr = ((cyg_uint8 *) cpd->rx_buffer) + 2;
 
@@ -1236,14 +1239,14 @@ cyg_uint32 getPHYSpeed(np_tse_mac *pmac)
 {
 
 	int isKnown; /* known PHY. */
-	cyg_uint32 is1000;
-	cyg_uint32 duplex; /* 1 = full ; 0 = half*/
-	int phyid;
+	cyg_uint32 is1000 = 0;
+	cyg_uint32 duplex = 0; /* 1 = full ; 0 = half*/
+	int phyid = 0;
 	int phyid2 = 0;
-	int dat;
+	int dat = 0;
 	int isMVL = 0;
 	cyg_uint32 result;
-	int phyadd;
+	int phyadd = 0;
 
 	DEBUG_FUNCTION();
 	// determine PHY speed: This is PHY dependent and you need to change
