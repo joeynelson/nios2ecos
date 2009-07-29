@@ -170,8 +170,7 @@ externC char *flash_errmsg(int err);
 #define FLASH_ERR_LOW_VOLTAGE     CYG_FLASH_ERR_LOW_VOLTAGE     
 #endif 
 
-#if defined(CYGPKG_IO_FLASH_BLOCK_DEVICE) || \
-      defined(CYGPKG_IO_FLASH_BLOCK_DEVICE_LEGACY)
+#if defined(CYGPKG_IO_EPCS_BLOCK_DEVICE)
 typedef struct {
     CYG_ADDRESS offset;
     size_t len;

@@ -238,8 +238,7 @@ target nios2_neek {
                           CYGPKG_ALTERA_AVALON_JTAG_UART_COMM
                           CYGPKG_ALTERA_AVALON_UART
                           CYGPKG_ALTERA_AVALON_JTAG_UART
-                          CYGPKG_ALTERA_AVALON_TIMER
-                          CYGPKG_DEVS_FLASH_NEEK                                            
+                          CYGPKG_ALTERA_AVALON_TIMER                                                            
         }
         description "
             Base NEEK Board"

@@ -87,7 +87,7 @@
 
 //=================================================================
 
-#if !defined(CYGPKG_IO_FLASH_BLOCK_DEVICE)
+#if !defined(CYGPKG_IO_EPCS_BLOCK_DEVICE)
 externC void
 cyg_start( void )
 {

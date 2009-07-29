@@ -1,6 +1,7 @@
 2009-07-29 Laurentiu Cocanu <laurentiu.cocanu@zylin.com>
 	* Added EPCS flash driver as block device driver
 	* Code clean-up and added working test
+	* Modified code in order to leave jffs2 source code intact
 
 2009-07-28 Edgar Grimberg <edgar.grimberg@zylin.com>
 	* Naive TX

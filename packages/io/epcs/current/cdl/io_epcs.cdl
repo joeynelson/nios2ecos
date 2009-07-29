@@ -54,12 +54,14 @@ cdl_package CYGPKG_IO_EPCS {
     description     "
         This package provides support for the flash devices on the
         current platform."
-    #requires    CYGPKG_ISOINFRA
-    #requires    CYGINT_ISO_STRING_STRFUNCS
+    requires    CYGPKG_ISOINFRA
+    requires    CYGINT_ISO_STRING_STRFUNCS
+    
+    implements    CYGHWR_IO_FLASH_DEVICE
 
     compile     epcs.c altera_avalon_epcs_flash_controller.c altera_avalon_spi.c epcs_commands.c alt_flash_dev.c alt_dev_llist_insert.c alt_find_dev.c
  
-    cdl_interface CYGHWR_IO_FLASH_DEVICE {
+    cdl_interface CYGHWR_IO_EPCS_DEVICE {
         display     "Hardware FLASH device drivers"
 	#requires    { CYGHWR_IO_FLASH_DEVICE >= 1 }
         description "
@@ -145,11 +147,11 @@ cdl_package CYGPKG_IO_EPCS {
            write-protected or not."
     }
 
-    cdl_component CYGPKG_IO_FLASH_BLOCK_DEVICE {
+    cdl_component CYGPKG_IO_EPCS_BLOCK_DEVICE {
         display         "Provide /dev block devices"
         flavor          bool
         active_if       CYGPKG_IO
-        default_value   0
+        default_value   1
         compile         -library=libextras.a epcs.c
         #requires        { CYGINT_IO_FLASH_BLOCK_DEVICE_METHODS > 0}
         description     "
@@ -157,7 +159,7 @@ cdl_package CYGPKG_IO_EPCS {
             accessed using standard I/O functions such as eCos cyg_io_read()
             and POSIX open()."
 
-        cdl_interface CYGINT_IO_FLASH_BLOCK_DEVICE_METHODS {
+        cdl_interface CYGINT_IO_EPCS_BLOCK_DEVICE_METHODS {
             display         "Number of methods to reference Flash"
             flavor          bool
             no_define
@@ -167,7 +169,7 @@ cdl_package CYGPKG_IO_EPCS {
                              is available."
         }
 
-        cdl_option CYGNUM_IO_FLASH_BLOCK_DEVICES {
+        cdl_option CYGNUM_IO_EPCS_BLOCK_DEVICES {
             display         "Number of /dev/flash/ device slots"
             flavor          data
             default_value   2
@@ -177,7 +179,7 @@ cdl_package CYGPKG_IO_EPCS {
                              number required will be small."
         }
 
-        cdl_option CYGFUN_IO_FLASH_BLOCK_FROM_FIS {
+        cdl_option CYGFUN_IO_EPCS_BLOCK_FROM_FIS {
             display         "Access using named FIS areas"
             requires        CYGSEM_HAL_VIRTUAL_VECTOR_SUPPORT
             default_value   CYGSEM_HAL_VIRTUAL_VECTOR_SUPPORT
@@ -186,7 +188,7 @@ cdl_package CYGPKG_IO_EPCS {
                              of FIS regions to identify the Flash device, or portion
                              of the device. For example /dev/flash/fis/jffs2."
         }
-        cdl_option CYGFUN_IO_FLASH_BLOCK_FROM_DEVOFFSET {
+        cdl_option CYGFUN_IO_EPCS_BLOCK_FROM_DEVOFFSET {
             display         "Access using device numbers,offsets"
             default_value   1
             implements      CYGINT_IO_FLASH_BLOCK_DEVICE_METHODS
