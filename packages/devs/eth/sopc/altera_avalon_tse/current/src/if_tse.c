@@ -196,6 +196,7 @@ static void tse_poll(struct eth_drv_sc *sc);
 static cyg_interrupt tse_interrupt;
 static cyg_handle_t tse_interrupt_handle;
 
+#if 0
 // This ISR is called when the ethernet interrupt occurs
 static int tse_txd_isr(cyg_vector_t vector, cyg_addrword_t data)
 /* , HAL_SavedRegisters *regs */
@@ -215,6 +216,8 @@ static int tse_txd_isr(cyg_vector_t vector, cyg_addrword_t data)
 	return (CYG_ISR_HANDLED); // Run the DSR
 }
 
+#endif
+
 // This ISR is called when the ethernet interrupt occurs
 static int tse_rxd_isr(cyg_vector_t vector, cyg_addrword_t data)
 /* , HAL_SavedRegisters *regs */
@@ -222,17 +225,15 @@ static int tse_rxd_isr(cyg_vector_t vector, cyg_addrword_t data)
 	struct eth_drv_sc *sc = (struct eth_drv_sc *) data;
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
 
-//	DEBUG_FUNCTION();
+	DEBUG_FUNCTION();
 
-	//    INCR_STAT( interrupts );
-	cyg_uint32 stat = alt_avalon_sgdma_status(&cpd->rx_sgdma);
-
-
-	cyg_drv_interrupt_mask(cpd->rx_sgdma.irq);
+	alt_avalon_sgdma_get_control(&cpd->rx_sgdma);
 
 	alt_avalon_sgdma_set_control(&cpd->rx_sgdma, ALTERA_AVALON_SGDMA_CONTROL_CLEAR_INTERRUPT_MSK);
 	alt_avalon_sgdma_set_control(&cpd->rx_sgdma, 0x0);
-	alt_avalon_sgdma_status(&cpd->rx_sgdma);
+
+	cyg_drv_interrupt_mask(cpd->rx_sgdma.irq);
+//	alt_avalon_sgdma_status(&cpd->rx_sgdma);
 
 	cyg_drv_interrupt_acknowledge(cpd->rx_sgdma.irq);
 
@@ -241,27 +242,56 @@ static int tse_rxd_isr(cyg_vector_t vector, cyg_addrword_t data)
 
 #endif
 
+static void tse_TxDone(struct eth_drv_sc *sc)
+{
+	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
+	alt_sgdma_descriptor *desc_base = cpd->tx_sgdma.descriptor_base;
+	int stat = 0;
+	DEBUG_FUNCTION();
+
+	stat = alt_avalon_sgdma_check_descriptor_status( (alt_sgdma_descriptor *)cpd->tx_sgdma.descriptor_base );
+	if((stat & ALTERA_AVALON_SGDMA_STATUS_BUSY_MSK) == 0 && 0 != cpd->txkey)
+	{
+		(sc->funs->eth_drv->tx_done)( sc, cpd->txkey, 0 );
+		cpd->txkey = 0;
+	}
+
+}
+
+
 // The deliver function (ex-DSR)  handles the ethernet [logical] processing
 static void tse_deliver(struct eth_drv_sc *sc)
 {
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
 
-//	DEBUG_FUNCTION();
+	DEBUG_FUNCTION();
 	cyg_uint32 stat = alt_avalon_sgdma_status(&cpd->rx_sgdma);
 
-	if(stat & ALTERA_AVALON_SGDMA_STATUS_ERROR_MSK)
+	tse_TxDone(sc);
+
+	//check for errors
+	if(stat & ALTERA_AVALON_SGDMA_STATUS_ERROR_MSK != 0x0)
 		cpd->bytesReceived = 0;
+			// not busy														//something completed
 	else
+		if( ((stat & ALTERA_AVALON_SGDMA_STATUS_BUSY_MSK) == 0x0)
+			&& ((stat & (ALTERA_AVALON_SGDMA_STATUS_DESC_COMPLETED_MSK | ALTERA_AVALON_SGDMA_STATUS_CHAIN_COMPLETED_MSK)) != 0x0)
+			)
 		cpd->bytesReceived = alt_avalon_sgdma_descpt_bytes_xfered(
 				(alt_sgdma_descriptor *) cpd->rx_sgdma.descriptor_base) - 2;
+	else
+		cpd->bytesReceived = 0;
 
-//	diag_printf("Bytes Rxd: %d\n", cpd->bytesReceived);
+//	diag_printf("stat: 0x%08x\n", stat);
+//	diag_printf("received: %d\n", cpd->bytesReceived);
 
 	if (cpd->bytesReceived > 0)
 	{
 		(sc->funs->eth_drv->recv)(sc, cpd->bytesReceived);
 	}
 
+//	alt_avalon_sgdma_set_control(&cpd->rx_sgdma, ALTERA_AVALON_SGDMA_CONTROL_CLEAR_INTERRUPT_MSK);
+//	alt_avalon_sgdma_set_control(&cpd->rx_sgdma, 0x0);
 	// Allow interrupts to happen again
 	cyg_drv_interrupt_unmask(cpd->rx_sgdma.irq);
 }
@@ -269,7 +299,7 @@ static void tse_deliver(struct eth_drv_sc *sc)
 static int tse_int_vector(struct eth_drv_sc *sc)
 {
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
-
+	DEBUG_FUNCTION();
 	return (cpd->rx_sgdma.irq);
 }
 
@@ -630,21 +660,6 @@ static int tse_control(struct eth_drv_sc *sc, unsigned long key,
 	return retVal;
 }
 
-static void tse_TxDone(struct eth_drv_sc *sc)
-{
-	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
-	alt_sgdma_descriptor *desc_base = cpd->tx_sgdma.descriptor_base;
-	int stat = 0;
-
-	stat = alt_avalon_sgdma_check_descriptor_status(desc_base);
-	if(stat == 0)
-	{
-		(sc->funs->eth_drv->tx_done)( sc, cpd->txkey, 0 );
-		cpd->txkey = 0;
-	}
-
-}
-
 //
 // This routine is called to see if it is possible to send another packet.
 // It will return non-zero if a transmit is possible, zero otherwise.
@@ -656,9 +671,9 @@ static int tse_can_send(struct eth_drv_sc *sc)
 
 	DEBUG_FUNCTION();
 
-	alt_avalon_sgdma_status(&cpd->rx_sgdma);
+//	alt_avalon_sgdma_status(&cpd->rx_sgdma);
 
-	if((alt_avalon_sgdma_status(&cpd->tx_sgdma)	& ALTERA_AVALON_SGDMA_STATUS_BUSY_MSK) == 0)
+	if((alt_avalon_sgdma_check_descriptor_status( (alt_sgdma_descriptor *)cpd->tx_sgdma.descriptor_base)	& ALTERA_AVALON_SGDMA_STATUS_BUSY_MSK) == 0)
 	{
 		retValue = 1;
 	}
@@ -679,11 +694,9 @@ static void tse_send(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 
 	DEBUG_FUNCTION();
 	cpd->txbusy = 1;
-	if(cpd->txkey)
-	{
-		(sc->funs->eth_drv->tx_done)( sc, cpd->txkey, 1 );
-	}
 	cpd->within_send = 1;
+
+	tse_TxDone(sc);
 
 	// for all of the buf/len pairs in the scatter gather list
 	len = 0;
@@ -722,7 +735,7 @@ static void tse_send(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 	//actualBytesTransferred = IORD_ALTERA_TSE_SGDMA_DESC_ACTUAL_BYTES_TRANSFERRED( cpd->tx_sgdma.descriptor_base);
 //	IOWR_ALTERA_TSEMAC_RX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_RX_CMD_STAT_RXSHIFT16_MSK);
 	IOWR_ALTERA_TSEMAC_TX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_TX_CMD_STAT_TXSHIFT16_MSK);
-	cpd->txbusy = 0;
+	cpd->within_send = 0;
 }
 
 static void tse_TxEvent(struct eth_drv_sc *sc, int stat)
@@ -961,7 +974,7 @@ static void tse_recv(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 			0); // don't write to constant address
 
 	//stop after 2 descriptors
-	cpd->rx_sgdma.chain_control = 0x1a | 0x200 | ALTERA_AVALON_SGDMA_CONTROL_IE_MAX_DESC_PROCESSED_MSK | ALTERA_AVALON_SGDMA_CONTROL_IE_ERROR_MSK ;
+	cpd->rx_sgdma.chain_control = 0x1a | 0x200 | ALTERA_AVALON_SGDMA_CONTROL_IE_MAX_DESC_PROCESSED_MSK | ALTERA_AVALON_SGDMA_CONTROL_IE_ERROR_MSK  ;
 
 
 //	alt_avalon_sgdma_set_control(&cpd->rx_sgdma, 0x1a | 0x200 | ALTERA_AVALON_SGDMA_CONTROL_IE_MAX_DESC_PROCESSED_MSK | ALTERA_AVALON_SGDMA_CONTROL_IE_ERROR_MSK);
@@ -979,53 +992,6 @@ static void tse_poll(struct eth_drv_sc *sc)
 	unsigned short event;
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
 	DEBUG_FUNCTION();
-#if 0
-	//    DEBUG_FUNCTION();
-	while (1)
-	{
-		cyg_drv_interrupt_acknowledge(cpd->interrupt);
-		// Get the (unmasked) requests
-		event = get_reg(sc, LAN91CXX_INTERRUPT);
-		event = event & (event >> 8) & 0xff;
-
-		if (0 == event)
-		break;
-#if 0
-		if (event & LAN91CXX_INTERRUPT_ERCV_INT)
-		{
-			// Early receive interrupt
-			db_printf("Early receive interrupt\n");
-		}
-		else if (event & LAN91CXX_INTERRUPT_EPH_INT)
-		{
-			// ethernet protocol handler failures
-			db_printf("Ethernet protocol handler failures\n");
-		}
-		else if (event & LAN91CXX_INTERRUPT_RX_OVRN_INT)
-		{
-			// receive overrun
-			db_printf("Receive overrun\n");
-		}
-		else if (event & LAN91CXX_INTERRUPT_ALLOC_INT)
-		{
-			// allocation interrupt
-			db_printf("Allocation interrupt\n");
-		}
-		else
-#endif
-		if (event & LAN91CXX_INTERRUPT_TX_SET)
-		{
-			tse_TxEvent(sc, event);
-		}
-		if (event & LAN91CXX_INTERRUPT_RCV_INT)
-		{
-			tse_RxEvent(sc);
-		}
-		if (event & ~(LAN91CXX_INTERRUPT_TX_SET | LAN91CXX_INTERRUPT_RCV_INT))
-		db_printf("%s: Unknown interrupt: 0x%04x\n",
-				__FUNCTION__, event);
-	}
-#endif
 }
 
 #ifdef LAN91CXX_IS_TSE
@@ -1205,6 +1171,8 @@ tse_write_phy(struct eth_drv_sc *sc, cyg_uint8 phyaddr,
  */
 cyg_uint32 marvell_cfg_gmii(np_tse_mac *pmac)
 {
+
+	DEBUG_FUNCTION();
 
 	cyg_uint16 dat = IORD(&pmac->mdio1.reg1b, 0);
     dat &= 0xfff0;
