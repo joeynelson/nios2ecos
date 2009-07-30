@@ -696,8 +696,6 @@ static void tse_send(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 	cpd->txbusy = 1;
 	cpd->within_send = 1;
 
-	tse_TxDone(sc);
-
 	// for all of the buf/len pairs in the scatter gather list
 	len = 0;
 	for (i = 0; i < sg_len; i++)
@@ -736,6 +734,8 @@ static void tse_send(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 //	IOWR_ALTERA_TSEMAC_RX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_RX_CMD_STAT_RXSHIFT16_MSK);
 	IOWR_ALTERA_TSEMAC_TX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_TX_CMD_STAT_TXSHIFT16_MSK);
 	cpd->within_send = 0;
+
+	tse_TxDone(sc);
 }
 
 static void tse_TxEvent(struct eth_drv_sc *sc, int stat)
