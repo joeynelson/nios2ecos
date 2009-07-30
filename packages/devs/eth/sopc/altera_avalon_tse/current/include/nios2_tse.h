@@ -183,7 +183,7 @@ typedef struct tse_priv_data {
 	alt_sgdma_dev   tx_sgdma;
 	alt_sgdma_dev   rx_sgdma;
 	cyg_uint32      cfgflags;  // flags or'ed during initialization of COMMAND_CONFIG
-	cyg_uint32      rx_buffer[( 1528 + 16) / 4];
+	cyg_uint32      rx_buffer[( 1528 + 16) / 4 + 2];
 	cyg_int32       bytesReceived;
 
 #ifdef KEEP_STATISTICS
