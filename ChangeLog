@@ -1,5 +1,6 @@
 2009-08-04 Edgar Grimberg <edgar.grimberg@zylin.com>
 	* Caches align addresses. Implemented invalidate macros.
+	* One descriptor TSE driver
 
 2009-07-31 Edgar Grimberg <edgar.grimberg@zylin.com>
 	* WIP TSE driver

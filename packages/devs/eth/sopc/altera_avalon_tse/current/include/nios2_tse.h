@@ -166,6 +166,7 @@ struct tse_priv_data;
 typedef cyg_bool (*provide_esa_t)(struct tse_priv_data* cpd);
 
 typedef struct tse_priv_data {
+	cyg_uint32      rx_buffer[( 1528 + 16) / 4 + 2]; 	//keep it first so it's aligned at the DCACHE line size
     int 			txbusy;             				// A packet has been sent
     unsigned long 	txkey;              				// Used to ack when packet sent
     unsigned short* base;               				// Base I/O address of controller (as it comes out of reset)
@@ -183,14 +184,16 @@ typedef struct tse_priv_data {
 	alt_sgdma_dev   tx_sgdma;
 	alt_sgdma_dev   rx_sgdma;
 	cyg_uint32      cfgflags;  // flags or'ed during initialization of COMMAND_CONFIG
-	cyg_uint32      rx_buffer[( 1528 + 16) / 4 + 2];
+
+
+	cyg_uint32      rx_buffer_uncached;
 	cyg_int32       bytesReceived;
 
 #ifdef KEEP_STATISTICS
     struct nios2_tse_stats stats;
 #endif
     cyg_uint32 speed;
-} tse_priv_data;
+} tse_priv_data __attribute__ ((aligned (NIOS2_DCACHE_LINE_SIZE)));
 
 // ------------------------------------------------------------------------
 
