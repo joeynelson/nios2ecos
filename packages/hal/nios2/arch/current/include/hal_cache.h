@@ -86,7 +86,7 @@
 // is not quite what we want, but there is no index-invalidate operation
 // available.
 
-#define HAL_DCACHE_INVALIDATE_ALL() HAL_DCACHE_SYNC()
+#define HAL_DCACHE_INVALIDATE_ALL() HAL_DCACHE_INVALIDATE(0, NIOS2_DCACHE_SIZE)
 
 // Synchronize the contents of the cache with memory.
 // This uses the index-writeback-invalidate operation.
@@ -95,20 +95,21 @@
     
 // It is not possible to lock entries in the Nios II data cache, so no
 // implementation is provided for these macros.
+// Flushing must happen on 4 byte aligned addresses
 
 #define HAL_DCACHE_FLUSH( _base_ , _asize_ )                     \
 CYG_MACRO_START                                                  \
     char* __i__;        											 \
-    char* __start__ = (char*)(_base_);                               \
+    char* __start__ = (char*)(((cyg_uint32)_base_) & 0xffffff00);       \
     char* __end__;                                                   \
-    cyg_uint32 size = _asize_;                                   \
+    cyg_uint32 __size__ = _asize_ + ((cyg_uint32)(_asize_ ) - (cyg_uint32)(__start__));                                   \
                                                                  \
-    if (size > NIOS2_DCACHE_SIZE)                                \
+    if (__size__ > NIOS2_DCACHE_SIZE)                                \
     {                                                            \
-      size = NIOS2_DCACHE_SIZE;                                  \
+      __size__ = NIOS2_DCACHE_SIZE;                                  \
     }                                                            \
                                                                  \
-    __end__ = ((char*)(__start__)) + size;                               \
+    __end__ = ((char*)(__start__)) + __size__;                               \
                                                                  \
     for (__i__ = (__start__); __i__ < __end__; __i__+= NIOS2_DCACHE_LINE_SIZE)       \
     {                                                            \
@@ -122,7 +123,29 @@ CYG_MACRO_START                                                  \
 CYG_MACRO_END
 
 #define HAL_DCACHE_INVALIDATE( _base_ , _asize_ ) \
-  HAL_DCACHE_FLUSH( _base_ , _asize_ )   
+CYG_MACRO_START                                                  \
+    char* __i__;        											 \
+    char* __start__ = (char*)(((cyg_uint32)_base_) & 0xffffff00);       \
+    char* __end__;                                                   \
+    cyg_uint32 __size__ = _asize_ + ((cyg_uint32)(_asize_ )- (cyg_uint32)(__start__));                                   \
+                                                                 \
+    if (__size__ > NIOS2_DCACHE_SIZE)                                \
+    {                                                            \
+      __size__ = NIOS2_DCACHE_SIZE;                                  \
+    }                                                            \
+                                                                 \
+    __end__ = ((char*)(__start__)) + __size__;                               \
+                                                                 \
+    for (__i__ = (__start__); __i__ < __end__; __i__+= NIOS2_DCACHE_LINE_SIZE)       \
+    {                                                            \
+      __asm__ volatile ("initd (%0)" :: "r" (__i__));               \
+    }                                                            \
+                                                                 \
+    if (((cyg_uint32)(__start__)) & (NIOS2_DCACHE_LINE_SIZE - 1))    \
+    {                                                            \
+      __asm__ volatile ("initd (%0)" :: "r" (__i__));               \
+    }                                                            \
+CYG_MACRO_END
 
 #define HAL_DCACHE_STORE( _base_ , _asize_ )  \
   HAL_DCACHE_FLUSH( _base_ , _asize_ )   
@@ -169,14 +192,14 @@ CYG_MACRO_START                                               \
     char* __i__;                                                  \
     char* __start__ = _base_;                                     \
     char* __end__;                                                \
-    cyg_uint32 size = _asize_;                                \
+    cyg_uint32 __size__ = _asize_;                                \
                                                               \
-    if (size > NIOS2_ICACHE_SIZE)                             \
+    if (__size__ > NIOS2_ICACHE_SIZE)                             \
     {                                                         \
-      size = NIOS2_ICACHE_SIZE;                               \
+      __size__ = NIOS2_ICACHE_SIZE;                               \
    }                                                          \
                                                               \
-    __end__ = ((char*) __start__) + size;                            \
+    __end__ = ((char*) __start__) + __size__;                            \
                                                               \
     for (__i__ = __start__; __i__ < __end__; __i__+= NIOS2_ICACHE_LINE_SIZE)     \
     {                                                         \
@@ -191,7 +214,33 @@ CYG_MACRO_START                                               \
     __asm__ volatile ("flushp");                              \
 CYG_MACRO_END
 
-#define HAL_ICACHE_FLUSH( _base_ , _asize_ ) HAL_ICACHE_INVALIDATE( _base_ , _asize_ ) 
+#define HAL_ICACHE_FLUSH( _base_ , _asize_ ) \
+CYG_MACRO_START                                               \
+    char* __i__;                                                  \
+    char* __start__ = _base_;                                     \
+    char* __end__;                                                \
+    cyg_uint32 __size__ = _asize_;                                \
+                                                              \
+    if (__size__ > NIOS2_ICACHE_SIZE)                             \
+    {                                                         \
+      __size__ = NIOS2_ICACHE_SIZE;                               \
+   }                                                          \
+                                                              \
+    __end__ = ((char*) __start__) + __size__;                            \
+                                                              \
+    for (__i__ = __start__; __i__ < __end__; __i__+= NIOS2_ICACHE_LINE_SIZE)     \
+    {                                                         \
+      __asm__ volatile ("flushi %0" :: "r" (__i__));               \
+    }                                                         \
+                                                              \
+    if (((cyg_uint32) __start__) & (NIOS2_ICACHE_LINE_SIZE - 1)) \
+    {                                                         \
+      __asm__ volatile ("flushi %0" :: "r" (__i__));               \
+    }                                                         \
+                                                              \
+    __asm__ volatile ("flushp");                              \
+CYG_MACRO_END
+
 #else
 #define HAL_ICACHE_INVALIDATE( _base_ , _asize_ ) 
 #define HAL_ICACHE_FLUSH( _base_ , _asize_ ) 
