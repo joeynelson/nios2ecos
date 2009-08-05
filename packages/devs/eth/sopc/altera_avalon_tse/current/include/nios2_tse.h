@@ -115,6 +115,26 @@
 
 /*** Debug Definition *********/
 
+#ifndef TSE_MAC_TRANSMIT_FIFO_DEPTH
+#define TSE_MAC_TRANSMIT_FIFO_DEPTH TSE_MAC_0_TRANSMIT_FIFO_DEPTH
+#endif
+
+#ifndef TSE_MAC_RECEIVE_FIFO_DEPTH
+#define TSE_MAC_RECEIVE_FIFO_DEPTH TSE_MAC_0_RECEIVE_FIFO_DEPTH
+#endif
+
+#ifndef TSE_MAC_USE_MDIO
+#define TSE_MAC_USE_MDIO TSE_MAC_0_USE_MDIO
+#endif
+
+#ifndef TSE_MAC_ENABLE_MACLITE
+#define TSE_MAC_ENABLE_MACLITE TSE_MAC_0_ENABLE_MACLITE
+#endif
+
+#ifndef TSE_MAC_MACLITE_GIGE
+#define TSE_MAC_MACLITE_GIGE TSE_MAC_0_MACLITE_GIGE
+#endif
+
 // change ENABLE_PHY_LOOPBACK to 1 to enable PHY loopback for debug purpose 
 #define ENABLE_PHY_LOOPBACK		0
 
@@ -156,20 +176,12 @@ struct nios2_tse_stats {
 struct tse_priv_data;
 typedef cyg_bool (*provide_esa_t)(struct tse_priv_data* cpd);
 
-#ifdef PACKET_MEMORY_BASE
-#define BUFFER_NO (((PACKET_MEMORY_SIZE_VALUE / (2 *(( 1528 + 16) / 4 + 2))) < (DESCRIPTOR_MEMORY_SIZE_VALUE / (2 * sizeof(alt_sgdma_descriptor)))) ?
-	(PACKET_MEMORY_SIZE_VALUE / (2 *(( 1528 + 16) / 4 + 2))) : (DESCRIPTOR_MEMORY_SIZE_VALUE / (2 * sizeof(alt_sgdma_descriptor))))
-#else //PACKET_MEMORY_BASE
-#define BUFFER_NO  (DESCRIPTOR_MEMORY_SIZE_VALUE / (2 * sizeof(alt_sgdma_descriptor)))
-#endif
-
 typedef struct tse_priv_data {
 //	volatile cyg_uint32      rx_buffer[( 1528 + 16) / 4 + 2]; 	//keep it first so it's aligned at the DCACHE line size
 	volatile cyg_uint32      *rx_buffer;
 	volatile cyg_uint32      *tx_buffer;
     int 			txbusy;             				// A packet has been sent
-
-    unsigned long 	txkey[BUFFER_NO];					// Used to ack when packet sent
+    unsigned long 	txkey;              				// Used to ack when packet sent
     unsigned short* base;               				// Base I/O address of controller (as it comes out of reset)
     int interrupt;                      				// Interrupt vector used by controller
     unsigned char 	enaddr[6];         					// Controller ESA (MAC ADDRESS)
@@ -185,6 +197,7 @@ typedef struct tse_priv_data {
 	alt_sgdma_dev   tx_sgdma;
 	alt_sgdma_dev   rx_sgdma;
 	cyg_uint32      cfgflags;  // flags or'ed during initialization of COMMAND_CONFIG
+
 
 	cyg_uint32      rx_buffer_uncached;
 	cyg_int32       bytesReceived;
