@@ -1,3 +1,6 @@
+2009-08-05 Edgar Grimberg <edgar.grimberg@zylin.com>
+	* Added packet memory area (dual port RAM inside the FPGA) for TSE
+
 2009-08-04 Edgar Grimberg <edgar.grimberg@zylin.com>
 	* Caches align addresses. Implemented invalidate macros.
 	* One descriptor TSE driver

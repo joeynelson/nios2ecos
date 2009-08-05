@@ -118,15 +118,6 @@
 // change ENABLE_PHY_LOOPBACK to 1 to enable PHY loopback for debug purpose 
 #define ENABLE_PHY_LOOPBACK		0
 
-
-#ifndef pnull
-#define pnull ((void *)0)
-#endif
-
-
-
-// ------------------------------------------------------------------------
-
 #ifdef KEEP_STATISTICS
 struct nios2_tse_stats {
     unsigned int tx_good             ;
@@ -166,7 +157,9 @@ struct tse_priv_data;
 typedef cyg_bool (*provide_esa_t)(struct tse_priv_data* cpd);
 
 typedef struct tse_priv_data {
-	cyg_uint32      rx_buffer[( 1528 + 16) / 4 + 2]; 	//keep it first so it's aligned at the DCACHE line size
+//	volatile cyg_uint32      rx_buffer[( 1528 + 16) / 4 + 2]; 	//keep it first so it's aligned at the DCACHE line size
+	volatile cyg_uint32      *rx_buffer;
+	volatile cyg_uint32      *tx_buffer;
     int 			txbusy;             				// A packet has been sent
     unsigned long 	txkey;              				// Used to ack when packet sent
     unsigned short* base;               				// Base I/O address of controller (as it comes out of reset)
@@ -199,107 +192,7 @@ typedef struct tse_priv_data {
 
 #include CYGDAT_DEVS_ETH_NIOS2_TSE_INL
 
-//#ifdef LAN91CXX_32BIT_RX
-//typedef cyg_uint32 rxd_t;
-//#else
-//typedef cyg_uint16 rxd_t;
-//#endif
-
-//#ifndef SMSC_PLATFORM_DEFINED_GET_REG
-//static __inline__ unsigned short
-//get_reg(struct eth_drv_sc *sc, int regno)
-//{
-//    struct tse_priv_data *cpd =
-//        (struct tse_priv_data *)sc->driver_private;
-//    unsigned short val;
-//    
-//    HAL_WRITE_UINT16(cpd->base+(LAN91CXX_BS << cpd->addrsh), CYG_CPU_TO_LE16(regno>>3));
-//    HAL_READ_UINT16(cpd->base+((regno&0x7) << cpd->addrsh), val);
-//    val = CYG_LE16_TO_CPU(val);
-//
-//#if DEBUG & 2
-//    diag_printf("read reg %d val 0x%04x\n", regno, val);
-//#endif
-//    return val;
-//}
-//#endif // SMSC_PLATFORM_DEFINED_GET_REG
-
-#ifndef SMSC_PLATFORM_DEFINED_PUT_REG
-static __inline__ void
-put_reg(struct eth_drv_sc *sc, int regno, unsigned short val)
-{
-    struct tse_priv_data *cpd =
-        (struct tse_priv_data *)sc->driver_private;
-	
-//    HAL_WRITE_UINT16(cpd->base+(LAN91CXX_BS << cpd->addrsh), CYG_CPU_TO_LE16(regno>>3));
-//    HAL_WRITE_UINT16(cpd->base+((regno&0x7) << cpd->addrsh), CYG_CPU_TO_LE16(val));
-
-#if DEBUG & 2
-    diag_printf("write reg %d val 0x%04x\n", regno, val); 
-#endif
-}
-#endif // SMSC_PLATFORM_DEFINED_PUT_REG
-
-#ifndef SMSC_PLATFORM_DEFINED_PUT_DATA
-// ------------------------------------------------------------------------
-// Assumes bank2 has been selected
-static __inline__ void
-put_data(struct eth_drv_sc *sc, unsigned short val)
-{
-    struct tse_priv_data *cpd =
-        (struct tse_priv_data *)sc->driver_private;
-	
-//    HAL_WRITE_UINT16(cpd->base+((LAN91CXX_DATA & 0x7) << cpd->addrsh), val);
-
-#if DEBUG & 2
-    diag_printf("write data 0x%04x\n", val);
-#endif
-}
-#endif // SMSC_PLATFORM_DEFINED_PUT_DATA
-
-#ifndef SMSC_PLATFORM_DEFINED_GET_DATA
-// Assumes bank2 has been selected
-//static __inline__ rxd_t
-static __inline__ int
-get_data(struct eth_drv_sc *sc)
-{
-//    rxd_t val;
-    struct tse_priv_data *cpd =  (struct tse_priv_data *)sc->driver_private;
-	
-#ifdef LAN91CXX_32BIT_RX
-//    HAL_READ_UINT32(cpd->base+((LAN91CXX_DATA_HIGH & 0x7) << cpd->addrsh), val);
-#else
-//    HAL_READ_UINT16(cpd->base+((LAN91CXX_DATA & 0x7) << cpd->addrsh), val);
-#endif
-
-#if DEBUG & 2
-//    diag_printf("read data 0x%x\n", val);
-#endif
-//    return val;
-	return 0;
-}
-#endif // SMSC_PLATFORM_DEFINED_GET_DATA
 
 // ------------------------------------------------------------------------
-// Read the bank register (this one is bank-independent)
-#ifndef SMSC_PLATFORM_DEFINED_GET_BANKSEL
-static __inline__ unsigned short
-get_banksel(struct eth_drv_sc *sc)
-{
-    struct tse_priv_data *cpd = (struct tse_priv_data *)sc->driver_private;
-    unsigned short val;
-    
-//    HAL_READ_UINT16(cpd->base+(LAN91CXX_BS << cpd->addrsh), val);
-    val = CYG_LE16_TO_CPU(val);
-#if DEBUG & 2
-    diag_printf("read bank val 0x%04x\n", val);
-#endif
-    return val;
-}
-#endif
-
-
-
-// ------------------------------------------------------------------------
-#endif // CYGONCE_DEVS_ETH_NIOS2_LAN91CXX_LAN91CXX_H
-// EOF smsc_tse.h
+#endif // CYGONCE_DEVS_ETH_NIOS2_TSE_TSE_H
+// EOF nios2_tse.h

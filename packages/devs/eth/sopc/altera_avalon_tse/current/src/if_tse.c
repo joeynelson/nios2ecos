@@ -303,6 +303,12 @@ static int tse_int_vector(struct eth_drv_sc *sc)
 	return (cpd->rx_sgdma.irq);
 }
 
+#ifndef PACKET_MEMORY_BASE
+volatile cyg_uint32      rx_buffer[( 1528 + 16) / 4 + 2] __attribute__ ((aligned (NIOS2_DCACHE_LINE_SIZE)));
+volatile cyg_uint32      tx_buffer[( 1528 + 16) / 4 + 2] __attribute__ ((aligned (NIOS2_DCACHE_LINE_SIZE)));;
+#endif
+
+
 static bool tse_init(struct cyg_netdevtab_entry *tab)
 {
 	struct eth_drv_sc *sc = (struct eth_drv_sc *) tab->device_instance;
@@ -322,6 +328,14 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 	int is1000 = 0, duplex = 0;
 	int status = 0;
 	int i = 0;
+
+#ifdef PACKET_MEMORY_BASE
+	cpd->rx_buffer = (volatile cyg_uint32*)PACKET_MEMORY_BASE;
+	cpd->tx_buffer = (volatile cyg_uint32*)(PACKET_MEMORY_BASE + PACKET_MEMORY_SIZE_VALUE / 2);
+#else
+	cpd->rx_buffer = rx_buffer;
+	cpd->tx_buffer = tx_buffer;
+#endif
 
 	/* Get the Rx and Tx SGDMA addresses */
 	cpd->rx_sgdma.base = SGDMA_RX_BASE;
@@ -343,6 +357,14 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 	cpd->tx_sgdma.chain_control = 0;
 
 	cpd->txkey = 0;
+
+//	diag_printf("tx_sgdma.descriptor 0x%08x\n", cpd->tx_sgdma.descriptor_base);
+//	diag_printf("rx_sgdma.descriptor 0x%08x\n", cpd->rx_sgdma.descriptor_base);
+//	diag_printf("tx_sgdma.base 0x%08x\n", cpd->tx_sgdma.base);
+//	diag_printf("rx_sgdma.base 0x%08x\n", cpd->rx_sgdma.base);
+//	diag_printf("tx_sgdma.irq %d\n", cpd->tx_sgdma.irq);
+//	diag_printf("rx_sgdma.irq %d\n", cpd->rx_sgdma.irq);
+
 
 	//Clearing SGDMA desc Memory - this clears 1024 KB of descriptor space
 	for (i = 0; i < 256; i++)
@@ -367,10 +389,8 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 	is1000 = (result >> 1) & 0x01;
 	duplex = result & 0x01;
 
-	diag_printf(
-			"[triple_speed_ethernet_init] Speed is %s\t Duplex is %s\n",
-			is1000 ? "1000 Mb/s" : "100 Mb/s", duplex ? "full" : "half");
-
+	diag_printf( "[triple_speed_ethernet_init] Speed is %s\t Duplex is %s\n",
+			is1000 ? "1000 Mb/s" : "100 Mb/s", duplex ? "full" : "half" );
 
 	cpd->speed = result;
 
@@ -688,8 +708,8 @@ static void tse_send(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 {
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
 	int i = 0, len = 0;
-	static cyg_uint32 send_buffer[( 1528 + 16) / 4 + 1];
-	cyg_uint8* mem = (cyg_uint8 *)( ((cyg_uint32)((cyg_uint8*)send_buffer)) | 0x80000000) + 2;
+
+	cyg_uint8* mem = (cyg_uint8 *)( ((cyg_uint32)((cyg_uint8*)cpd->tx_buffer))) + 2;
 	alt_sgdma_descriptor *desc_base = cpd->tx_sgdma.descriptor_base;
 
 	DEBUG_FUNCTION();
@@ -707,13 +727,13 @@ static void tse_send(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 		len += sg_list[i].len;
 
 	}
-//	HAL_DCACHE_FLUSH(send_buffer, len + 2);
+	HAL_DCACHE_FLUSH(cpd->tx_buffer, len + 2);
 
 		/* Construct the descriptor */
 		alt_avalon_sgdma_construct_mem_to_stream_desc(
 				desc_base, /* Descriptor */
 				desc_base+ 1, /* Next descriptor */
-				send_buffer,
+				cpd->tx_buffer,
 				len + 2,
 				0, /* Don't read fixed addr */
 				1, /* Generate SOP @ first desc */
@@ -933,11 +953,12 @@ static void tse_recv(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 {
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
 
-	cyg_uint8 *from_addr = 0;
+	volatile cyg_uint8 *from_addr = 0;
 	cyg_uint32 from = 0, status = 0, i = 0;
 	int pkt_len = 0, total_len = 0;
 
-	from_addr = ((cyg_uint8 *) cpd->rx_buffer) + 2;
+	//uncached, aligned to half-word
+	from_addr = ((cyg_uint8 *) cpd->rx_buffer) + 0x80000002;
 
 	DEBUG_FUNCTION();
 
@@ -954,12 +975,12 @@ static void tse_recv(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 			break; // out of mbufs
 		}
 
-		///    	if ( len > pkt_len )
+		//    	if ( len > pkt_len )
 		//		{
 		//      		len = pkt_len;
 		//		}
 
-		HAL_DCACHE_FLUSH(from_addr, len);
+//		HAL_DCACHE_FLUSH(from_addr, len);
 		memcpy(to_addr, (void *) from_addr, len);
 
 //		{
