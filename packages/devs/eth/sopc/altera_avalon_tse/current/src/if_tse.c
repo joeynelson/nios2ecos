@@ -252,8 +252,8 @@ static void tse_TxDone(struct eth_drv_sc *sc)
 	stat = alt_avalon_sgdma_check_descriptor_status( (alt_sgdma_descriptor *)cpd->tx_sgdma.descriptor_base );
 	if((stat & ALTERA_AVALON_SGDMA_STATUS_BUSY_MSK) == 0 && 0 != cpd->txkey)
 	{
-		(sc->funs->eth_drv->tx_done)( sc, cpd->txkey[0], 0 );
-		cpd->txkey[0] = 0;
+		(sc->funs->eth_drv->tx_done)( sc, cpd->txkey, 0 );
+		cpd->txkey = 0;
 	}
 
 }
@@ -304,16 +304,15 @@ static int tse_int_vector(struct eth_drv_sc *sc)
 }
 
 #ifndef PACKET_MEMORY_BASE
-static volatile cyg_uint32 rx_buffer[( 1528 + 16) / 4 + 2][BUFFER_NO];
-static volatile cyg_uint32 tx_buffer[( 1528 + 16) / 4 + 2][BUFFER_NO];
-#endif //PACKET_MEMORY_BASE
+volatile cyg_uint32      rx_buffer[( 1528 + 16) / 4 + 2] __attribute__ ((aligned (NIOS2_DCACHE_LINE_SIZE)));
+volatile cyg_uint32      tx_buffer[( 1528 + 16) / 4 + 2] __attribute__ ((aligned (NIOS2_DCACHE_LINE_SIZE)));;
+#endif
 
 
 static bool tse_init(struct cyg_netdevtab_entry *tab)
 {
 	struct eth_drv_sc *sc = (struct eth_drv_sc *) tab->device_instance;
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
-
 
 	unsigned short val = 0;
 	int cc = 0;
@@ -332,7 +331,7 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 
 #ifdef PACKET_MEMORY_BASE
 	cpd->rx_buffer = (volatile cyg_uint32*)PACKET_MEMORY_BASE;
-	cpd->tx_buffer = (volatile cyg_uint32*)(PACKET_MEMORY_BASE + BUFFER_NO);
+	cpd->tx_buffer = (volatile cyg_uint32*)(PACKET_MEMORY_BASE + PACKET_MEMORY_SIZE_VALUE / 2);
 #else
 	cpd->rx_buffer = rx_buffer;
 	cpd->tx_buffer = tx_buffer;
@@ -357,7 +356,7 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 	cpd->tx_sgdma.isr_data = (cyg_addrword_t) sc; // data item passed to interrupt handler
 	cpd->tx_sgdma.chain_control = 0;
 
-	cpd->txkey[0] = 0;
+	cpd->txkey = 0;
 
 //	diag_printf("tx_sgdma.descriptor 0x%08x\n", cpd->tx_sgdma.descriptor_base);
 //	diag_printf("rx_sgdma.descriptor 0x%08x\n", cpd->rx_sgdma.descriptor_base);
@@ -483,6 +482,7 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 	IOWR_ALTERA_TSEMAC_RX_SECTION_FULL( cpd->base, 0);
 
 //	IOWR_ALTERA_TSEMAC_RX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_RX_CMD_STAT_RXSHIFT16_MSK);
+
 	IOWR_ALTERA_TSEMAC_TX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_TX_CMD_STAT_TXSHIFT16_MSK);
 
 	// Initialize upper level driver
@@ -511,7 +511,7 @@ static void tse_stop(struct eth_drv_sc *sc)
 //		cyg_interrupt_detach( cpd->rx_sgdma.sgdma_interrupt_handle);
 //	  	cyg_interrupt_detach( cpd->tx_sgdma.sgdma_interrupt_handle);
 
-	cpd->txkey[0] = 0;
+	cpd->txkey = 0;
 
 	/* Disable Receive path on the device*/
 	state = IORD_ALTERA_TSEMAC_CMD_CONFIG( cpd->base);
@@ -742,7 +742,7 @@ static void tse_send(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 				0 /* Streaming channel: N/A */
 		);
 
-	cpd->txkey[0] = key;
+	cpd->txkey = key;
 
 	// Set up the SGDMA
 	// Clear the status and control bits of the SGDMA descriptor
@@ -841,7 +841,7 @@ static void tse_TxEvent(struct eth_drv_sc *sc, int stat)
 	if ( cpd->txbusy )
 	{
 		cpd->txbusy = 0;
-		(sc->funs->eth_drv->tx_done)(sc, cpd->txkey[0], success);
+		(sc->funs->eth_drv->tx_done)(sc, cpd->txkey, success);
 	}
 #endif
 }
