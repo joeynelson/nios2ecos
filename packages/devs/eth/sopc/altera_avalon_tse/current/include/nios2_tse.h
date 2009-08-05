@@ -186,7 +186,6 @@ typedef struct tse_priv_data {
 	alt_sgdma_dev   rx_sgdma;
 	cyg_uint32      cfgflags;  // flags or'ed during initialization of COMMAND_CONFIG
 
-
 	cyg_uint32      rx_buffer_uncached;
 	cyg_int32       bytesReceived;
 

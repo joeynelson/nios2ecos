@@ -314,6 +314,7 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 	struct eth_drv_sc *sc = (struct eth_drv_sc *) tab->device_instance;
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
 
+
 	unsigned short val = 0;
 	int cc = 0;
 	cyg_bool esa_configured = false;
