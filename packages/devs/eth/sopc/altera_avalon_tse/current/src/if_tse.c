@@ -113,7 +113,7 @@ int tse_txfifo_bad = 0;
 // 2 for added data IO output: get_reg, put_reg
 // 4 for packet allocation/free output
 // 8 for only startup status, so we can tell we're installed OK
-#define DEBUG 0
+#define DEBUG 1
 cyg_uint32 getPHYSpeed(np_tse_mac *pmac);
 cyg_uint32 marvell_cfg_gmii(np_tse_mac *pmac);
 
@@ -282,9 +282,10 @@ static void tse_deliver(struct eth_drv_sc *sc)
 	else
 		cpd->bytesReceived = 0;
 
-//	diag_printf("stat: 0x%08x\n", stat);
-//	diag_printf("received: %d\n", cpd->bytesReceived);
-
+#if DEBUG
+	diag_printf("stat: 0x%08x\n", stat);
+	diag_printf("received: %d\n", cpd->bytesReceived);
+#endif
 	if (cpd->bytesReceived > 0)
 	{
 		(sc->funs->eth_drv->recv)(sc, cpd->bytesReceived);
@@ -358,12 +359,14 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 
 	cpd->txkey = 0;
 
-//	diag_printf("tx_sgdma.descriptor 0x%08x\n", cpd->tx_sgdma.descriptor_base);
-//	diag_printf("rx_sgdma.descriptor 0x%08x\n", cpd->rx_sgdma.descriptor_base);
-//	diag_printf("tx_sgdma.base 0x%08x\n", cpd->tx_sgdma.base);
-//	diag_printf("rx_sgdma.base 0x%08x\n", cpd->rx_sgdma.base);
-//	diag_printf("tx_sgdma.irq %d\n", cpd->tx_sgdma.irq);
-//	diag_printf("rx_sgdma.irq %d\n", cpd->rx_sgdma.irq);
+#if DEBUG
+	diag_printf("tx_sgdma.descriptor 0x%08x\n", cpd->tx_sgdma.descriptor_base);
+	diag_printf("rx_sgdma.descriptor 0x%08x\n", cpd->rx_sgdma.descriptor_base);
+	diag_printf("tx_sgdma.base 0x%08x\n", cpd->tx_sgdma.base);
+	diag_printf("rx_sgdma.base 0x%08x\n", cpd->rx_sgdma.base);
+	diag_printf("tx_sgdma.irq %d\n", cpd->tx_sgdma.irq);
+	diag_printf("rx_sgdma.irq %d\n", cpd->rx_sgdma.irq);
+#endif
 
 
 	//Clearing SGDMA desc Memory - this clears 1024 KB of descriptor space
@@ -435,7 +438,7 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 	IOWR_ALTERA_TSEMAC_SMAC_3_0( cpd->base, ((int)cpd->enaddr[0] | (int)( cpd->enaddr[1] << 8 ) | (int)( cpd->enaddr[2] << 16) | (int)( cpd->enaddr[3] << 24)));
 	IOWR_ALTERA_TSEMAC_SMAC_3_1( cpd->base, ((int)cpd->enaddr[4] | (int)( cpd->enaddr[5] << 8 ) & 0xffff));
 
-#if DEBUG & 9
+#if DEBUG
 	db_printf("TSE - ESA: %02x:%02x:%02x:%02x:%02x:%02x\n", cpd->enaddr[0],
 			cpd->enaddr[1], cpd->enaddr[2], cpd->enaddr[3], cpd->enaddr[4],
 			cpd->enaddr[5]);
@@ -699,6 +702,11 @@ static int tse_can_send(struct eth_drv_sc *sc)
 		retValue = 1;
 	}
 
+#if DEBUG
+	diag_printf("can send: %d\n", retValue);
+#endif
+
+
 	return retValue;
 }
 
@@ -729,6 +737,14 @@ static void tse_send(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 
 	}
 	HAL_DCACHE_FLUSH(cpd->tx_buffer, len + 2);
+
+#if DEBUG
+	for(i = 0; i < len; i++)
+	{
+		diag_printf("%02x ", *(mem + i));
+	}
+	diag_printf("\n");
+#endif
 
 		/* Construct the descriptor */
 		alt_avalon_sgdma_construct_mem_to_stream_desc(
@@ -959,8 +975,10 @@ static void tse_recv(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 	int pkt_len = 0, total_len = 0;
 
 	//uncached, aligned to half-word
-	from_addr = ((cyg_uint8 *) cpd->rx_buffer) + 0x80000002;
-
+	from_addr = ((cyg_uint8 *) cpd->rx_buffer) + 2;
+#ifndef PACKET_MEMORY_BASE
+	from_addr +=  0x80000000; //uncached
+#endif
 	DEBUG_FUNCTION();
 
 	for (i = 0; i < sg_len; i++)
@@ -984,17 +1002,21 @@ static void tse_recv(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 //		HAL_DCACHE_FLUSH(from_addr, len);
 		memcpy(to_addr, (void *) from_addr, len);
 
-//		{
-//			int j;
-//			for(j = 0; j < len; j++)
-//					diag_printf("%02x ", to_addr[j]);
-//		}
-
+#if DEBUG
+		{
+			int j;
+			for(j = 0; j < len; j++)
+					diag_printf("%02x ", to_addr[j]);
+		}
+#endif
 
 		from_addr += len;
 		//    	pkt_len   -= len;
 	}
-//	diag_printf("\n");
+#if DEBUG
+	diag_printf("\n");
+#endif
+
 	alt_sgdma_descriptor *desc_base = cpd->rx_sgdma.descriptor_base;
 
 	// set the recieve descriptor
