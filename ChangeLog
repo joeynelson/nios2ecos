@@ -1,5 +1,6 @@
 2009-08-07 Edgar Grimberg <edgar.grimberg@zylin.com>
 	* added debug information. enable using #define DEBUG
+	* added multicast list and multicast all proper handling
 	
 2009-08-05 Edgar Grimberg <edgar.grimberg@zylin.com>
 	* Added packet memory area (dual port RAM inside the FPGA) for TSE

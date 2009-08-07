@@ -608,6 +608,34 @@ static void tse_start(struct eth_drv_sc *sc, unsigned char *enaddr, int flags)
 
 }
 
+
+static void tse_set_hash_table(struct eth_drv_sc *sc,  struct eth_drv_mc_list *mc_list)
+{
+	int mac_octet, xor_bit, bitshift, hash, loop;
+	char octet;
+	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
+
+	for (loop = 0; loop < mc_list->len; loop++)
+	{
+		/* make sure this is a multicasts address    */
+		if (!(mc_list->addrs[loop][0] & 1))	//
+			continue;
+
+		hash = 0;	// the hash value
+
+		for (mac_octet = 5; mac_octet >= 0; mac_octet--) {
+			xor_bit = 0;
+			octet = mc_list->addrs[loop][mac_octet];
+			for (bitshift = 0; bitshift < 8; bitshift++)
+				xor_bit ^= (int)((octet >> bitshift) & 0x01);
+			hash = (hash << 1) | xor_bit;
+		}
+		IOWR_ALTERA_TSEMAC_HASH_TABLE( cpd->base , hash, 1);
+	}
+
+}
+
+
 //
 // This function is called for low level "control" operations
 //
@@ -631,9 +659,21 @@ static int tse_control(struct eth_drv_sc *sc, unsigned long key,
 			break;
 		}
 		case ETH_DRV_SET_MC_LIST:
+		{
+			struct eth_drv_mc_list list = *((struct eth_drv_mc_list*)data);
+			int hash_loop;
+			//clear existing hash entries
+			for (hash_loop = 0; hash_loop < 64; hash_loop++)
+				IOWR_ALTERA_TSEMAC_HASH_TABLE( cpd->base , hash_loop, 0);
+
+			tse_set_hash_table(sc, data);
+			break;
+		}
 		case ETH_DRV_SET_MC_ALL:
 		{
-			IOWR_ALTERA_TSEMAC_HASH_TABLE(cpd->base, 0, 0xffffffff);
+			int hash_loop;
+			for (hash_loop = 0; hash_loop < 64; hash_loop++)
+				IOWR_ALTERA_TSEMAC_HASH_TABLE( cpd->base , hash_loop, 1);
 			break;
 		}
 //		{
