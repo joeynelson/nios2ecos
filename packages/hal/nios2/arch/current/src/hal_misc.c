@@ -325,6 +325,36 @@ void cyg_hal_plf_comms_init(void)
 {
 }
 
+#if (__GNUC__ >= 3)
+// Versions of gcc/g++ after 3.0 (approx.), when configured for Linux
+// native development (specifically, --with-__cxa_enable), have
+// additional dependencies related to the destructors for static
+// objects. When compiling C++ code with static objects the compiler
+// inserts a call to __cxa_atexit() with __dso_handle as one of the
+// arguments. __cxa_atexit() would normally be provided by glibc, and
+// __dso_handle is part of crtstuff.c. Synthetic target applications
+// are linked rather differently, so either a differently-configured
+// compiler is needed or dummy versions of these symbols should be
+// provided. If these symbols are not actually used then providing
+// them is still harmless, linker garbage collection will remove them.
+
+void
+__cxa_atexit(void (*arg1)(void*), void* arg2, void* arg3)
+{
+}
+void*   __dso_handle = (void*) &__dso_handle;
+
+// gcc 3.2.2 (approx). The libsupc++ version of the new operator pulls
+// in exception handling code, even when using the nothrow version and
+// building with -fno-exceptions. libgcc_eh.a provides the necessary
+// functions, but requires a dl_iterate_phdr() function. That is related
+// to handling dynamically loaded code so is not applicable to eCos.
+int
+dl_iterate_phdr(void* arg1, void* arg2)
+{
+    return -1;
+}
+#endif
 
 #ifdef CYGPKG_PROFILE_GPROF
 //--------------------------------------------------------------------------

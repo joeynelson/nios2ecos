@@ -1,3 +1,6 @@
+2009-09-07 Edgar Grimberg <edgar.grimberg@zylin.com>
+	* added __dso_handle to satisfy GCC 4.1.2
+	
 2009-08-07 Edgar Grimberg <edgar.grimberg@zylin.com>
 	* added debug information. enable using #define DEBUG
 	* added multicast list and multicast all proper handling
