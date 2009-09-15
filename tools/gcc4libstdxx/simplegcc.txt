@@ -3,6 +3,20 @@ Crude instructions on how to build Nios GCC 4.1 toolchain with libstdc++ w/POSIX
 Warning! GCC 4.1 is a bit rough around the edges, so if you can get hold of
 a binary GCC toolchain, you'll save yourself quite a bit of time. 
 
+0. Source code/downloads
+See http://www.nioswiki.com for source code to GCC. It's part
+of the Linux MMU distribution, surprise-surprise...
+
+Source code, is this official address to get this??? Where is it advertised?
+
+http://www.niosftp.com/pub/gnutools/
+http://www.niosftp.com/pub/gnutools/wrs-linux-4.1-176-nios2-wrs-linux-gnu.src.tar.bz2
+
+Prebuilt Ubuntu binaries:
+
+http://opensource.zylin.com/gcc/binaries/nios/nios2-elf-gcc-4.1-pthreads-linux.tar.bz2
+
+
 
 1. First build eCos w/POSIX threads
 
