@@ -1,0 +1,56 @@
+Crude instructions on how to build Nios GCC 4.1 toolchain with libstdc++ w/POSIX threads
+========================================================================================
+Warning! GCC 4.1 is a bit rough around the edges, so if you can get hold of
+a binary GCC toolchain, you'll save yourself quite a bit of time. 
+
+
+1. First build eCos w/POSIX threads
+
+cd nios2ecos
+. nios2_env.sh
+mkdir ~/buildgcc
+cd ~/buildgcc
+mkdir ecos
+nios2configgen --ptf=/home/oyvind/workspace/nios2ecos/neek/neek.ptf --cpu=cpu
+ecosconfig new nios2_neek default
+ecosconfig import $NIOS_ECOS/../tools/gcc4libstdxx/headers.ecm
+ecosconfig tree
+make headers
+make 
+
+NB!!!! the nios2ecos make files are broken in that "make headers" does not create
+cyg/hal/system.h
+
+2. Build binutils
+
+sudo apt-get install gobjc++
+tar -xjvf src/binutils-4.1-176.tar.bz2
+
+export PATH=`pwd`/install/bin:$PATH
+mkdir build
+cd build
+../binutils-2.17.50/configure --prefix=`pwd`/../install --target=nios2-elf  --disable-shared --disable-werror
+make 
+make install
+
+if you get error message about missing elf32-target.h, type:
+
+cd bfd
+make elf32-target.h
+cd ..
+
+2. Build GCC using eCos header files
+
+tar -xjvf src/gcc-4.1-176.tar.bz2
+cd gcc-4.1-176
+
+../gcc-4.1/configure --prefix=`pwd`/../install --target=nios2-elf --enable-languages=c,c++ --with-gnu-ld --disable-shared --disable-nls --enable-threads=posix --with-gnu-as --enable-libstdcxx-allocator=malloc --enable-cstdio=stdio --with-newlib  --disable-unix98 --with-headers=`pwd`/../ecos/install/include --enable-multilib --disable-libstdcxx-pch --enable-sjlj-exceptions --disable-werror
+make >errors.txt 2>&1
+
+Problems: c++locale.c does has fallback code for strtof that isn't supported, modify c++locale.c to #if 0 the strtof path.
+
+
+3. Build GDB
+
+../gdb-wrs/configure --prefix=`pwd`/../install --target=nios2-elf  --disable-shared --disable-werror
+

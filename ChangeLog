@@ -1,3 +1,9 @@
+2009-09-15 Øyvind Harboe <oyvind.harboe@zylin.com>
+
+	* fix nios_env.sh script (do not use set -e), still wip...
+	* updated compat/posix committed until libstdc++ pthread 
+	exceptions are tested & working
+
 2009-09-07 Edgar Grimberg <edgar.grimberg@zylin.com>
 	* added __dso_handle to satisfy GCC 4.1.2
 	
