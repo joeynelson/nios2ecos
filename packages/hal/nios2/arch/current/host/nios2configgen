@@ -24,6 +24,9 @@ print_help()
   echo "--cpu= : Is the name of the cpu within that PTF you wish to run eCos on"
 }
 
+# Place nios2_auto.cdl in ecos.ecc/gen_nios directory
+export GEN_NIOS=`pwd`/gen_nios
+mkdir -p $GEN_NIOS
 
 #
 # Did they request the help option
@@ -86,7 +89,7 @@ else
 			  sopc_builder --update_classes_and_exit --no_splash -s --projectpath `cygpath -m $ptf_name`
                 `cygpath -m \`which gtf-generate\`` \
                 --gtf=`cygpath -m $NIOS_ECOS/hal/nios2/arch/current/gtf/nios2_auto.cdl.gtf` \
-                --output-directory=`cygpath -m $TMP` --ptf="$ptf_name" --cpu="$cpu_name" 
+                --output-directory=`cygpath -m $GEN_NIOS` --ptf="$ptf_name" --cpu="$cpu_name" 
 
 			else		  
 			  echo "No such PTF file"

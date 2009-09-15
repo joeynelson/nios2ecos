@@ -1,5 +1,9 @@
 2009-09-15 Øyvind Harboe <oyvind.harboe@zylin.com>
 
+	* Nios eCos builds now survive reboots under Linux and multiple
+	Nios eCos build directories can exist side by side on the same
+	machine. nios2configgen now places generated cdl file into [pwd]/gen_nios 
+	instead of using /tmp.
 	* fix nios_env.sh script (do not use set -e), still wip...
 	* updated compat/posix committed until libstdc++ pthread 
 	exceptions are tested & working

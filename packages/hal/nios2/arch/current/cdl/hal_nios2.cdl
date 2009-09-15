@@ -39,7 +39,8 @@
 # defines the hardware constrained options. The file is generated based on
 # the SOPC builder system configuration using the gtf-generate tool.
 
-set nios2_config_file "$env(TMP)/nios2_auto.cdl" 
+# [pwd] is the directory of the ecos.ecc file
+set nios2_config_file "[pwd]/gen_nios/nios2_auto.cdl" 
 
 # If this configuration file does not exist, generate an appropriate error.
 
