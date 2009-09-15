@@ -84,7 +84,7 @@ else
 			  #
 			  # If the file nios2_auto.cdl already exists we have another session running or crashed
 			  #
-			  rm -f $TMP/nios2_auto.cdl
+			  rm -f $GEN_NIOS/nios2_auto.cdl
 			  
 			  sopc_builder --update_classes_and_exit --no_splash -s --projectpath `cygpath -m $ptf_name`
                 `cygpath -m \`which gtf-generate\`` \

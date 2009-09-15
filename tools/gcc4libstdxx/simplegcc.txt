@@ -25,6 +25,7 @@ cd nios2ecos
 mkdir ~/buildgcc
 cd ~/buildgcc
 mkdir ecos
+cd ecos
 nios2configgen --ptf=/home/oyvind/workspace/nios2ecos/neek/neek.ptf --cpu=cpu
 ecosconfig new nios2_neek default
 ecosconfig import $NIOS_ECOS/../tools/gcc4libstdxx/headers.ecm
