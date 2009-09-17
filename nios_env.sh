@@ -22,9 +22,6 @@ else
 	export CYG_ALTERA_ROOTDIR=/cygdrive/c/altera/90
 	# FIX!!!! check if nios2-elf-gcc is already added to path
 	export PATH=$PATH:$CYG_ALTERA_ROOTDIR/nios2eds/bin/nios2-gnutools/H-i686-pc-cygwin/bin
-	
-	export QUARTUS_ROOTDIR=$WIN_ALTERA_ROOTDIR/quartus
-	export SOPC_KIT_NIOS2=$WIN_ALTERA_ROOTDIR/nios2eds
 fi
 
 
