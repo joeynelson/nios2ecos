@@ -27,7 +27,6 @@ fi
 # DANGER!!! here we need windows-like paths for compatibility.
 export QUARTUS_ROOTDIR=$WIN_ALTERA_ROOTDIR/quartus
 export SOPC_KIT_NIOS2=$WIN_ALTERA_ROOTDIR/nios2eds
-export PERL5LIB=$CYG_ALTERA_ROOTDIR/quartus/sopc_builder/bin/perl_lib:$CYG_ALTERA_ROOTDIR/quartus/sopc_builder/bin
 
 # This is the standard installation directory for eCos 3.0
 echo "Adding eCos 3.0 tools to path: ~/ecos/ecos-3.0/tools/bin"
