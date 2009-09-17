@@ -113,9 +113,11 @@ int tse_txfifo_bad = 0;
 // 2 for added data IO output: get_reg, put_reg
 // 4 for packet allocation/free output
 // 8 for only startup status, so we can tell we're installed OK
-#define DEBUG 1
+#define DEBUG 0
 cyg_uint32 getPHYSpeed(np_tse_mac *pmac);
 cyg_uint32 marvell_cfg_gmii(np_tse_mac *pmac);
+cyg_uint32 marvell_cfg_rgmii(np_tse_mac *pmac);
+cyg_uint32 marvell_cfg_sgmii(np_tse_mac *pmac);
 
 #if DEBUG
 #if defined(CYGPKG_REDBOOT)
@@ -164,7 +166,7 @@ static void db_printf( char *fmt, ... )
 #endif
 #endif
 
-#if DEBUG & 1
+#if DEBUG
 #define DEBUG_FUNCTION() do { db_printf("%s\n", __FUNCTION__); } while (0)
 #else
 #define DEBUG_FUNCTION() do {} while(0)
@@ -262,37 +264,111 @@ static void tse_TxDone(struct eth_drv_sc *sc)
 // The deliver function (ex-DSR)  handles the ethernet [logical] processing
 static void tse_deliver(struct eth_drv_sc *sc)
 {
-	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
-
 	DEBUG_FUNCTION();
-	cyg_uint32 stat = alt_avalon_sgdma_status(&cpd->rx_sgdma);
 
+	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
+	alt_sgdma_descriptor *desc_base = (alt_sgdma_descriptor *) ( (cyg_uint8 *)(cpd->rx_sgdma.descriptor_base));
+	cyg_uint32 stat = IORD_ALTERA_AVALON_SGDMA_STATUS( cpd->rx_sgdma.base );
+	cyg_uint32 desc_stat = 0;
+	int i;
+
+	//free up tx keys
 	tse_TxDone(sc);
 
-	//check for errors
-	if(stat & ALTERA_AVALON_SGDMA_STATUS_ERROR_MSK != 0x0)
-		cpd->bytesReceived = 0;
-			// not busy														//something completed
-	else
-		if( ((stat & ALTERA_AVALON_SGDMA_STATUS_BUSY_MSK) == 0x0)
-			&& ((stat & (ALTERA_AVALON_SGDMA_STATUS_DESC_COMPLETED_MSK | ALTERA_AVALON_SGDMA_STATUS_CHAIN_COMPLETED_MSK)) != 0x0)
-			)
-		cpd->bytesReceived = alt_avalon_sgdma_descpt_bytes_xfered(
-				(alt_sgdma_descriptor *) cpd->rx_sgdma.descriptor_base) - 2;
-	else
-		cpd->bytesReceived = 0;
-
-#if DEBUG
-	diag_printf("stat: 0x%08x\n", stat);
-	diag_printf("received: %d\n", cpd->bytesReceived);
-#endif
-	if (cpd->bytesReceived > 0)
+	//get the finished descriptor
+	for (cpd->rx_current_index = 0; cpd->rx_current_index < BUFFER_NO; cpd->rx_current_index++)
 	{
-		(sc->funs->eth_drv->recv)(sc, cpd->bytesReceived);
+//		desc_stat = alt_avalon_sgdma_check_descriptor_status(desc_base + cpd->rx_current_index);
+
+#if 0
+
+
+		diag_printf("read_addr = 0x%08x\n", (desc_base + cpd->rx_current_index)->read_addr);
+		diag_printf("read_addr_pad = %d\n", (desc_base + cpd->rx_current_index)->read_addr_pad);
+
+		diag_printf("write_addr = 0x%08x\n", (desc_base + cpd->rx_current_index)->write_addr);
+		diag_printf("write_addr_pad = %d\n", (desc_base + cpd->rx_current_index)->write_addr_pad);
+
+		diag_printf("next = 0x%08x\n", (desc_base + cpd->rx_current_index)->next);
+		diag_printf("next_pad = %d\n", (desc_base + cpd->rx_current_index)->next_pad);
+
+		diag_printf("bytes_to_transfer = %d\n", (desc_base + cpd->rx_current_index)->bytes_to_transfer);
+
+		diag_printf("read_burst = %d\n", (desc_base + cpd->rx_current_index)->read_burst);
+		diag_printf("write_burst = %d\n", (desc_base + cpd->rx_current_index)->write_burst);
+
+		diag_printf("actual_bytes_transferred = %d\n", (desc_base + cpd->rx_current_index)->actual_bytes_transferred);
+		diag_printf("status = 0x%02x\n", (desc_base + cpd->rx_current_index)->status);
+		diag_printf("control = 0x%02x\n", (desc_base + cpd->rx_current_index)->control);
+
+#endif
+
+#if DEBUG > 1
+		diag_printf("index = %d\nstat = 0x%08x\ndescr_stat = %d\n", cpd->rx_current_index, stat, desc_stat);
+#endif
+#if DEBUG > 1
+	diag_printf("control = 0x%02x\n", (desc_base + cpd->rx_current_index)->control);
+#endif
+		//completed, no error, not owned by HW
+		if ( IORD_8DIRECT(&((desc_base + cpd->rx_current_index)->control), 0) == 0x00 )
+		{
+			//get the received bytes
+			cpd->bytesReceived = alt_avalon_sgdma_descpt_bytes_xfered(desc_base + cpd->rx_current_index) - 2;
+#if DEBUG > 1
+				diag_printf("received %d bytes\n", cpd->bytesReceived);
+#endif
+			if (cpd->bytesReceived > 0)
+			{
+				(sc->funs->eth_drv->recv)(sc, cpd->bytesReceived);
+			}
+			//put the owned by hardware flag back in place
+
+			(desc_base + cpd->rx_current_index)->status = 0x00;
+			(desc_base + cpd->rx_current_index)->actual_bytes_transferred = 0;
+			HAL_DCACHE_FLUSH((desc_base + cpd->rx_current_index), sizeof(alt_sgdma_descriptor));
+
+		}
+		else
+		{
+			cpd->rx_current_index = 0;
+			//until the first not terminated one
+			break;
+		}
+
+	}
+
+	/* Halt any current transactions (reset the device) */
+	IOWR_ALTERA_AVALON_SGDMA_CONTROL(cpd->rx_sgdma.base, ALTERA_AVALON_SGDMA_CONTROL_SOFTWARERESET_MSK | ALTERA_AVALON_SGDMA_CONTROL_CLEAR_INTERRUPT_MSK);
+
+	/*
+	 * Disable interrupts, halt future descriptor processing,
+	 * and clear status register content
+	 */
+	IOWR_ALTERA_AVALON_SGDMA_CONTROL(cpd->rx_sgdma.base, 0x0);
+	IOWR_ALTERA_AVALON_SGDMA_STATUS( cpd->rx_sgdma.base, 0xFF);
+
+
+	for(i = 0; i < BUFFER_NO - 1; i++)
+	{
+		alt_avalon_sgdma_construct_stream_to_mem_desc(desc_base + i, // descriptor
+			desc_base + i + 1, // next descriptor
+			cpd->rx_buffer + i * BUFFER_SIZE, // starting write_address
+			(cyg_uint16)0, // read until EOP
+			0); // don't write to constant address
+	}
+
+	cpd->rx_sgdma.chain_control = 0x1a;
+
+	stat = IORD_ALTERA_AVALON_SGDMA_STATUS( cpd->rx_sgdma.base );
+	if ((stat & ALTERA_AVALON_SGDMA_STATUS_CHAIN_COMPLETED_MSK) ||
+		!(stat & ALTERA_AVALON_SGDMA_STATUS_BUSY_MSK))
+	{
+		alt_avalon_sgdma_do_async_transfer(&(cpd->rx_sgdma), desc_base);
 	}
 
 //	alt_avalon_sgdma_set_control(&cpd->rx_sgdma, ALTERA_AVALON_SGDMA_CONTROL_CLEAR_INTERRUPT_MSK);
 //	alt_avalon_sgdma_set_control(&cpd->rx_sgdma, 0x0);
+
 	// Allow interrupts to happen again
 	cyg_drv_interrupt_unmask(cpd->rx_sgdma.irq);
 }
@@ -305,15 +381,18 @@ static int tse_int_vector(struct eth_drv_sc *sc)
 }
 
 #ifndef PACKET_MEMORY_BASE
-volatile cyg_uint32      rx_buffer[( 1528 + 16) / 4 + 2] __attribute__ ((aligned (NIOS2_DCACHE_LINE_SIZE)));
-volatile cyg_uint32      tx_buffer[( 1528 + 16) / 4 + 2] __attribute__ ((aligned (NIOS2_DCACHE_LINE_SIZE)));;
-#endif
+//align to cache line, it will make flushing lighter
+static volatile cyg_uint8 rx_buffer[BUFFER_SIZE][BUFFER_NO] __attribute__ ((aligned (NIOS2_DCACHE_LINE_SIZE)));;
+static volatile cyg_uint8 tx_buffer[BUFFER_SIZE][BUFFER_NO] __attribute__ ((aligned (NIOS2_DCACHE_LINE_SIZE)));;
+#endif //PACKET_MEMORY_BASE
 
 
 static bool tse_init(struct cyg_netdevtab_entry *tab)
 {
 	struct eth_drv_sc *sc = (struct eth_drv_sc *) tab->device_instance;
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
+
+	alt_sgdma_descriptor *desc_base = (alt_sgdma_descriptor *) ( (cyg_uint8 *)(cpd->rx_sgdma.descriptor_base) + 0x80000000 );
 
 	unsigned short val = 0;
 	int cc = 0;
@@ -331,8 +410,8 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 	int i = 0;
 
 #ifdef PACKET_MEMORY_BASE
-	cpd->rx_buffer = (volatile cyg_uint32*)PACKET_MEMORY_BASE;
-	cpd->tx_buffer = (volatile cyg_uint32*)(PACKET_MEMORY_BASE + PACKET_MEMORY_SIZE_VALUE / 2);
+	cpd->rx_buffer = (volatile cyg_uint8*)PACKET_MEMORY_BASE;
+	cpd->tx_buffer = (volatile cyg_uint8*)(PACKET_MEMORY_BASE + (BUFFER_NO * BUFFER_SIZE));
 #else
 	cpd->rx_buffer = rx_buffer;
 	cpd->tx_buffer = tx_buffer;
@@ -385,7 +464,7 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 	// reset the tx sgdma
 	alt_avalon_sgdma_init2(&cpd->tx_sgdma);
 
-	marvell_cfg_gmii(cpd->base);
+	marvell_cfg_sgmii(cpd->base);
 
 	/* reset the PHY if necessary */
 	result = getPHYSpeed(cpd->base);
@@ -405,7 +484,7 @@ static bool tse_init(struct cyg_netdevtab_entry *tab)
 
 #if 0 < CYGINT_DEVS_ETH_SOCP_ALT_AVALON_TSE_STATIC_ESA
 	// Use statically configured ESA from the private data
-#if DEBUG & 9
+#if DEBUG
 	db_printf("TSE - static ESA: %02x:%02x:%02x:%02x:%02x:%02x\n", cpd->enaddr[0], cpd->enaddr[1], cpd->enaddr[2], cpd->enaddr[3], cpd->enaddr[4], cpd->enaddr[5] );
 #endif // DEBUG
 	IOWR_ALTERA_TSEMAC_MAC_0( cpd->base, (int)cpd->enaddr[0] | (int)( cpd->enaddr[1] << 8 ) | (int)( cpd->enaddr[2] << 16) | (int)( cpd->enaddr[3] << 24));
@@ -505,8 +584,8 @@ static void tse_stop(struct eth_drv_sc *sc)
 	/* disable the interrupt for the rx*/
 	cyg_drv_interrupt_mask(cpd->rx_sgdma.irq);
 
-	alt_avalon_sgdma_reset(&(cpd->rx_sgdma));
-	alt_avalon_sgdma_reset(&(cpd->tx_sgdma));
+//	alt_avalon_sgdma_reset(&(cpd->rx_sgdma));
+//	alt_avalon_sgdma_reset(&(cpd->tx_sgdma));
 
 	/* disable the interrupt for the tx*/
 	    cyg_drv_interrupt_mask(cpd->tx_sgdma.irq);
@@ -533,13 +612,15 @@ static void tse_start(struct eth_drv_sc *sc, unsigned char *enaddr, int flags)
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
 	cyg_uint32 dat = 0, timeout = 0, result = 0;
 	int is1000 = 0, duplex = 0;
+	int i = 0;
 
 	DEBUG_FUNCTION();
 
-	alt_sgdma_descriptor *desc_base = cpd->rx_sgdma.descriptor_base;
+	alt_sgdma_descriptor *desc_base = (alt_sgdma_descriptor *) ( (cyg_uint8 *)(cpd->rx_sgdma.descriptor_base) + 0x80000000 );
+	dat = IORD_ALTERA_TSEMAC_CMD_CONFIG( cpd->base);
 
 	/* enable MAC */
-	dat = ALTERA_TSEMAC_CMD_TX_ENA_MSK | ALTERA_TSEMAC_CMD_RX_ENA_MSK |
+	dat |= ALTERA_TSEMAC_CMD_TX_ENA_MSK | ALTERA_TSEMAC_CMD_RX_ENA_MSK |
 #if ENABLE_PHY_LOOPBACK
 			ALTERA_TSEMAC_CMD_PROMIS_EN_MSK | ALTERA_TSEMAC_CMD_LOOPBACK_MSK | // promiscuous mode
 #endif
@@ -569,12 +650,8 @@ static void tse_start(struct eth_drv_sc *sc, unsigned char *enaddr, int flags)
 	}
 
 	IOWR_ALTERA_TSEMAC_CMD_CONFIG(cpd->base, dat);
+
 //	printf("\nMAC post-initialization: CMD_CONFIG=0x%08x\n", IORD_ALTERA_TSEMAC_CMD_CONFIG(cpd->base));
-
-	/* enable the interrupt for the rx*/
-	cyg_drv_interrupt_unmask(cpd->rx_sgdma.irq);
-
-//	cyg_drv_interrupt_unmask(cpd->tx_sgdma.irq);
 
 	// start the dma transfer
 	// Make sure SGDMA controller is not busy from a former command
@@ -589,15 +666,21 @@ static void tse_start(struct eth_drv_sc *sc, unsigned char *enaddr, int flags)
 	//        	return ;
 	//		}
 	//  	}
-	// set the recieve descriptor
-	alt_avalon_sgdma_construct_stream_to_mem_desc(desc_base, // descriptor
-			desc_base + 1, // next descriptor
-			cpd->rx_buffer, // starting write_address
-			0, // read until EOP
+	// set the recieve descriptors
+	for(i = 0; i < BUFFER_NO  - 1; i++)
+	{
+		alt_avalon_sgdma_construct_stream_to_mem_desc(desc_base + i, // descriptor
+			desc_base + i + 1, // next descriptor
+			cpd->rx_buffer + i * BUFFER_SIZE, // starting write_address
+			(cyg_uint16)0, // read until EOP
 			0); // don't write to constant address
+	}
 
 	//stop after 2 descriptors
-	cpd->rx_sgdma.chain_control = 0x1a | 0x200 | ALTERA_AVALON_SGDMA_CONTROL_IE_MAX_DESC_PROCESSED_MSK | ALTERA_AVALON_SGDMA_CONTROL_IE_ERROR_MSK ;
+	cpd->rx_sgdma.chain_control = 0x1a /* | 0x200 | ALTERA_AVALON_SGDMA_CONTROL_IE_MAX_DESC_PROCESSED_MSK | ALTERA_AVALON_SGDMA_CONTROL_IE_ERROR_MSK */;
+
+/* enable the interrupt for the rx*/
+	cyg_drv_interrupt_unmask(cpd->rx_sgdma.irq);
 
 	//	do {
 
@@ -742,7 +825,7 @@ static int tse_can_send(struct eth_drv_sc *sc)
 		retValue = 1;
 	}
 
-#if DEBUG
+#if DEBUG >= 2
 	diag_printf("can send: %d\n", retValue);
 #endif
 
@@ -778,7 +861,7 @@ static void tse_send(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 	}
 	HAL_DCACHE_FLUSH(cpd->tx_buffer, len + 2);
 
-#if DEBUG
+#if DEBUG >= 2
 	for(i = 0; i < len; i++)
 	{
 		diag_printf("%02x ", *(mem + i));
@@ -820,86 +903,6 @@ static void tse_send(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 static void tse_TxEvent(struct eth_drv_sc *sc, int stat)
 {
 	DEBUG_FUNCTION();
-#if 0
-	unsigned short packet, ints, tcr;
-	struct tse_priv_data *cpd =
-	(struct tse_priv_data *)sc->driver_private;
-	int success = 1;
-
-	DEBUG_FUNCTION();
-
-	INCR_STAT( tx_complete );
-
-	// Ack and mask TX interrupt set
-	ints = get_reg(sc, LAN91CXX_INTERRUPT) & 0xff00;
-	ints |= LAN91CXX_INTERRUPT_TX_SET_ACK;
-	ints &= ~LAN91CXX_INTERRUPT_TX_SET_M;
-	put_reg(sc, LAN91CXX_INTERRUPT, ints);
-
-	// Get number of completed packet and read the status word
-	packet = get_reg(sc, LAN91CXX_FIFO_PORTS);
-#if DEBUG & 1
-	db_printf("%s:START: fifo %04x ints %04x\n", __FUNCTION__, packet, ints);
-#endif
-
-#ifdef KEEP_STATISTICS
-	{
-		unsigned short reg;
-
-	}
-#endif // KEEP_STATISTICS
-	// We do not really care about Tx failure.  Ethernet is not a reliable
-	// medium.  But we do care about the TX engine stopping.
-	tcr = get_reg(sc, LAN91CXX_TCR);
-	if ( 0 == (LAN91CXX_TCR_TXENA & tcr) )
-	{
-#if DEBUG & 1
-		db_printf("%s: ENGINE RESTART: tcr 0x%04x eph 0x%04x ints 0x%04x\n", __FUNCTION__, tcr, get_reg(sc, LAN91CXX_EPH_STATUS), ints);
-#endif
-		tcr |= LAN91CXX_TCR_TXENA;
-		put_reg(sc, LAN91CXX_TCR, tcr);
-		success = 0; // And treat this as an error...
-	}
-
-	packet &= 0xff;
-
-	// It certainly appears that occasionally the tx fifo tells lies; we
-	// get the wrong packet number.  Freeing the one we allocated seems to
-	// give correct operation.
-#ifdef CYGPKG_INFRA_DEBUG
-	// Then we log, OOI, the number of times we get a bad packet number
-	// from the tx done fifo.
-	if (cpd->txpacket != packet )
-	tse_txfifo_bad++;
-	else
-	tse_txfifo_good++;
-#endif
-#if DEBUG & 4
-	db_printf("#####Tx packet freed 0x%04x (expected 0x%04x)\n", packet, cpd->txpacket );
-#endif
-	// and then free the packet
-	put_reg(sc, LAN91CXX_PNR, cpd->txpacket);
-	put_reg(sc, LAN91CXX_MMU_COMMAND, LAN91CXX_MMU_rel_packet);
-
-	// Ack the TX int which is supposed to clear the packet from the TX
-	// completion queue.
-	ints = get_reg(sc, LAN91CXX_INTERRUPT) & 0xff00;
-	ints |= LAN91CXX_INTERRUPT_TX_FIFO_ACK;
-	put_reg(sc, LAN91CXX_INTERRUPT, ints);
-
-#if DEBUG & 1
-	// Hm... The free doesn't seem to have the desired effect?!?
-	ints = get_reg(sc, LAN91CXX_INTERRUPT);
-	packet = get_reg(sc, LAN91CXX_FIFO_PORTS);
-	db_printf("%s:END: fifo %04x ints %04x\n", __FUNCTION__, packet, ints);
-#endif
-
-	if ( cpd->txbusy )
-	{
-		cpd->txbusy = 0;
-		(sc->funs->eth_drv->tx_done)(sc, cpd->txkey, success);
-	}
-#endif
 }
 
 //
@@ -915,87 +918,7 @@ static void tse_RxEvent(struct eth_drv_sc *sc)
 	unsigned short stat, len;
 
 	DEBUG_FUNCTION();
-#if 0
-	stat = get_reg(sc, LAN91CXX_FIFO_PORTS);
-#if DEBUG & 1
-	db_printf("RxEvent - FIFOs: 0x%04x\n", stat);
-#endif
-	if ( 0x8000 & stat )
-	{
-		// Then the Rx FIFO is empty
-#if DEBUG & 4
-		db_printf("#####RxEvent with empty fifo\n");
-#endif
-		return;
-	}
 
-	INCR_STAT( rx_count );
-
-#if DEBUG & 4
-	db_printf("#####Rx packet allocated 0x%04x (previous 0x%04x)\n",
-			0xff & (stat >> 8), cpd->rxpacket );
-#endif
-	// There is an Rx Packet ready
-	cpd->rxpacket = 0xff & (stat >> 8);
-
-	// Read status and (word) length
-	put_reg(sc, LAN91CXX_POINTER, (LAN91CXX_POINTER_RCV | LAN91CXX_POINTER_READ |
-					LAN91CXX_POINTER_AUTO_INCR | 0x0000));
-	get_data_init(sc);
-
-	stat = get_data_short(sc);
-	len = get_data_short(sc);
-	len = len - 6; // minus header/footer words
-
-#ifdef KEEP_STATISTICS
-	if ( stat & LAN91CXX_RX_STATUS_ALIGNERR ) INCR_STAT( rx_align_errors );
-	//if ( stat & LAN91CXX_RX_STATUS_BCAST    ) INCR_STAT(  );
-	if ( stat & LAN91CXX_RX_STATUS_BADCRC ) INCR_STAT( rx_crc_errors );
-	if ( stat & LAN91CXX_RX_STATUS_TOOLONG ) INCR_STAT( rx_too_long_frames );
-	if ( stat & LAN91CXX_RX_STATUS_TOOSHORT ) INCR_STAT( rx_short_frames );
-	//if ( stat & LAN91CXX_RX_STATUS_MCAST    ) INCR_STAT(  );
-#endif // KEEP_STATISTICS
-	if ((stat & LAN91CXX_RX_STATUS_BAD) == 0)
-	{
-		INCR_STAT( rx_good );
-		// Then it's OK
-
-		if( LAN91CXX_RX_STATUS_IS_ODD(cpd,stat) )
-		len++;
-
-#if DEBUG & 1
-		db_printf("RxEvent good rx - stat: 0x%04x, len: 0x%04x\n", stat, len);
-#endif
-		// Check for bogusly short packets; can happen in promisc mode:
-		// Asserted against and checked by upper layer driver.
-#ifdef CYGPKG_NET
-		if ( len > sizeof( struct ether_header ) )
-		// then it is acceptable; offer the data to the network stack
-#endif
-		(sc->funs->eth_drv->recv)(sc, len);
-
-		return;
-	}
-
-	// Not OK for one reason or another...
-#if DEBUG & 1
-	db_printf("RxEvent - bad rx: stat: 0x%04x, len: 0x%04x\n", stat, len);
-	db_printf("PHY %2d: %04x\n",0,tse_read_phy( sc, 0, 0));
-	db_printf("PHY %2d: %04x\n",1,tse_read_phy( sc, 0, 1));
-	db_printf("PHY %2d: %04x\n",2,tse_read_phy( sc, 0, 2));
-	db_printf("PHY %2d: %04x\n",3,tse_read_phy( sc, 0, 3));
-	db_printf("PHY %2d: %04x\n",4,tse_read_phy( sc, 0, 4));
-	db_printf("PHY %2d: %04x\n",5,tse_read_phy( sc, 0, 5));
-	db_printf("PHY %2d: %04x\n",16,tse_read_phy( sc, 0, 16));
-	db_printf("PHY %2d: %04x\n",17,tse_read_phy( sc, 0, 17));
-	db_printf("PHY %2d: %04x\n",18,tse_read_phy( sc, 0, 18));
-	db_printf("PHY %2d: %04x\n",19,tse_read_phy( sc, 0, 19));
-	db_printf("PHY %2d: %04x\n",20,tse_read_phy( sc, 0, 20));
-#endif
-
-	// Free packet
-	put_reg(sc, LAN91CXX_MMU_COMMAND, LAN91CXX_MMU_remrel_rx_frame);
-#endif
 }
 
 //
@@ -1009,16 +932,15 @@ static void tse_recv(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 		int sg_len)
 {
 	struct tse_priv_data *cpd = (struct tse_priv_data *) sc->driver_private;
-
+	alt_sgdma_descriptor *desc_base = (alt_sgdma_descriptor *) ( (cyg_uint8 *)(cpd->rx_sgdma.descriptor_base) );
 	volatile cyg_uint8 *from_addr = 0;
 	cyg_uint32 from = 0, status = 0, i = 0;
 	int pkt_len = 0, total_len = 0;
 
 	//uncached, aligned to half-word
-	from_addr = ((cyg_uint8 *) cpd->rx_buffer) + 2;
-#ifndef PACKET_MEMORY_BASE
-	from_addr +=  0x80000000; //uncached
-#endif
+	from_addr = ((cyg_uint8 *) cpd->rx_buffer) + cpd->rx_current_index * BUFFER_SIZE + 2;
+	from_addr += 0x80000000;
+
 	DEBUG_FUNCTION();
 
 	for (i = 0; i < sg_len; i++)
@@ -1034,15 +956,10 @@ static void tse_recv(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 			break; // out of mbufs
 		}
 
-		//    	if ( len > pkt_len )
-		//		{
-		//      		len = pkt_len;
-		//		}
-
 //		HAL_DCACHE_FLUSH(from_addr, len);
 		memcpy(to_addr, (void *) from_addr, len);
 
-#if DEBUG
+#if DEBUG >= 2
 		{
 			int j;
 			for(j = 0; j < len; j++)
@@ -1051,29 +968,13 @@ static void tse_recv(struct eth_drv_sc *sc, struct eth_drv_sg *sg_list,
 #endif
 
 		from_addr += len;
-		//    	pkt_len   -= len;
 	}
-#if DEBUG
+#if DEBUG >= 2
 	diag_printf("\n");
 #endif
 
-	alt_sgdma_descriptor *desc_base = cpd->rx_sgdma.descriptor_base;
-
-	// set the recieve descriptor
-	alt_avalon_sgdma_construct_stream_to_mem_desc(desc_base, // descriptor
-			desc_base + 1, // next descriptor
-			cpd->rx_buffer, // starting write_address
-			0, // read until EOP
-			0); // don't write to constant address
-
-	//stop after 2 descriptors
-	cpd->rx_sgdma.chain_control = 0x1a | 0x200 | ALTERA_AVALON_SGDMA_CONTROL_IE_MAX_DESC_PROCESSED_MSK | ALTERA_AVALON_SGDMA_CONTROL_IE_ERROR_MSK  ;
-
-
-//	alt_avalon_sgdma_set_control(&cpd->rx_sgdma, 0x1a | 0x200 | ALTERA_AVALON_SGDMA_CONTROL_IE_MAX_DESC_PROCESSED_MSK | ALTERA_AVALON_SGDMA_CONTROL_IE_ERROR_MSK);
-
-	// SGDMA operation invoked for RX (non-blocking call)
-	alt_avalon_sgdma_do_async_transfer(&cpd->rx_sgdma, desc_base);
+	(desc_base + cpd->rx_current_index)->control |= ALTERA_AVALON_SGDMA_DESCRIPTOR_CONTROL_OWNED_BY_HW_MSK;
+	HAL_DCACHE_FLUSH((desc_base + cpd->rx_current_index), sizeof(alt_sgdma_descriptor));
 
 //	IOWR_ALTERA_TSEMAC_RX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_RX_CMD_STAT_RXSHIFT16_MSK);
 //	IOWR_ALTERA_TSEMAC_TX_CMD_STAT(     cpd->base, ALTERA_TSEMAC_TX_CMD_STAT_TXSHIFT16_MSK);
@@ -1087,174 +988,6 @@ static void tse_poll(struct eth_drv_sc *sc)
 	DEBUG_FUNCTION();
 }
 
-#ifdef LAN91CXX_IS_TSE
-
-static cyg_uint16
-tse_read_phy(struct eth_drv_sc *sc, cyg_uint8 phyaddr, cyg_uint8 phyreg)
-{
-	int i, mask, input_idx, clk_idx = 0;
-	cyg_uint16 mii_reg, value;
-	cyg_uint8 bits[64];
-	DEBUG_FUNCTION();
-
-	// 32 consecutive ones on MDO to establish sync
-	for (i = 0; i < 32; ++i)
-	bits[clk_idx++] = LAN91CXX_MGMT_MDOE | LAN91CXX_MGMT_MDO;
-
-	// Start code <01>
-	bits[clk_idx++] = LAN91CXX_MGMT_MDOE;
-	bits[clk_idx++] = LAN91CXX_MGMT_MDOE | LAN91CXX_MGMT_MDO;
-
-	// Read command <10>
-	bits[clk_idx++] = LAN91CXX_MGMT_MDOE | LAN91CXX_MGMT_MDO;
-	bits[clk_idx++] = LAN91CXX_MGMT_MDOE;
-
-	// Output the PHY address, msb first
-	for (mask = 0x10; mask; mask >>= 1)
-	{
-		if (phyaddr & mask)
-		bits[clk_idx++] = LAN91CXX_MGMT_MDOE | LAN91CXX_MGMT_MDO;
-		else
-		bits[clk_idx++] = LAN91CXX_MGMT_MDOE;
-	}
-
-	// Output the phy register number, msb first
-	for (mask = 0x10; mask; mask >>= 1)
-	{
-		if (phyreg & mask)
-		bits[clk_idx++] = LAN91CXX_MGMT_MDOE | LAN91CXX_MGMT_MDO;
-		else
-		bits[clk_idx++] = LAN91CXX_MGMT_MDOE;
-	}
-
-	// Tristate and turnaround (1 bit times)
-	bits[clk_idx++] = 0;
-
-	// Input starts at this bit time
-	input_idx = clk_idx;
-
-	// Will input 16 bits
-	for (i = 0; i < 16; ++i)
-	bits[clk_idx++] = 0;
-
-	// Final clock bit
-	bits[clk_idx++] = 0;
-
-	// Get the current MII register value
-	mii_reg = get_reg(sc, LAN91CXX_MGMT);
-
-	// Turn off all MII Interface bits
-	mii_reg &= ~(LAN91CXX_MGMT_MDOE | LAN91CXX_MGMT_MCLK |
-			LAN91CXX_MGMT_MDI | LAN91CXX_MGMT_MDO);
-
-	// Clock all 64 cycles
-	for (i = 0; i < sizeof(bits); ++i)
-	{
-		// Clock Low - output data
-		put_reg(sc, LAN91CXX_MGMT, mii_reg | bits[i]);
-		HAL_DELAY_US(50);
-
-		// Clock Hi - input data
-		put_reg(sc, LAN91CXX_MGMT, mii_reg | bits[i] | LAN91CXX_MGMT_MCLK);
-		HAL_DELAY_US(50);
-
-		bits[i] |= get_reg(sc, LAN91CXX_MGMT) & LAN91CXX_MGMT_MDI;
-	}
-
-	// Return to idle state
-	put_reg(sc, LAN91CXX_MGMT, mii_reg);
-	HAL_DELAY_US(50);
-
-	// Recover input data
-	for (value = 0, i = 0; i < 16; ++i)
-	{
-		value <<= 1;
-		if (bits[input_idx++] & LAN91CXX_MGMT_MDI)
-		value |= 1;
-	}
-	return value;
-}
-
-static void
-tse_write_phy(struct eth_drv_sc *sc, cyg_uint8 phyaddr,
-		cyg_uint8 phyreg, cyg_uint16 value)
-{
-	int i, mask, clk_idx = 0;
-	cyg_uint16 mii_reg;
-	cyg_uint8 bits[65];
-
-	// 32 consecutive ones on MDO to establish sync
-	for (i = 0; i < 32; ++i)
-	bits[clk_idx++] = LAN91CXX_MGMT_MDOE | LAN91CXX_MGMT_MDO;
-
-	// Start code <01>
-	bits[clk_idx++] = LAN91CXX_MGMT_MDOE;
-	bits[clk_idx++] = LAN91CXX_MGMT_MDOE | LAN91CXX_MGMT_MDO;
-
-	// Write command <01>
-	bits[clk_idx++] = LAN91CXX_MGMT_MDOE;
-	bits[clk_idx++] = LAN91CXX_MGMT_MDOE | LAN91CXX_MGMT_MDO;
-
-	// Output the PHY address, msb first
-	for (mask = 0x10; mask; mask >>= 1)
-	{
-		if (phyaddr & mask)
-		bits[clk_idx++] = LAN91CXX_MGMT_MDOE | LAN91CXX_MGMT_MDO;
-		else
-		bits[clk_idx++] = LAN91CXX_MGMT_MDOE;
-	}
-
-	// Output the phy register number, msb first
-	for (mask = 0x10; mask; mask >>= 1)
-	{
-		if (phyreg & mask)
-		bits[clk_idx++] = LAN91CXX_MGMT_MDOE | LAN91CXX_MGMT_MDO;
-		else
-		bits[clk_idx++] = LAN91CXX_MGMT_MDOE;
-	}
-
-	// Tristate and turnaround (2 bit times)
-	bits[clk_idx++] = 0;
-	bits[clk_idx++] = 0;
-
-	// Write out 16 bits of data, msb first
-	for (mask = 0x8000; mask; mask >>= 1)
-	{
-		if (value & mask)
-		bits[clk_idx++] = LAN91CXX_MGMT_MDOE | LAN91CXX_MGMT_MDO;
-		else
-		bits[clk_idx++] = LAN91CXX_MGMT_MDOE;
-	}
-
-	// Final clock bit (tristate)
-	bits[clk_idx++] = 0;
-
-	// Get the current MII register value
-	mii_reg = get_reg(sc, LAN91CXX_MGMT);
-
-	// Turn off all MII Interface bits
-	mii_reg &= ~(LAN91CXX_MGMT_MDOE | LAN91CXX_MGMT_MCLK |
-			LAN91CXX_MGMT_MDI | LAN91CXX_MGMT_MDO);
-
-	// Clock all cycles
-	for (i = 0; i < sizeof(bits); ++i)
-	{
-		// Clock Low - output data
-		put_reg(sc, LAN91CXX_MGMT, mii_reg | bits[i]);
-		HAL_DELAY_US(50);
-
-		// Clock Hi - input data
-		put_reg(sc, LAN91CXX_MGMT, mii_reg | bits[i] | LAN91CXX_MGMT_MCLK);
-		HAL_DELAY_US(50);
-
-		//	bits[i] |= get_reg(sc, LAN91CXX_MGMT) & LAN91CXX_MGMT_MDI;
-	}
-
-	// Return to idle state
-	put_reg(sc, LAN91CXX_MGMT, mii_reg);
-	HAL_DELAY_US(50);
-}
-#endif // LAN91CXX_IS_TSE
 
 
 
@@ -1283,6 +1016,62 @@ cyg_uint32 marvell_cfg_gmii(np_tse_mac *pmac)
     IOWR(&pmac->mdio1.CONTROL, 0, dat | PCS_CTL_sw_reset);
 
     return 1;
+}
+
+/* @Function Description: Change operating mode of Marvell PHY to SGMII
+ * @API Type:   Internal
+ * @param pmac  Pointer to the first TSE MAC Control Interface Base address within MAC group
+ */
+cyg_uint32 marvell_cfg_sgmii(np_tse_mac *pmac) {
+
+	DEBUG_FUNCTION();
+
+	cyg_uint16 dat = IORD(&pmac->mdio1.reg1b, 0);
+    dat &= 0xfff0;
+
+//    tse_dprintf(5, "MARVELL : Mode changed to SGMII without clock with SGMII Auto-Neg to copper mode\n");
+    IOWR(&pmac->mdio1.reg1b, 0, dat | 0x4);
+
+//    tse_dprintf(5, "MARVELL : Disable RGMII Timing Control\n");
+    dat = IORD(&pmac->mdio1.reg14, 0);
+    dat &= ~0x82;
+    IOWR(&pmac->mdio1.reg14, 0, dat);
+
+//    tse_dprintf(5, "MARVELL : PHY reset\n");
+    dat = IORD(&pmac->mdio1.CONTROL, 0);
+    IOWR(&pmac->mdio1.CONTROL, 0, dat | PCS_CTL_sw_reset);
+
+    return 1;
+}
+
+/* @Function Description: Change operating mode of Marvell PHY to RGMII
+ * @API Type:   Internal
+ * @param pmac  Pointer to the first TSE MAC Control Interface Base address within MAC group
+ */
+cyg_uint32 marvell_cfg_rgmii(np_tse_mac *pmac)
+{
+
+	DEBUG_FUNCTION();
+
+	cyg_uint16 dat = IORD(&pmac->mdio1.reg1b, 0);
+    dat &= 0xfff0;
+    dat |= 0x000b;
+
+//    tse_dprintf(5, "MARVELL : Mode changed to RGMII/Modified MII to Copper mode\n");
+    IOWR(&pmac->mdio1.reg1b, 0, dat);
+
+//    tse_dprintf(5, "MARVELL : Enable RGMII Timing Control\n");
+    dat = IORD(&pmac->mdio1.reg14, 0);
+    dat &= ~0x82;
+    dat |= 0x82;
+    IOWR(&pmac->mdio1.reg14, 0, dat);
+
+//    tse_dprintf(5, "MARVELL : PHY reset\n");
+    dat = IORD(&pmac->mdio1.CONTROL, 0);
+    IOWR(&pmac->mdio1.CONTROL, 0, dat | PCS_CTL_sw_reset);
+
+    return 1;
+
 }
 
 

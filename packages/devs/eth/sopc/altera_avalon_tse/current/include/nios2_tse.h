@@ -113,8 +113,6 @@
 #define NTLPHY_ID       0x20005c7a  /* National DP83865 */
 #define MVLPHY_ID		0x0141		/* Marvell 88E1111 */
 
-/*** Debug Definition *********/
-
 #ifndef TSE_MAC_TRANSMIT_FIFO_DEPTH
 #define TSE_MAC_TRANSMIT_FIFO_DEPTH TSE_MAC_0_TRANSMIT_FIFO_DEPTH
 #endif
@@ -134,6 +132,9 @@
 #ifndef TSE_MAC_MACLITE_GIGE
 #define TSE_MAC_MACLITE_GIGE TSE_MAC_0_MACLITE_GIGE
 #endif
+
+
+/*** Debug Definition *********/
 
 // change ENABLE_PHY_LOOPBACK to 1 to enable PHY loopback for debug purpose 
 #define ENABLE_PHY_LOOPBACK		0
@@ -176,10 +177,25 @@ struct nios2_tse_stats {
 struct tse_priv_data;
 typedef cyg_bool (*provide_esa_t)(struct tse_priv_data* cpd);
 
+#define BUFFER_SIZE ( 1528 + 16 + 8)
+
+#ifdef PACKET_MEMORY_BASE
+#	define BUFFER_NO (((PACKET_MEMORY_SIZE_VALUE / (2 * BUFFER_SIZE)) < (DESCRIPTOR_MEMORY_SIZE_VALUE / (2 * sizeof(alt_sgdma_descriptor)))) ? \
+		(PACKET_MEMORY_SIZE_VALUE / (2 * BUFFER_SIZE)) : (DESCRIPTOR_MEMORY_SIZE_VALUE / (2 * sizeof(alt_sgdma_descriptor))))
+#else //PACKET_MEMORY_BASE
+#	define BUFFER_NO  (DESCRIPTOR_MEMORY_SIZE_VALUE / (2 * sizeof(alt_sgdma_descriptor)))
+#endif
+
+#define ALTERA_TSE_FIRST_TX_SGDMA_DESC_OFST		BUFFER_NO
+#define ALTERA_TSE_SECOND_TX_SGDMA_DESC_OFST    BUFFER_NO + 1
+#define ALTERA_TSE_FIRST_RX_SGDMA_DESC_OFST		0
+#define ALTERA_TSE_SECOND_RX_SGDMA_DESC_OFST    1
+
+
+
 typedef struct tse_priv_data {
-//	volatile cyg_uint32      rx_buffer[( 1528 + 16) / 4 + 2]; 	//keep it first so it's aligned at the DCACHE line size
-	volatile cyg_uint32      *rx_buffer;
-	volatile cyg_uint32      *tx_buffer;
+	volatile cyg_uint8      *rx_buffer;
+	volatile cyg_uint8      *tx_buffer;
     int 			txbusy;             				// A packet has been sent
     unsigned long 	txkey;              				// Used to ack when packet sent
     unsigned short* base;               				// Base I/O address of controller (as it comes out of reset)
@@ -195,11 +211,11 @@ typedef struct tse_priv_data {
     cyg_uint32 		data_buf;
     int   			data_pos;
 	alt_sgdma_dev   tx_sgdma;
+	int				tx_current_index;
 	alt_sgdma_dev   rx_sgdma;
-	cyg_uint32      cfgflags;  // flags or'ed during initialization of COMMAND_CONFIG
-
-
+	int				rx_current_index;
 	cyg_uint32      rx_buffer_uncached;
+	cyg_uint32      cfgflags;  // flags or'ed during initialization of COMMAND_CONFIG
 	cyg_int32       bytesReceived;
 
 #ifdef KEEP_STATISTICS

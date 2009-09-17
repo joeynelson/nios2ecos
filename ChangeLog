@@ -1,3 +1,7 @@
+2009-09-17 Edgar Grimberg <edgar.grimberg@zylin.com>
+	
+	* multiple buffers for receive in TSE
+	
 2009-09-17 Øyvind Harboe <oyvind.harboe@zylin.com>
 
 	* added "fixquartus90cygwin.sh".
