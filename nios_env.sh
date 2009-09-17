@@ -10,7 +10,6 @@ export NIOS_ECOS=`pwd`/packages
 
 if [ `uname` = Linux ] ;then
 	echo "Linux box"
-	export WIN_ALTERA_ROOTDIR=/opt/altera9.0
 	export CYG_ALTERA_ROOTDIR=/opt/altera9.0
 	# FIX!!!! check if nios2-elf-gcc is already added to path
 	export PATH=$PATH:$CYG_ALTERA_ROOTDIR/nios2eds/bin/nios2-gnutools/H-i686-pc-linux-gnu/bin
@@ -18,15 +17,16 @@ if [ `uname` = Linux ] ;then
 else
 	echo "Cygwin"
 	export CYGWIN=nontsec
+	# DANGER!!! here we need windows-like paths for compatibility.
 	export WIN_ALTERA_ROOTDIR=c:/altera/90
 	export CYG_ALTERA_ROOTDIR=/cygdrive/c/altera/90
 	# FIX!!!! check if nios2-elf-gcc is already added to path
 	export PATH=$PATH:$CYG_ALTERA_ROOTDIR/nios2eds/bin/nios2-gnutools/H-i686-pc-cygwin/bin
+	
+	export QUARTUS_ROOTDIR=$WIN_ALTERA_ROOTDIR/quartus
+	export SOPC_KIT_NIOS2=$WIN_ALTERA_ROOTDIR/nios2eds
 fi
 
-# DANGER!!! here we need windows-like paths for compatibility.
-export QUARTUS_ROOTDIR=$WIN_ALTERA_ROOTDIR/quartus
-export SOPC_KIT_NIOS2=$WIN_ALTERA_ROOTDIR/nios2eds
 
 # This is the standard installation directory for eCos 3.0
 echo "Adding eCos 3.0 tools to path: ~/ecos/ecos-3.0/tools/bin"
