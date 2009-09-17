@@ -26,4 +26,4 @@ cd /tmp/ecos
 nios2configgen --ptf=$NIOS_ECOS/../neek/neek.ptf --cpu=cpu
 ecosconfig new nios2_neek default
 ecosconfig tree
-make
+make -s

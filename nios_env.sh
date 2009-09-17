@@ -12,6 +12,7 @@ if [ `uname` = Linux ] ;then
 	echo "Linux box"
 	export WIN_ALTERA_ROOTDIR=/opt/altera9.0
 	export CYG_ALTERA_ROOTDIR=/opt/altera9.0
+	# FIX!!!! check if nios2-elf-gcc is already added to path
 	export PATH=$PATH:$CYG_ALTERA_ROOTDIR/nios2eds/bin/nios2-gnutools/H-i686-pc-linux-gnu/bin
 	export TMP=/tmp
 else
@@ -19,6 +20,7 @@ else
 	export CYGWIN=nontsec
 	export WIN_ALTERA_ROOTDIR=c:/altera/90
 	export CYG_ALTERA_ROOTDIR=/cygdrive/c/altera/90
+	# FIX!!!! check if nios2-elf-gcc is already added to path
 	export PATH=$PATH:$CYG_ALTERA_ROOTDIR/nios2eds/bin/nios2-gnutools/H-i686-pc-cygwin/bin
 fi
 
@@ -36,7 +38,11 @@ export PATH=$PATH:~/ecos/ecos-3.0/tools/bin
 export ECOS_REPOSITORY=~/ecos/ecos-3.0/packages
 echo "Prepend Nios eCos repository to ECOS_REPOSITORY=$ECOS_REPOSITORY"
 export ECOS_REPOSITORY=$NIOS_ECOS:$ECOS_REPOSITORY
-export ECOS_REPOSITORY=$NIOS_ECOS/../tools/gcc4libstdxx/ecos:$ECOS_REPOSITORY
+
+# Enable the line below if you need to build libstdc++ posix threads 
+# This is the compat/posix support while we wait for a few more features
+# to be added to the eCos CVS HEAD
+#export ECOS_REPOSITORY=$NIOS_ECOS/../tools/gcc4libstdxx/ecos:$ECOS_REPOSITORY
 echo "ECOS_REPOSITORY=$ECOS_REPOSITORY"
 
 
