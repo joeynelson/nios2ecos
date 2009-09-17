@@ -1,3 +1,7 @@
+2009-09-17 Øyvind Harboe <oyvind.harboe@zylin.com>
+
+	* added "fixquartus90cygwin.sh".
+
 2009-09-15 Øyvind Harboe <oyvind.harboe@zylin.com>
 
 	* Nios eCos builds now survive reboots under Linux and multiple
