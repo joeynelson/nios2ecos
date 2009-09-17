@@ -24,8 +24,8 @@ else
 	echo "Cygwin"
 	export CYGWIN=nontsec
 	# DANGER!!! here we need windows-like paths for compatibility.
-	export WIN_ALTERA_ROOTDIR=c:/altera/90
-	export CYG_ALTERA_ROOTDIR=/cygdrive/c/altera/90
+	export WIN_ALTERA_ROOTDIR=`cygpath -m $SOPC_KIT_NIOS2/.. | sed "s,/$,,"`
+	export CYG_ALTERA_ROOTDIR=`cygpath -u $WIN_ALTERA_ROOTDIR`
 	# FIX!!!! check if nios2-elf-gcc is already added to path
 	export PATH=$PATH:$CYG_ALTERA_ROOTDIR/nios2eds/bin/nios2-gnutools/H-i686-pc-cygwin/bin
 fi

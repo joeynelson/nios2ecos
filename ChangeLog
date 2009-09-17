@@ -4,6 +4,9 @@
 	
 2009-09-17 Øyvind Harboe <oyvind.harboe@zylin.com>
 
+	* nios_env.sh - Cygwin fix, pick up from environment variables installation
+	location of Quartus, should now work when installing Quartus on drivers
+	other than c:\
 	* nios_env.sh - stripping away stuff from path that we do not strictly need for a 
 	smoketest build 
 	* added smoketest.sh - runs a smoketest of the build environment
