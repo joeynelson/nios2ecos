@@ -4,6 +4,10 @@
 	
 2009-09-17 Øyvind Harboe <oyvind.harboe@zylin.com>
 
+	* nios_env.sh - stripping away stuff from path that we do not strictly need for a 
+	smoketest build 
+	* added smoketest.sh - runs a smoketest of the build environment
+	* added checkcygwin.sh - beginnings of sanity checking environment
 	* added "fixquartus90cygwin.sh".
 
 2009-09-15 Øyvind Harboe <oyvind.harboe@zylin.com>
