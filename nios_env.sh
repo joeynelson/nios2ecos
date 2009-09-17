@@ -14,6 +14,12 @@ if [ `uname` = Linux ] ;then
 	# FIX!!!! check if nios2-elf-gcc is already added to path
 	export PATH=$PATH:$CYG_ALTERA_ROOTDIR/nios2eds/bin/nios2-gnutools/H-i686-pc-linux-gnu/bin
 	export TMP=/tmp
+	# SOPC_KIT_NIOS2 and QUARTUS_ROOTDIR exists in the 
+	# Windows environment when Quartus 9 is installed
+	# and there are scripts that rely on their presence. Add
+	# them for Linux.
+	export SOPC_KIT_NIOS2=$CYG_ALTERA_ROOTDIR/nios2eds
+	export QUARTUS_ROOTDIR=$CYG_ALTERA_ROOTDIR/quartus
 else
 	echo "Cygwin"
 	export CYGWIN=nontsec
