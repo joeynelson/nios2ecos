@@ -1,6 +1,7 @@
 2009-09-20 Edgar Grimberg <edgar.grimberg@zylin.com>
 
 	* nios_env.sh - added /opt/altera9.0/nios2eds/bin/ to $PATH
+	* nios_env.sh - added /opt/altera9.0/quartus/bin to $PATH
 
 2009-09-17 Edgar Grimberg <edgar.grimberg@zylin.com>
 	
