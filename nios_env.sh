@@ -52,6 +52,7 @@ echo "ECOS_REPOSITORY=$ECOS_REPOSITORY"
 # lots of obsolete stuff
 export PATH=$PATH:$NIOS_ECOS/hal/nios2/arch/current/host
 export PATH=$PATH:$CYG_ALTERA_ROOTDIR/quartus/sopc_builder/bin
+export PATH=$PATH:$CYG_ALTERA_ROOTDIR/nios2eds/bin
 
 
 
