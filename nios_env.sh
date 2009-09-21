@@ -52,6 +52,9 @@ echo "ECOS_REPOSITORY=$ECOS_REPOSITORY"
 # lots of obsolete stuff
 export PATH=$PATH:$NIOS_ECOS/hal/nios2/arch/current/host
 export PATH=$PATH:$CYG_ALTERA_ROOTDIR/quartus/sopc_builder/bin
+
+# These two last paths are not necessary to build stuff, only to
+# get tools to communicate with the FPGA(nios2-gdb-server, etc.)
 export PATH=$PATH:$CYG_ALTERA_ROOTDIR/nios2eds/bin
 export PATH=$PATH:$QUARTUS_ROOTDIR/bin
 
