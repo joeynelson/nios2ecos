@@ -6,7 +6,11 @@
 # Intended to work on Cygwin & Linux out of the box(tested on Ubuntu 9.04
 # and Cygwin as of writing).
 
-export NIOS_ECOS=`pwd`/packages
+# Be afraid!!!! here we have to figure out the location of the
+# script being sourced!!!! Requires bash 3.0 or later.
+export NIOS_ECOS=$(readlink -f ${BASH_ARGV[0]%/*}/packages)
+
+echo "NIOS_ECOS = $NIOS_ECOS"
 
 if [ `uname` = Linux ] ;then
 	echo "Linux box"

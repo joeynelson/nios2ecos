@@ -1,3 +1,10 @@
+2009-09-21 Øyvind Harboe <oyvind.harboe@zylin.com>
+
+	* Make nios_env.sh more robust: get the path of the nios_env.sh
+	script so the script will work even if it does not run from
+	the nios2ecos folder.
+	* retire obsolete -fvtable-gc option from default CFLAGS
+
 2009-09-20 Edgar Grimberg <edgar.grimberg@zylin.com>
 
 	* nios_env.sh - added /opt/altera9.0/nios2eds/bin/ to $PATH
