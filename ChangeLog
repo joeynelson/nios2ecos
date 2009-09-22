@@ -1,3 +1,8 @@
+2009-09-22 Øyvind Harboe <oyvind.harboe@zylin.com>
+
+	* added Ubuntu cygpath.c that works around Altera's
+	reliance on cygpath in linux scripts
+
 2009-09-21 Øyvind Harboe <oyvind.harboe@zylin.com>
 
 	* Make nios_env.sh more robust: get the path of the nios_env.sh
