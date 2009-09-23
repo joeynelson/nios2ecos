@@ -105,16 +105,16 @@ typedef volatile CYG_ADDRWORD HAL_IO_REGISTER;
 // Individual and vectorized access to 32 bit registers.
     
 #define HAL_READ_UINT32( _register_, _value_ ) \
-         _value_ = __builtin_ldwio (_register_)
+         _value_ = __builtin_ldwio ((cyg_uint32 *)(_register_))
 
 #define HAL_WRITE_UINT32( _register_, _value_ ) \
-        __builtin_stwio(_register_, _value_)
+        __builtin_stwio((cyg_uint32 *)(_register_), _value_)
 
 #define HAL_READ_UINT32_VECTOR( _register_, _buf_, _count_, _step_ )    \
 {                                                                       \
     cyg_count32 _i_,_j_;                                                \
     for( _i_ = 0, _j_ = 0; _i_ < (_count_); _i_++, _j_ += (_step_))     \
-        (_buf_)[_i_] = __builtin_ldwio(&(_register_)[_j_]);             \
+        (_buf_)[_i_] = __builtin_ldwio(&((cyg_uint32 *)(_register_))[_j_]);             \
 }
 
 #define HAL_WRITE_UINT32_VECTOR( _register_, _buf_, _count_, _step_ )   \

@@ -1,6 +1,7 @@
 2009-09-23 Edgar Grimberg <edgar.grimberg@zylin.com>
 
 	* added support for 28F256P30B and 28F256P30T flash chips
+	* cast inside the HAL_WRITE_UINT32 HAL_READ_UINT32 HAL_READ_UINT32_VECTOR
 
 2009-09-22 Øyvind Harboe <oyvind.harboe@zylin.com>
 
