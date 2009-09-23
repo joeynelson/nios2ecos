@@ -1,3 +1,7 @@
+2009-09-23 Edgar Grimberg <edgar.grimberg@zylin.com>
+
+	* added support for 28F256P30B and 28F256P30T flash chips
+
 2009-09-22 Øyvind Harboe <oyvind.harboe@zylin.com>
 
 	* added Ubuntu cygpath.c that works around Altera's

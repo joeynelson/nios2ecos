@@ -267,6 +267,11 @@ externC void hal_delay_us(int us);
 
 #define HAL_DELAY_US(n)          hal_delay_us(n)
 
+
+#define HAL_STRATA_INTSCACHE_STATE cyg_uint32 _saved_ints_
+#define HAL_STRATA_INTSCACHE_BEGIN() HAL_DISABLE_INTERRUPTS(_saved_ints_)
+#define HAL_STRATA_INTSCACHE_END() HAL_RESTORE_INTERRUPTS(_saved_ints_)
+
 //--------------------------------------------------------------------------
 #endif // ifndef CYGONCE_HAL_HAL_INTR_H
 // End of hal_intr.h
