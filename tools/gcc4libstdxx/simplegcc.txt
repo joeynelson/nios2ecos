@@ -3,6 +3,12 @@ Crude instructions on how to build Nios GCC 4.1 toolchain with libstdc++ w/POSIX
 Warning! GCC 4.1 is a bit rough around the edges, so if you can get hold of
 a binary GCC toolchain, you'll save yourself quite a bit of time. 
 
+Things to install... maybe?
+
+apt-get install tetex-bin
+
+
+
 0. Source code/downloads
 See http://www.nioswiki.com for source code to GCC. It's part
 of the Linux MMU distribution, surprise-surprise...
@@ -22,6 +28,8 @@ http://opensource.zylin.com/gcc/binaries/nios/nios2-elf-gcc-4.1-pthreads-linux.t
 
 cd nios2ecos
 . nios2_env.sh
+# use modified POSIX module not yet in eCos CVS mainline
+export ECOS_REPOSITORY=`pwd`/tools/gcc4libstdxx/ecos:$ECOS_REPOSITORY
 mkdir ~/buildgcc
 cd ~/buildgcc
 mkdir ecos
@@ -44,7 +52,7 @@ tar -xjvf src/binutils-4.1-176.tar.bz2
 export PATH=`pwd`/install/bin:$PATH
 mkdir build
 cd build
-../binutils-2.17.50/configure --prefix=`pwd`/../install --target=nios2-elf  --disable-shared --disable-werror
+../binutils-2.17.50/configure --prefix=`pwd`/../install --target=nios2-elf  --disable-shared --disable-werror --disable-nls --disable-doc
 make 
 make install
 
@@ -59,7 +67,7 @@ cd ..
 tar -xjvf src/gcc-4.1-176.tar.bz2
 cd gcc-4.1-176
 
-../gcc-4.1/configure --prefix=`pwd`/../install --target=nios2-elf --enable-languages=c,c++ --with-gnu-ld --disable-shared --disable-nls --enable-threads=posix --with-gnu-as --enable-libstdcxx-allocator=malloc --enable-cstdio=stdio --with-newlib  --disable-unix98 --with-headers=`pwd`/../ecos/install/include --enable-multilib --disable-libstdcxx-pch --enable-sjlj-exceptions --disable-werror
+../gcc-4.1/configure --prefix=`pwd`/../install --target=nios2-elf --enable-languages=c,c++ --with-gnu-ld --disable-shared --disable-nls --enable-threads=posix --with-gnu-as --enable-libstdcxx-allocator=malloc --enable-cstdio=stdio --with-newlib  --disable-unix98 --with-headers=`pwd`/../ecos/install/include --enable-multilib --disable-libstdcxx-pch --enable-sjlj-exceptions --disable-werror  --disable-doc
 make >errors.txt 2>&1
 
 Problems: c++locale.c does has fallback code for strtof that doesn't
