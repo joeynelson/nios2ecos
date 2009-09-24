@@ -8,7 +8,10 @@
 
 # Be afraid!!!! here we have to figure out the location of the
 # script being sourced!!!! Requires bash 3.0 or later.
-export NIOS_ECOS=$(readlink -f ${BASH_ARGV[0]%/*}/packages)
+export NIOS2_ENV_PATH=$(dirname $BASH_ARGV)
+export NIOS_ECOS=$(readlink -f $NIOS2_ENV_PATH/packages)
+
+echo "Test $BASH_ARGV"
 
 echo "NIOS_ECOS = $NIOS_ECOS"
 

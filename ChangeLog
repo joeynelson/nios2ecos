@@ -1,3 +1,9 @@
+2009-09-24 Øyvind Harboe <oyvind.harboe@zylin.com>
+
+	* Fix regression in nios_env.sh under Cygwin when
+	picking up the full path to nios_env.sh to support
+	running nios_env.sh in pwd!=nios2ecos
+
 2009-09-23 Edgar Grimberg <edgar.grimberg@zylin.com>
 
 	* added support for 28F256P30B and 28F256P30T flash chips
