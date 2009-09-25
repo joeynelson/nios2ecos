@@ -22,6 +22,10 @@ Prebuilt Ubuntu binaries:
 
 http://opensource.zylin.com/gcc/binaries/nios/nios2-elf-gcc-4.1-pthreads-linux.tar.bz2
 
+Cygwin binaries:
+
+http://opensource.zylin.com/gcc/binaries/nios/nios2-elf-gcc-4.1-pthreads-cygwin.tar.bz2
+
 
 
 1. First build eCos w/POSIX threads
