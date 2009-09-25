@@ -317,4 +317,11 @@ cdl_component CYGBLD_GLOBAL_OPTIONS {
             This option specifies the command prefix used when
             invoking the build tools."
     }
+    
+    cdl_option CYGBLD_GLOBAL_START_ADDRESS {
+	    display "Start address"
+	    flavor  data	    
+	    default_value 0
+	    description "Start address"
+	}
 }

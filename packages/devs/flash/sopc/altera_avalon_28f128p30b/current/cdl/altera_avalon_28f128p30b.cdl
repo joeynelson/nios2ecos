@@ -1,8 +1,8 @@
 # ====================================================================
 #
-#      altera_avalon_28f256p30b.cdl
+#      altera_avalon_28f128p30b.cdl
 #
-#      Configuration data for the SOPC builder aware 28F256P30B flash
+#      Configuration data for the SOPC builder aware 28F128P30B flash
 #      driver.
 #
 # ====================================================================
@@ -36,8 +36,8 @@
 ## -------------------------------------------
 #####ECOSGPLCOPYRIGHTEND####
 
-cdl_package CYGPKG_ALTERA_AVALON_28F256P30B_FLASH {
-    display       "Altera Avalon 28F256P30B FLASH memory support. It can be part of stacked memory."
+cdl_package CYGPKG_ALTERA_AVALON_28F128P30B_FLASH {
+    display       "Altera Avalon 28F128P30B FLASH memory support. It can be part of stacked memory."
 
     parent        CYGPKG_IO_FLASH
     active_if     CYGPKG_IO_FLASH
@@ -48,11 +48,11 @@ cdl_package CYGPKG_ALTERA_AVALON_28F256P30B_FLASH {
     implements    CYGHWR_IO_FLASH_BLOCK_LOCKING
 
     description   "
-           This option enables the 28F256P30B driver "
+           This option enables the 28F128P30B driver "
 
-    compile  -library=libextras.a altera_avalon_28f256p30b.c
+    compile  -library=libextras.a altera_avalon_28f128p30b.c
 
-    cdl_option ALTERA_AVALON_28F256P30B_FLASH_DEV {
+    cdl_option ALTERA_AVALON_28F128P30B_FLASH_DEV {
         display       "flash device"
         flavor        data
         default_value { "default" }

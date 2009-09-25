@@ -92,7 +92,7 @@
     <text>
 MEMORY
 {
-    reset : ORIGIN = %RESET_ADDRESS%, LENGTH = %RESET_ROUTINE_SIZE%
+    reset : ORIGIN = CYGBLD_GLOBAL_START_ADDRESS, LENGTH = %RESET_ROUTINE_SIZE%
     </text> <!-- ...always one for the reset address -->
 
     <!-- ...and one for each MODULE/SLAVE -->
@@ -107,11 +107,12 @@ MEMORY
 
         <set_variable variable="MODULE_SLAVE_NAME" to="list_get( %MODULE_SLAVE_NAME_LIST%, %MODULE_SLAVE_LIST_INDEX% )"/>
         <set_variable variable="IS_NON_VOLATILE" ptf_path="SYSTEM/MODULE %MODULE_SLAVE%/SYSTEM_BUILDER_INFO/Is_Nonvolatile_Storage"/>
-
+		<set_variable variable="NEW_BASE_ADDRESS" to="%BASE_ADDRESS%"/>    
         <switch>
             <!-- if the base address for this MODULE/SLAVE is the same as the reset address, then make room for the reset handler -->
             <if condition="eq( %BASE_ADDRESS%, %RESET_ADDRESS% )">
                 <set_variable variable="BASE_ADDRESS" to="add( %BASE_ADDRESS%, %RESET_ROUTINE_SIZE% )"/>
+                <set_variable variable="NEW_BASE_ADDRESS" to="(CYGBLD_GLOBAL_START_ADDRESS + %RESET_ROUTINE_SIZE%)"/>                 
                 <set_variable variable="ADDRESS_SPAN" to="sub( %ADDRESS_SPAN%, %RESET_ROUTINE_SIZE% )"/>
                 <break/>
             </if>
@@ -120,10 +121,10 @@ MEMORY
             <if condition="and( gt( %RESET_ADDRESS%, %BASE_ADDRESS% ), lt( %RESET_ADDRESS%, add( %BASE_ADDRESS%, %ADDRESS_SPAN% ) ) )">
                 <!-- ...everything less than the reset address is unused -->
                 <set_variable variable="NEW_SEGMENT_ADDRESS_SPAN" to="radix( sub( %RESET_ADDRESS%, %BASE_ADDRESS% ), 10 )"/>
-                <text>    %MODULE_SLAVE_NAME%_UNUSED : ORIGIN = %BASE_ADDRESS%, LENGTH = %NEW_SEGMENT_ADDRESS_SPAN%
+                <text>    %MODULE_SLAVE_NAME%_UNUSED : ORIGIN = %NEW_BASE_ADDRESS%, LENGTH = %NEW_SEGMENT_ADDRESS_SPAN%
                 </text>
                 <!-- ...and start the usable segment after the reset handler -->
-                <set_variable variable="BASE_ADDRESS" to="add( %RESET_ADDRESS%, %RESET_ROUTINE_SIZE% )"/>
+                <set_variable variable="NEW_BASE_ADDRESS" to="add( %RESET_ADDRESS%, %RESET_ROUTINE_SIZE% )"/>
                 <set_variable variable="ADDRESS_SPAN" to="sub( %ADDRESS_SPAN%, %NEW_SEGMENT_ADDRESS_SPAN%, %RESET_ROUTINE_SIZE% )"/>
             </if>
         </switch>
@@ -144,10 +145,10 @@ MEMORY
             <if condition="and( gt( %EXC_ADDRESS%, %BASE_ADDRESS% ), lt( %EXC_ADDRESS%, add( %BASE_ADDRESS%, %ADDRESS_SPAN% ) ) )">
                 <!-- ...everything less than the exception address is unused -->
                 <set_variable variable="NEW_SEGMENT_ADDRESS_SPAN" to="radix( sub( %EXC_ADDRESS%, %BASE_ADDRESS% ), 10 )"/>
-                <text>    %MODULE_SLAVE_NAME%_UNUSED : ORIGIN = %BASE_ADDRESS%, LENGTH = %NEW_SEGMENT_ADDRESS_SPAN%
+                <text>    %MODULE_SLAVE_NAME%_UNUSED : ORIGIN = %NEW_BASE_ADDRESS%, LENGTH = %NEW_SEGMENT_ADDRESS_SPAN%
                 </text>
                 <!-- ...and start the usable segment at the exception address -->
-                <set_variable variable="BASE_ADDRESS" to="%EXC_ADDRESS%"/>
+                <set_variable variable="NEW_BASE_ADDRESS" to="%EXC_ADDRESS%"/>
                 <set_variable variable="ADDRESS_SPAN" to="sub( %ADDRESS_SPAN%, %NEW_SEGMENT_ADDRESS_SPAN% )"/>
                 <set_variable variable="EXCEPTIONS_SEGMENT" to="%MODULE_SLAVE_NAME%"/>
                 <if condition="eq( %IS_NON_VOLATILE%, 1 )">
@@ -163,7 +164,7 @@ MEMORY
         <set_variable variable="MEMORY_RANGE_LIST"
                       to='list_add( %MEMORY_RANGE_LIST%, "(%BASE_ADDRESS%,%PHYSICAL_END%)" )'/>
 
-        <text>    %MODULE_SLAVE_NAME% : ORIGIN = %BASE_ADDRESS%, LENGTH = %ADDRESS_SPAN%
+        <text>    %MODULE_SLAVE_NAME% : ORIGIN = %NEW_BASE_ADDRESS%, LENGTH = %ADDRESS_SPAN%
         </text>
     </for_each>
 

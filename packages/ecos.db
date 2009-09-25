@@ -281,3 +281,10 @@ package CYGPKG_ALTERA_AVALON_28F256P30T_FLASH {
     description		 "Altera Avalon 28F256P30T FLASH memory support. It can be part of stacked memory."
 }
 
+package CYGPKG_ALTERA_AVALON_28F128P30B_FLASH {
+    alias			{  "Altera Avalon 28F1286P30B FLASH memory support." 28f128p30b }
+    hardware
+    directory		devs/flash/sopc/altera_avalon_28f128p30b
+    script			altera_avalon_28f128p30b.cdl
+    description		 "Altera Avalon 28F128P30B FLASH memory support."
+}

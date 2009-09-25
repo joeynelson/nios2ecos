@@ -1,3 +1,12 @@
+2009-09-24 Laurentiu Cocanu <laurentiu.cocanu@zylin.com>
+	* Added a global option in $NIOS_ECOS/hal/nios2/arch/current/cdl/hal_nios2.cdl
+	 CYGBLD_GLOBAL_START_ADDRESS, to set the absolute address of the start
+	 address in memory configuration
+	* Replaced in $NIOS_ECOS/hal/nios2/arch/current/gtf/mlt_nios2.ldi.gtf
+	%BASE_ADDRESS% with CYGBLD_GLOBAL_START_ADDRESS
+	* Added flash driver for Altera Avalon 28F128P30B
+	* Fixed some copyright texts
+
 2009-09-24 Øyvind Harboe <oyvind.harboe@zylin.com>
 
 	* Fix regression in nios_env.sh under Cygwin when
