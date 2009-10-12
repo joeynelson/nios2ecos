@@ -319,6 +319,9 @@ static cyg_bool alt_avalon_cf_insert(struct cyg_devtab_entry *tab)
   ident.sectors_num = ide_idData->num_sectors;
   ident.lba_sectors_num = ide_idData->lba_total_sectors[1] << 16 | 
     ide_idData->lba_total_sectors[0];
+  ident.phys_block_size = CYGDAT_ALTERA_AVALON_CF_SECTOR_SIZE;
+
+
     
   D("\tSerial : %s\n", ident.serial);
   D("\tFirmware rev. : %s\n", ident.firmware_rev);
@@ -541,7 +544,7 @@ static Cyg_ErrNo alt_avalon_cf_read(disk_channel *chan,
   D("IDE %d read block %d\n", info->chan, block_num);
   
   if (!ide_read_sector(info->ide_base, info->chan, block_num, 
-		       (cyg_uint8 *)buf, len)) 
+		       (cyg_uint8 *)buf, len*chan->info->block_size)) 
   {
     return -EIO; 
   }
@@ -564,7 +567,7 @@ static Cyg_ErrNo alt_avalon_cf_write(disk_channel *chan,
   D("IDE %d write block %d\n", info->chan, block_num);
   
   if (!ide_write_sector(info->ide_base, info->chan, block_num, 
-			(cyg_uint8 *)buf, len)) 
+			(cyg_uint8 *)buf, len*chan->info->block_size)) 
   {
     return -EIO; 
   }
@@ -603,11 +606,20 @@ alt_avalon_cf_set_config(disk_channel *chan,
 // ----------------------------------------------------------------------------
 // Device function table. This is used by all instances of this device.
 
+/* don't want static alt_avalon_cf_funs
 DISK_FUNS(alt_avalon_cf_funs, 
-	  alt_avalon_cf_read, 
-	  alt_avalon_cf_write, 
-	  alt_avalon_cf_get_config,
-	  alt_avalon_cf_set_config
+	alt_avalon_cf_read, 
+	alt_avalon_cf_write, 
+	alt_avalon_cf_get_config,
+	alt_avalon_cf_set_config
 );
+*/
+
+disk_funs alt_avalon_cf_funs = {
+  alt_avalon_cf_read,
+  alt_avalon_cf_write,
+  alt_avalon_cf_get_config,
+  alt_avalon_cf_set_config
+}; 
 
 //EOF altera_avalon_cf.c

@@ -70,9 +70,11 @@ static alt_avalon_cf_info_t alt_avalon_cf_info_##_name_##_chan_ =  \
  interface: &alt_avalon_cf_interface_##_name_              \
 };                                                         \
                                                            \
+DISK_CONTROLLER( alt_avalon_cf_disk_controller_##_name_##_chan_, alt_avalon_cf_disk_controller_##_name_##_chan_ ); \
 DISK_CHANNEL(alt_avalon_cf_channel_##_name_##_chan_,       \
              alt_avalon_cf_funs,                           \
              alt_avalon_cf_info_##_name_##_chan_,          \
+			 alt_avalon_cf_disk_controller_##_name_##_chan_,		\
              CYGDAT_ALTERA_AVALON_CF_MBR_FLAG,   	   \
              4                                             \
 	     );                                            \

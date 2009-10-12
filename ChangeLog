@@ -1,3 +1,7 @@
+2009-10-12 Denis Gorodnichev <denis.gorodnichev@gmail.com>
+	
+	* Fixes to compile cf driver without errors
+	
 2009-09-24 Laurentiu Cocanu <laurentiu.cocanu@zylin.com>
 	* Added a global option in $NIOS_ECOS/hal/nios2/arch/current/cdl/hal_nios2.cdl
 	 CYGBLD_GLOBAL_START_ADDRESS, to set the absolute address of the start
