@@ -1,3 +1,7 @@
+2009-09-23 Edgar Grimberg <edgar.grimberg@zylin.com>
+	
+	* fixes in flash drivers 
+	
 2009-10-12 Denis Gorodnichev <denis.gorodnichev@gmail.com>
 	
 	* Fixes to compile cf driver without errors

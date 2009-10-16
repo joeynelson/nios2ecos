@@ -50,7 +50,7 @@ static const CYG_FLASH_FUNS(
     &cyg_strata_init_check_devid_16,
     &cyg_flash_devfn_query_nop,
     &cyg_strata_erase_16,
-    &cyg_strata_bufprogram_16,
+    &cyg_strata_program_16,
     (int (*)(struct cyg_flash_dev*, const cyg_flashaddr_t, void*, size_t))0,
     &cyg_strata_lock_k3_16,
     &cyg_strata_unlock_k3_16);
@@ -58,10 +58,10 @@ static const CYG_FLASH_FUNS(
 static const cyg_strata_dev altera_avalon_28f256p30b_flash_priv = {
     .manufacturer_code = CYG_FLASH_STRATA_MANUFACTURER_INTEL,
     .device_code = 0x891C,
-    .bufsize    = 16,
+    .bufsize    = 32,
     .block_info = {
-        { 0x00008000, 4 	},
-        { 0x00020000, 255	}
+        { 0x00004000, 4 	},
+        { 0x00010000, 511	}
     }
 };
 
