@@ -288,3 +288,11 @@ package CYGPKG_ALTERA_AVALON_28F128P30B_FLASH {
     script			altera_avalon_28f128p30b.cdl
     description		 "Altera Avalon 28F128P30B FLASH memory support."
 }
+
+package CYGPKG_ALTERA_AVALON_SPI {
+    alias			{  "Altera Avalon SPI." altera_avalon_spi }
+    hardware
+    directory		devs/spi/sopc/altera_avalon_spi
+    script			altera_avalon_spi.cdl
+    description		 "Altera Avalon SPI support."
+}
