@@ -1,3 +1,7 @@
+2009-10-29 Edgar Grimberg <edgar.grimberg@zylin.com>
+	
+	* fixed an SPI receive problem 
+	
 2009-10-22 Edgar Grimberg <edgar.grimberg@zylin.com>
 
 	* added untested SPI driver 

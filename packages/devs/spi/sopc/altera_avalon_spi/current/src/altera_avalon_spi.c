@@ -111,6 +111,13 @@ spi_sopc_transfer_polled(cyg_spi_sopc_device_t *dev,
     cyg_uint32 val, status;
     cyg_spi_sopc_bus_t *spi_bus = (cyg_spi_sopc_bus_t *)dev->spi_device.spi_bus;
 
+    /*
+     * Discard any stale data present in the RXDATA register, in case
+     * previous communication was interrupted and stale data was left
+     * behind.
+     */
+    IORD_ALTERA_AVALON_SPI_RXDATA((spi_bus->base));
+
     // Transmit and receive byte by byte
     while (count-- > 0)
     {
@@ -118,17 +125,10 @@ spi_sopc_transfer_polled(cyg_spi_sopc_device_t *dev,
         {
           status = IORD_ALTERA_AVALON_SPI_STATUS((spi_bus->base));
         }
-        while (((status & ALTERA_AVALON_SPI_STATUS_TRDY_MSK) == 0) &&
-                (status & ALTERA_AVALON_SPI_STATUS_RRDY_MSK) == 0);
+        while ((status & ALTERA_AVALON_SPI_STATUS_TRDY_MSK) == 0);
 
         // Send next byte over the wire
         IOWR_ALTERA_AVALON_SPI_TXDATA((spi_bus->base), *tx_data++);
-
-        //read and store only if rx_data is valid
-        val = (alt_u8)IORD_ALTERA_AVALON_SPI_RXDATA((spi_bus->base));
-        if (NULL != rx_data)
-            *rx_data++ = val;
-
         /* Wait until the interface has finished transmitting */
         do
         {
@@ -136,8 +136,18 @@ spi_sopc_transfer_polled(cyg_spi_sopc_device_t *dev,
         }
         while ((status & ALTERA_AVALON_SPI_STATUS_TMT_MSK) == 0);
 
-        // Store received byte
 
+        do
+		{
+			status = IORD_ALTERA_AVALON_SPI_STATUS((spi_bus->base));
+		} while ((status & ALTERA_AVALON_SPI_STATUS_RRDY_MSK) == 0);
+
+        //read and store only if rx_data is valid
+        val = (alt_u8)IORD_ALTERA_AVALON_SPI_RXDATA((spi_bus->base));
+        if (NULL != rx_data)
+        {
+            *rx_data++ = val;
+        }
     }
 }
 
