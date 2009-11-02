@@ -145,9 +145,16 @@ extern int _gp;
 // of the current thread is to be stored, and from where the sp of the
 // next thread is to be fetched.
 
-externC void hal_thread_switch_context( CYG_ADDRESS to, CYG_ADDRESS from );
-externC void hal_thread_load_context( CYG_ADDRESS to )
-    __attribute__ ((noreturn));
+#ifdef __cplusplus
+ externC
+#endif
+	void hal_thread_switch_context( CYG_ADDRESS to, CYG_ADDRESS from );
+#ifdef __cplusplus
+ externC
+#endif
+ void hal_thread_load_context( CYG_ADDRESS to )
+	     __attribute__ ((noreturn));
+
 
 #define HAL_THREAD_SWITCH_CONTEXT(_fspptr_,_tspptr_)                    \
         hal_thread_switch_context( (CYG_ADDRESS)_tspptr_,               \

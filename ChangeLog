@@ -1,3 +1,7 @@
+2009-11-02 Laurentiu Cocanu <laurentiu.cocanu@zylin.com>
+	
+	* extern for C++
+
 2009-10-29 Edgar Grimberg <edgar.grimberg@zylin.com>
 	
 	* fixed an SPI receive problem 
