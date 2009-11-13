@@ -467,7 +467,9 @@ _interrupt_handler:
     bne r3, zero, 7f
     addi r4, r4, 1
     srli r24, r24, 1
-    br 6b
+    bne zero, r24, 6b				/* More bits to search*/
+spurios_interrupt_site:
+    br spurios_interrupt
 
 7:
     /*
@@ -510,6 +512,9 @@ _interrupt_handler:
     callr r1
     ldw r15, (sp)
     addi sp, sp, 4
+
+
+spurios_interrupt:
 
 #if defined(CYGIMP_HAL_COMMON_INTERRUPTS_USE_INTERRUPT_STACK)
     /*
