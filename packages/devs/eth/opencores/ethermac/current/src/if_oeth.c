@@ -93,7 +93,7 @@
 #endif
 
 
-#define FIAD_PHY_ADDRESS 1 // for Zylin PHI board.
+#define FIAD_PHY_ADDRESS 31 // for Zylin PHI board.
 
 //#define DEBUG_OPENETH
 
@@ -908,6 +908,12 @@ bool openeth_device_init(struct eth_drv_sc *sc, cyg_uint32 idx, cyg_uint32 base,
 	  if(macaddr[i] != 0xff)
 		  gotMac = true;
   }
+  for(i = 0; i < 6; i++)
+  {
+	  if (macaddr[i] != 0x00)
+		  break;
+  }
+  gotMac = gotMac && (i != 6);
 
   if (!gotMac)
   {
