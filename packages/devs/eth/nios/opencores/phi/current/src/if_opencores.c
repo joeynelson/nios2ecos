@@ -95,16 +95,16 @@ bool openeth_phi_init(struct cyg_netdevtab_entry *ndp)
 {
   struct eth_drv_sc *sc = (struct eth_drv_sc *)(ndp->device_instance);
 
-#if !defined(CYGPKG_DEVS_ETH_OPENCORES_ETHERMAC_FLUSH)
-#error "CYGPKG_DEVS_ETH_OPENCORES_ETHERMAC_FLUSH must be 1 for Zylin Phi"
+#if defined(CYGPKG_DEVS_ETH_OPENCORES_ETHERMAC_FLUSH)
+#error "CYGPKG_DEVS_ETH_OPENCORES_ETHERMAC_FLUSH must be 0 for Zylin Phi"
 #endif
 
 #ifdef OCM_BASE
 	// we only have a single ethernet device in the system
-	return openeth_device_init(sc, 0, OCM_BASE, OCM_IRQ);
+	return openeth_device_init(sc, 0, OCM_BASE|0x80000000, OCM_IRQ);
 #else
 	// we only have a single ethernet device in the system
-	return openeth_device_init(sc, 0, IGOR_MAC_BASE, IGOR_MAC_IRQ);
+	return openeth_device_init(sc, 0, IGOR_MAC_BASE|0x80000000, IGOR_MAC_IRQ);
 #endif
 }
 

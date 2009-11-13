@@ -594,7 +594,7 @@ static void openeth_send(struct eth_drv_sc *sc,
   }
 
   OETH_REGLOAD(bdp->addr, addr);
-  to_addr = (cyg_uint8 *)addr;
+  to_addr = (cyg_uint8 *)(addr | 0x80000000);;
   for (i = 0;  i < sg_len;  i++) {
     len = sg_list[i].len;
     memcpy(to_addr, (void*)sg_list[i].buf, len);
@@ -660,7 +660,7 @@ static void openeth_recv( struct eth_drv_sc *sc, struct eth_drv_sg *sg_list, int
   bdp = cep->rx_bd_base + cep->rx_cur;
   OETH_REGLOAD(bdp->len_status,status);
   OETH_REGLOAD(bdp->addr,from);
-  from_addr = (cyg_uint8 *) from;
+  from_addr = (cyg_uint8 *) (from | 0x80000000);
 
   /* Process the incoming frame.
    *
@@ -873,7 +873,7 @@ static void write_mii(int phy, int addr, int data, volatile oeth_regs *regs)
     OETH_REGLOAD(regs->miistatus, tmp);
   } while (tmp & OETH_MIISTATUS_BUSY);
 
-  OETH_REGSAVE(regs->miiaddress, addr << 8 | FIAD_PHY_ADDRESS);
+  OETH_REGSAVE(regs->miiaddress, addr << 8 | phy);
   OETH_REGSAVE(regs->miitx_data, data);
   OETH_REGSAVE(regs->miicommand, OETH_MIICOMMAND_WCTRLDATA);
 
@@ -983,35 +983,51 @@ bool openeth_device_init(struct eth_drv_sc *sc, cyg_uint32 idx, cyg_uint32 base,
   OETH_REGSAVE(regs->ctrlmoder , 0);//regs->ctrlmoder = 0;
 #endif
 
-	for (i=0; i<32; i++)
-	{
-		diag_printf("Reading PHY %d\n", i);
-		int val=
-			read_mii(i, 2, regs);
-		int val2=
-			read_mii(i, 3, regs);
-		diag_printf("PHY identifier %08x\n", ((val&0xffff)<<3)|(((val2>>10)&0x3f)<<19));
-		diag_printf("PHY model %08x\n", ((val2>>4)&0x3f));
-		diag_printf("PHY revision %08x\n", ((val2>>0)&0xf));
-	}
+#if 0
+  /* FIX!!! There is no generic way of doing hardware PHY reset.
+   *
+   * Pray this PHY is hardwired to reset into autonegotiate.
+   */
+  HAL_WRITE_UINT32(0x08002000, 0xf); /* set all to 1 */
+  HAL_DELAY_US(1000);
+  HAL_WRITE_UINT32(0x08002004, 0x8); /* reset PHY */
+  HAL_DELAY_US(1000);
+  HAL_WRITE_UINT32(0x08002000, 0x8); /* come out of PHY reset... */
+  HAL_DELAY_US(1000);
+#endif
 
   /* Set PHY to show Tx status, Rx status and Link status */
   /*regs->miiaddress = 20<<8;
   regs->miitx_data = 0x1422;
   regs->miicommand = OETH_MIICOMMAND_WCTRLDATA;*/
 
-  // switch to 10 mbit ethernet
-#ifdef CYGPKG_DEVS_ETH_OPENCORES_ETHERMAC_ETH100
-  OETH_REGSAVE(regs->miiaddress , 0 | FIAD_PHY_ADDRESS); //regs->miiaddress = 0;
-  OETH_REGSAVE(regs->miitx_data , 0x2000); //regs->miitx_data = 0x2000;
-  OETH_REGSAVE(regs->miicommand , OETH_MIICOMMAND_WCTRLDATA); //regs->miicommand = OETH_MIICOMMAND_WCTRLDATA;
-#else
-  OETH_REGSAVE(regs->miiaddress , 0 | FIAD_PHY_ADDRESS); //regs->miiaddress = 0;
-  OETH_REGSAVE(regs->miitx_data , 0); //regs->miitx_data = 0;
-  OETH_REGSAVE(regs->miicommand , OETH_MIICOMMAND_WCTRLDATA); //regs->miicommand = OETH_MIICOMMAND_WCTRLDATA;
-//
-  write_mii(0, 0, 0, regs);
+  // The PHY is autonegotiate per defualt, we don't want to mess around with that..
+#if 0
+	#ifdef CYGPKG_DEVS_ETH_OPENCORES_ETHERMAC_ETH100
+		OETH_REGSAVE(regs->miiaddress , 0 | FIAD_PHY_ADDRESS); //regs->miiaddress = 0;
+		OETH_REGSAVE(regs->miitx_data , 0x2000); //regs->miitx_data = 0x2000;
+		OETH_REGSAVE(regs->miicommand , OETH_MIICOMMAND_WCTRLDATA); //regs->miicommand = OETH_MIICOMMAND_WCTRLDATA;
+	#else
+		// switch to 10 mbit ethernet
+		OETH_REGSAVE(regs->miiaddress , 0 | FIAD_PHY_ADDRESS); //regs->miiaddress = 0;
+		OETH_REGSAVE(regs->miitx_data , 0); //regs->miitx_data = 0;
+		OETH_REGSAVE(regs->miicommand , OETH_MIICOMMAND_WCTRLDATA); //regs->miicommand = OETH_MIICOMMAND_WCTRLDATA;
+	#endif
+#endif
 
+#if 0
+	/* This will dump all the phy registers */
+	for (i=0; i<32; i++)
+	{
+		int val= read_mii(FIAD_PHY_ADDRESS, i, regs);
+		diag_printf("reg %d 0x%08x\n", i, val);
+	}
+	diag_printf("Second pass - some registers are clear on read\n");
+	for (i=0; i<32; i++)
+	{
+		int val= read_mii(FIAD_PHY_ADDRESS, i, regs);
+		diag_printf("reg %d 0x%08x\n", i, val);
+	}
 #endif
 
   /* Initialize TXBDs. */
