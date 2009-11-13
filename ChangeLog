@@ -1,3 +1,8 @@
+2009-11-13 Laurentiu Cocanu <laurentiu.cocanu@zylin.com>
+	
+	* moved the code to enable interrupts at the serial device from 
+	altera_avalon_uart_lookup to altera_avalon_uart_init
+
 2009-11-02 Laurentiu Cocanu <laurentiu.cocanu@zylin.com>
 	
 	* extern for C++

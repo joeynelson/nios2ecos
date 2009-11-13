@@ -373,12 +373,41 @@ static void altera_avalon_uart_DSR(cyg_vector_t   vector,
 
 bool altera_avalon_uart_init(struct cyg_devtab_entry *tab)
 {
-  serial_channel *chan = (serial_channel *)tab->priv;
-  altera_avalon_uart_dev *uart_chan = (altera_avalon_uart_dev *)chan->dev_priv;
+	  serial_channel *chan = (serial_channel *)tab->priv;
+	  altera_avalon_uart_dev *uart_chan = (altera_avalon_uart_dev *)chan->dev_priv;
 
-  (chan->callbacks->serial_init)(chan); 
+	  if (__builtin_strcmp (DEV_NAME(CYGHWR_HAL_NIOS2_VV_DEBUG_DEV), tab->name) &&
+	      __builtin_strcmp (DEV_NAME(CYGHWR_HAL_NIOS2_VV_CONSOLE_DEV), tab->name))
+	  {
+	    (chan->callbacks->serial_init)(chan);
 
-  return true;
+	    /* enable interrupts at the device */
+
+	    if (chan->out_cbuf.len != 0)
+	    {
+	      cyg_drv_interrupt_create(uart_chan->irq,
+	                               99,                     /* Priority - unused */
+	                               (cyg_addrword_t)chan,   /* Data item passed to interrupt handler */
+	                               altera_avalon_uart_ISR,
+	                               altera_avalon_uart_DSR,
+	                               &uart_chan->serial_interrupt_handle,
+	                               &uart_chan->serial_interrupt);
+
+	      cyg_drv_interrupt_attach(uart_chan->serial_interrupt_handle);
+
+	      IOWR_ALTERA_AVALON_UART_CONTROL(uart_chan->base,
+	                      ALTERA_AVALON_UART_CONTROL_RTS_MSK  |
+	                      ALTERA_AVALON_UART_CONTROL_RRDY_MSK |
+	                      ALTERA_AVALON_UART_CONTROL_DCTS_MSK);
+
+	      cyg_drv_interrupt_unmask(uart_chan->irq);
+	    }
+	    return true;
+	  }
+	  else
+	  {
+	    return false;
+	  }
 }
 
 /*--------------------------------------------------------------------- 
@@ -391,43 +420,7 @@ Cyg_ErrNo altera_avalon_uart_lookup(struct cyg_devtab_entry **tab,
                                     struct cyg_devtab_entry *sub_tab,
                                     const char *name)
 {
-  serial_channel *chan = (serial_channel *)(*tab)->priv;
-  altera_avalon_uart_dev *uart_chan = (altera_avalon_uart_dev *)chan->dev_priv;
-
-  if (__builtin_strcmp (DEV_NAME(CYGHWR_HAL_NIOS2_VV_DEBUG_DEV), (*tab)->name) &&
-      __builtin_strcmp (DEV_NAME(CYGHWR_HAL_NIOS2_VV_CONSOLE_DEV), (*tab)->name))
-  {
-    (chan->callbacks->serial_init)(chan);
-
-    /* enable interrupts at the device */
-    
-    if (chan->out_cbuf.len != 0) 
-    {
-      cyg_drv_interrupt_create(uart_chan->irq,
-                               99,                     /* Priority - unused */
-                               (cyg_addrword_t)chan,   /* Data item passed to interrupt handler */
-                               altera_avalon_uart_ISR,
-                               altera_avalon_uart_DSR,
-                               &uart_chan->serial_interrupt_handle,
-                               &uart_chan->serial_interrupt);
-
-      cyg_drv_interrupt_attach(uart_chan->serial_interrupt_handle);
-
-      IOWR_ALTERA_AVALON_UART_CONTROL(uart_chan->base, 
-                      ALTERA_AVALON_UART_CONTROL_RTS_MSK  |
-                      ALTERA_AVALON_UART_CONTROL_RRDY_MSK |
-                      ALTERA_AVALON_UART_CONTROL_DCTS_MSK); 
-
-      cyg_drv_interrupt_unmask(uart_chan->irq);
-    }
-    return ENOERR;
-  }
-  else
-  {
-	  /* We don't support using the same serial port as for diag and
-	   * UART at the same time... */
-    return -EPERM;
-  }
+	return ENOERR;
 }
 
 /*--------------------------------------------------------------------- 
