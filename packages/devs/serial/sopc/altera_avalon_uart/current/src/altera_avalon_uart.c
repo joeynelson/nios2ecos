@@ -424,7 +424,9 @@ Cyg_ErrNo altera_avalon_uart_lookup(struct cyg_devtab_entry **tab,
   }
   else
   {
-    return EPERM;
+	  /* We don't support using the same serial port as for diag and
+	   * UART at the same time... */
+    return -EPERM;
   }
 }
 

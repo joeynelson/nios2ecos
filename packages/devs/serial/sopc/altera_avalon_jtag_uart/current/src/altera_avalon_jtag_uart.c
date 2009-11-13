@@ -383,7 +383,7 @@ Cyg_ErrNo altera_avalon_jtag_uart_lookup(struct cyg_devtab_entry **tab,
   }
   else
   {
-    return EPERM;
+    return -EPERM;
   }
 
 }
