@@ -125,9 +125,9 @@ CYG_MACRO_END
 #define HAL_DCACHE_INVALIDATE( _base_ , _asize_ ) \
 CYG_MACRO_START                                                  \
     char* __i__;        											 \
-    char* __start__ = (char*)(((cyg_uint32)_base_) & 0xffffff00);       \
+    char* __start__ = (char*)(((cyg_uint32)_base_) & ~(NIOS2_DCACHE_LINE_SIZE-1));       \
     char* __end__;                                                   \
-    cyg_uint32 __size__ = _asize_ + ((cyg_uint32)(_asize_ )- (cyg_uint32)(__start__));                                   \
+    cyg_uint32 __size__ = ((cyg_uint32)(_asize_) + (cyg_uint32)(_base_) - (cyg_uint32)(__start__)); \
                                                                  \
     if (__size__ > NIOS2_DCACHE_SIZE)                                \
     {                                                            \
@@ -138,13 +138,13 @@ CYG_MACRO_START                                                  \
                                                                  \
     for (__i__ = (__start__); __i__ < __end__; __i__+= NIOS2_DCACHE_LINE_SIZE)       \
     {                                                            \
-      __asm__ volatile ("initd (%0)" :: "r" (__i__));               \
-    }                                                            \
-                                                                 \
+      __asm__ volatile ("initda (%0)" :: "r" (__i__));               \
+    } \
+\
     if (((cyg_uint32)(__start__)) & (NIOS2_DCACHE_LINE_SIZE - 1))    \
     {                                                            \
-      __asm__ volatile ("initd (%0)" :: "r" (__i__));               \
-    }                                                            \
+      __asm__ volatile ("initda (%0)" :: "r" (__i__));               \
+    } \
 CYG_MACRO_END
 
 #define HAL_DCACHE_STORE( _base_ , _asize_ )  \
