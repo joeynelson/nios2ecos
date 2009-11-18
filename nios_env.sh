@@ -39,12 +39,12 @@ fi
 
 
 # This is the standard installation directory for eCos 3.0
-echo "Adding eCos 3.0 tools to path: ~/ecos/ecos-3.0/tools/bin"
+# echo "Adding eCos 3.0 tools to path: ~/ecos/ecos-3.0/tools/bin"
 # FIX!!! check if ecosconfig is already in the path and only add
 # this to path if it isn't 
-export PATH=$PATH:~/ecos/ecos-3.0/tools/bin
-# FIX!!! check if ECOS_REPOSITORY variable is already set up
-export ECOS_REPOSITORY=~/ecos/ecos-3.0/packages
+# export PATH=$PATH:~/ecos/ecos-3.0/tools/bin
+# FIX!!! ECOS_REPOSITORY must already be set up, add check
+#export ECOS_REPOSITORY=~/ecos/ecos-3.0/packages
 echo "Prepend Nios eCos repository to ECOS_REPOSITORY=$ECOS_REPOSITORY"
 export ECOS_REPOSITORY=$NIOS_ECOS:$ECOS_REPOSITORY
 
