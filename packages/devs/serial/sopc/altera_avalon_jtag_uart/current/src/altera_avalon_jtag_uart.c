@@ -329,7 +329,7 @@ static void altera_avalon_jtag_uart_DSR(cyg_vector_t   vector,
 /*--------------------------------------------------------------------- 
  * altera_avalon_jtag_uart_init
  *
- * Initialise the device. 
+ * Initialize the device.
  */
 
 bool altera_avalon_jtag_uart_init(struct cyg_devtab_entry *tab)
@@ -357,8 +357,6 @@ bool altera_avalon_jtag_uart_init(struct cyg_devtab_entry *tab)
 
 /*--------------------------------------------------------------------- 
  * altera_avalon_jtag_uart_lookup
- *
- * This is called to initialise a device upon first access.
  */
 
 Cyg_ErrNo altera_avalon_jtag_uart_lookup(struct cyg_devtab_entry **tab, 
