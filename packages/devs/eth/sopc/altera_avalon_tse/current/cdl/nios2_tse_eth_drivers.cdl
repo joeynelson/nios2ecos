@@ -94,6 +94,18 @@ cdl_package CYGPKG_DEVS_ETH_NIOS2_TSE {
             can then override this value in the hardware specific package. "
     }
 
+	cdl_option CYGDAT_TSE_GET_ESA {
+        display "The name of a function that sets the ESA (MAC address)"
+        flavor  data
+        default_value {"get_mac_address"}
+        description "
+           The name of a function that sets the ESA (MAC address). 
+           Signature is void CYGDAT_TSE_GET_ESA(unsigned char   enaddr[],
+                               unsigned short* base,
+                               int             irq); "
+    }
+	
+
     cdl_interface CYGINT_DEVS_ETH_NIOS2_TSE_STATIC_ESA {
 	display "ESA is statically configured"
 	description "

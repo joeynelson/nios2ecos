@@ -1,3 +1,8 @@
+2009-11-19 Laurentiu Cocanu <laurentiu.cocanu@zylin.com>
+
+	* An option in the TSE driver for the name of a function that 
+	sets the ESA (MAC address)
+	
 2009-11-13 Laurentiu Cocanu <laurentiu.cocanu@zylin.com>
 	
 	* moved the code to enable interrupts at the serial device from 

@@ -48,7 +48,8 @@
  * Provide a prototype for the function used to obtain the MAC address.
  */
 
-extern void CYGDAT_TSE_GET_ESA(unsigned char   enaddr[],
+// CYGDAT_TSE_GET_ESA
+void get_mac_address(unsigned char   enaddr[],
                                unsigned short* base,
                                int             irq)
 {
@@ -188,6 +189,10 @@ void altera_avalon_tse_get_esa(unsigned char   enaddr[],
  *
  */
 struct tse_priv_data;
+extern void CYGDAT_TSE_GET_ESA(unsigned char   enaddr[],
+                               unsigned short* base,
+                               int             irq);
+
 static void altera_avalon_tse_get_esa_wrapper(struct tse_priv_data* cpd)
 {
   CYGDAT_TSE_GET_ESA(cpd->enaddr, cpd->base, cpd->interrupt);
