@@ -113,6 +113,41 @@
                altera_avalon_uart_lookup,                                          \
                &device##_channel); 
 
+
+#define FIFOED_AVALON_UART_INSTANCE(name, device)                                  \
+  static altera_avalon_uart_dev device##_info = {                                  \
+    name##_BASE,                                                                   \
+    name##_IRQ,                                                                    \
+    name##_FREQ,                                                                   \
+    (name##_FIXED_BAUD ? ALT_AVALON_UART_FB : 0) |                                 \
+       (name##_USE_CTS_RTS ? ALT_AVALON_UART_FC : 0)                               \
+    };                                                                             \
+                                                                                   \
+  static SERIAL_CHANNEL_USING_INTERRUPTS(device##_channel,                         \
+                        altera_avalon_uart_funs,                                   \
+                        device##_info,                                             \
+                        ALTERA_AVALON_UART_BAUD(name##_BAUD),                      \
+                        (name##_STOP_BITS == 1) ? CYGNUM_SERIAL_STOP_1: CYGNUM_SERIAL_STOP_2, \
+                        (name##_PARITY == 'N') ? CYGNUM_SERIAL_PARITY_NONE :       \
+                          (name##_PARITY == 'E') ? CYGNUM_SERIAL_PARITY_EVEN :     \
+                          CYGNUM_SERIAL_PARITY_ODD,                                \
+                        ALTERA_AVALON_UART_WORD_LENGTH(name##_DATA_BITS),           \
+                        ((CYG_SERIAL_FLAGS_DEFAULT & ~ALTERA_AVALON_UART_RTSCTS) | \
+                          name##_USE_CTS_RTS ? 0: ALTERA_AVALON_UART_RTSCTS),      \
+                        &device##_info.tx_buf[0],                                  \
+                        sizeof(device##_info.tx_buf),                              \
+                        &device##_info.rx_buf[0],                                  \
+                        sizeof(device##_info.rx_buf));                             \
+                                                                                   \
+  DEVTAB_ENTRY(device##_io,                                                        \
+               name##_NAME,                                                        \
+               0,                                                                  \
+               &cyg_io_serial_devio,                                               \
+               altera_avalon_uart_init,                                            \
+               altera_avalon_uart_lookup,                                          \
+               &device##_channel);
+
+
 #include <cyg/hal/devices.h>
 
 #endif /* CYGPKG_IO_SERIAL */

@@ -39,7 +39,7 @@ cdl_package CYGPKG_ALTERA_AVALON_UART_COMM {
     display       "Altera Avalon UART comm driver"
 
     parent        CYGPKG_HAL_SOPC
-    active_if     {!CYGHWR_DETECTED_SOPC_DEVICES || is_substr (CYGHWR_DETECTED_SOPC_DEVICE_LIST, " altera_avalon_uart ")}
+    active_if     {!CYGHWR_DETECTED_SOPC_DEVICES || is_substr (CYGHWR_DETECTED_SOPC_DEVICE_LIST, " altera_avalon_uart ") || is_substr (CYGHWR_DETECTED_SOPC_DEVICE_LIST, " fifoed_avalon_uart ")}
 
     description   "
         This option enables the comm driver for the
