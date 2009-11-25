@@ -321,45 +321,82 @@ static void altera_avalon_uart_DSR(cyg_vector_t   vector,
                                    cyg_ucount32   count, 
                                    cyg_addrword_t handle)
 {
-  cyg_uint32 status;
+  cyg_uint32 status, save_status = 0;
 
   serial_channel *chan              = (serial_channel *)handle;
   altera_avalon_uart_dev *uart_chan = (altera_avalon_uart_dev *)chan->dev_priv;
   cyg_addrword_t port               = uart_chan->base;
   cyg_uint32     data;
 
-  /*
-   * Read the status register in order to determine the cause of the
-   * interrupt.
-   */
+  bool canXmit = false;
+  int space_avail;
+  unsigned char* space;
 
-  status = IORD_ALTERA_AVALON_UART_STATUS(port);
-
-  /* Clear any error flags set at the device */
-
-  IOWR_ALTERA_AVALON_UART_STATUS(port, 0);
-
-  /* process a read irq */
- 
-  if (status & ALTERA_AVALON_UART_STATUS_RRDY_MSK)
+  for (;;)
   {
-    data = IORD_ALTERA_AVALON_UART_RXDATA(port);
+	  int num;
+	  bool canReceive = (chan->callbacks->data_rcv_req)(chan,
+			  4096,
+						   &space_avail,
+						   &space) == CYG_RCV_OK;
+	  num = space_avail;
+	  if (!canReceive)
+	  {
+		  /* drop all receive chars we can't keep up */
+		  for (;;)
+		  {
+			  status = IORD_ALTERA_AVALON_UART_STATUS(port);
+			  save_status |= status;
+			  IOWR_ALTERA_AVALON_UART_STATUS(port, 0);
+			  if (!(status & ALTERA_AVALON_UART_STATUS_RRDY_MSK))
+			  {
+				  goto xmit;
+			  }
+			  data = IORD_ALTERA_AVALON_UART_RXDATA(port);
+		  }
+	  }
+	  while (space_avail > 0)
+	  {
+		  /*
+		   * Read the status register in order to determine the cause of the
+		   * interrupt.
+		   */
 
-    /* pass the data to the higher layers only if there was no error */
+		  status = IORD_ALTERA_AVALON_UART_STATUS(port);
 
-    if (!(status & (ALTERA_AVALON_UART_STATUS_PE_MSK | 
-                      ALTERA_AVALON_UART_STATUS_FE_MSK)))
-    {
-      (chan->callbacks->rcv_char)(chan, data);
-    }
+		  save_status |= status;
+
+		  /* Clear any error flags set at the device */
+		  IOWR_ALTERA_AVALON_UART_STATUS(port, 0);
+
+		  /* process a read irq */
+		  if (status & ALTERA_AVALON_UART_STATUS_RRDY_MSK)
+		  {
+			data = IORD_ALTERA_AVALON_UART_RXDATA(port);
+
+			/* pass the data to the higher layers only if there was no error */
+			if (!(status & (ALTERA_AVALON_UART_STATUS_PE_MSK |
+							  ALTERA_AVALON_UART_STATUS_FE_MSK)))
+		    {
+				//(chan->callbacks->rcv_char)(chan, data);
+				*space++=data;
+				space_avail--;
+			}
+		  } else
+		  {
+			  (chan->callbacks->data_rcv_done)(chan, num-space_avail);
+			  goto xmit;
+		  }
+	  }
+	  (chan->callbacks->data_rcv_done)(chan, num-space_avail);
   }
+  xmit:
 
   /* process a write irq */
-
-  if (status & (ALTERA_AVALON_UART_STATUS_TRDY_MSK | 
-                  ALTERA_AVALON_UART_STATUS_DCTS_MSK))
+  if (save_status & (ALTERA_AVALON_UART_STATUS_TRDY_MSK |
+				  ALTERA_AVALON_UART_STATUS_DCTS_MSK))
   {
-    (chan->callbacks->xmt_char)(chan);
+	(chan->callbacks->xmt_char)(chan);
   }
 
   cyg_drv_interrupt_unmask(vector);
