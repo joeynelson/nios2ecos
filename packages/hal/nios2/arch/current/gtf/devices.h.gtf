@@ -91,12 +91,23 @@
         <if true="and( ptf_module_is_mastered_by( %MODULE%, %CPU% ), !=( %MODULE%, %CPU% ) )"> 
                    <set_variable variable="MODULE_CLASS"
                           ptf_path="SYSTEM/MODULE %MODULE%/class"/>
+                   
+                   <!-- handle non-legacy modules with more grace -->       
+				   <if condition="eq( %MODULE_CLASS%, no_legacy_module )">
+      				 <set_variable variable="MODULE_CLASS" ptf_path="SYSTEM/MODULE %MODULE%/gtf_class_name"/>
+    			   </if>
+                          
+                          
                    <!-- did we already add it to ECOS_COMPONENT_LIST? (we don't want duplicate defines) -->
                    <if true="lt list_index_of( %ECOS_COMPONENT_LIST%, %MODULE_CLASS% ), 0 )">
                           <set_variable variable="ECOS_COMPONENT_LIST"
                                         to="list_add( %ECOS_COMPONENT_LIST%, %MODULE_CLASS% )"/>
                           <set_variable variable="MODULE_CLASS"
                                         ptf_path="SYSTEM/MODULE %MODULE%/class"/>
+		                   <!-- handle non-legacy modules with more grace -->       
+						   <if condition="eq( %MODULE_CLASS%, no_legacy_module )">
+      							 <set_variable variable="MODULE_CLASS" ptf_path="SYSTEM/MODULE %MODULE%/gtf_class_name"/>
+    			   			</if>
                           <set_variable variable="MODULE_CLASS_UPPER"
                                         to="uppercase( %MODULE_CLASS% )"/>
                           <text>#ifndef %MODULE_CLASS_UPPER%_INSTANCE
@@ -120,6 +131,10 @@
         <if true="and( ptf_module_is_mastered_by( %MODULE%, %CPU% ), !=( %MODULE%, %CPU% ) )">
             <set_variable variable="MODULE_CLASS"
                           ptf_path="SYSTEM/MODULE %MODULE%/class"/>
+            <!-- handle non-legacy modules with more grace -->       
+            <if condition="eq( %MODULE_CLASS%, no_legacy_module )">
+    			 <set_variable variable="MODULE_CLASS" ptf_path="SYSTEM/MODULE %MODULE%/gtf_class_name"/>
+    		</if>
             <set_variable variable="MODULE_CLASS_UPPER"
                           to="uppercase( %MODULE_CLASS% )"/>
             <set_variable variable="MODULE_UPPER"
@@ -145,12 +160,24 @@
         <if true="and( ptf_module_is_mastered_by( %MODULE%, %CPU% ), !=( %MODULE%, %CPU% ) )"> 
                    <set_variable variable="MODULE_CLASS"
                           ptf_path="SYSTEM/MODULE %MODULE%/class"/>
+
+		                   <!-- handle non-legacy modules with more grace -->       
+						   <if condition="eq( %MODULE_CLASS%, no_legacy_module )">
+      							 <set_variable variable="MODULE_CLASS" ptf_path="SYSTEM/MODULE %MODULE%/gtf_class_name"/>
+    			   			</if>
+
                    <!-- did we already add it to ECOS_COMPONENT_LIST? (we don't want duplicate defines) -->
                    <if true="lt( list_index_of( %ECOS_COMPONENT_LIST%, %MODULE_CLASS% ), 0 )">
                           <set_variable variable="ECOS_COMPONENT_LIST"
                                         to="list_add( %ECOS_COMPONENT_LIST%, %MODULE_CLASS% )"/>
                           <set_variable variable="MODULE_CLASS"
                                         ptf_path="SYSTEM/MODULE %MODULE%/class"/>
+
+		                   <!-- handle non-legacy modules with more grace -->       
+						   <if condition="eq( %MODULE_CLASS%, no_legacy_module )">
+      							 <set_variable variable="MODULE_CLASS" ptf_path="SYSTEM/MODULE %MODULE%/gtf_class_name"/>
+    			   			</if>
+
                           <set_variable variable="MODULE_CLASS_UPPER"
                                         to="uppercase( %MODULE_CLASS% )"/>
                           <text>#undef %MODULE_CLASS_UPPER%_INSTANCE
