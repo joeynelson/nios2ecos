@@ -215,7 +215,7 @@ static bool altera_avalon_uart_config_port(serial_channel    *chan,
    */
   
   IOWR_ALTERA_AVALON_UART_DIVISOR(uart_chan->base, 
-    ((uart_chan->freq/altera_avalon_uart_speed[new_config->baud]) - 1));
+    ((uart_chan->freq/altera_avalon_uart_speed[new_config->baud - 1]) - 1));
 
   if (&chan->config != new_config)
   {
