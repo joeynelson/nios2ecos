@@ -281,7 +281,6 @@ static cyg_uint8* altera_avalon_jtag_uart_chan[2] = {NULL, NULL};
   }
 
 
-#define FIFOED_AVALON_UART_INSTANCE(name, device)  ALTERA_AVALON_JTAG_UART_INSTANCE(name, device)
 /*--------------------------------------------------------------------- 
  * altera_avalon_jtag_uart_diag_init
  */

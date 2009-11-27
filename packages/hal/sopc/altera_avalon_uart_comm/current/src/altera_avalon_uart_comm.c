@@ -379,6 +379,7 @@ static altera_avalon_uart_chan uart_chan[2] =
     CYGACC_COMM_IF_GETC_TIMEOUT_SET(*comm, altera_avalon_uart_diag_getc_timeout);  \
   }
 
+#define FIFOED_AVALON_UART_INSTANCE(name, device)  ALTERA_AVALON_UART_INSTANCE(name, device)
 /*--------------------------------------------------------------------- 
  * altera_avalon_uart_diag_init
  */
