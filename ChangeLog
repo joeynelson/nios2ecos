@@ -1,3 +1,7 @@
+2009-12-04 Laurentiu Cocanu <laurentiu.cocanu@zylin.com>
+
+	* changed block info for 28f256p30 top and bottom
+	
 2009-11-19 Laurentiu Cocanu <laurentiu.cocanu@zylin.com>
 
 	* An option in the TSE driver for the name of a function that 

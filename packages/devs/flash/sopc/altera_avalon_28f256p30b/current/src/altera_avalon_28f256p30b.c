@@ -60,8 +60,8 @@ static const cyg_strata_dev altera_avalon_28f256p30b_flash_priv = {
     .device_code = 0x891C,
     .bufsize    = 32,
     .block_info = {
-        { 0x00004000, 4 	},
-        { 0x00010000, 511	}
+        { 0x00008000, 4 	},
+        { 0x00020000, 255	}
     }
 };
 
