@@ -203,30 +203,22 @@ externC void hal_interrupt_stack_call_pending_DSRs(void);
 
 #define HAL_INTERRUPT_MASK( _vector_ )          \
   CYG_MACRO_START                               \
-  cyg_uint32 _status_;                          \
   cyg_uint32 _alt_irq_active_;                  \
-                                                \
-  HAL_DISABLE_INTERRUPTS(_status_);             \
                                                 \
   NIOS2_READ_IENABLE (_alt_irq_active_);        \
   _alt_irq_active_ &= ~(1 << _vector_);         \
   NIOS2_WRITE_IENABLE (_alt_irq_active_);       \
-                                                \
-  HAL_RESTORE_INTERRUPTS(_status_);             \
+  \
   CYG_MACRO_END
 
 #define HAL_INTERRUPT_UNMASK( _vector_ )        \
   CYG_MACRO_START                               \
-  unsigned int  _status_;                       \
   unsigned int _alt_irq_active_;                \
-                                                \
-  HAL_DISABLE_INTERRUPTS(_status_);             \
                                                 \
   NIOS2_READ_IENABLE (_alt_irq_active_);        \
   _alt_irq_active_ |= (1 << _vector_);          \
   NIOS2_WRITE_IENABLE (_alt_irq_active_);       \
                                                 \
-  HAL_RESTORE_INTERRUPTS(_status_);             \
   CYG_MACRO_END
 
 #define HAL_INTERRUPT_ACKNOWLEDGE( _vector_ )
