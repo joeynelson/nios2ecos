@@ -468,8 +468,9 @@ _interrupt_handler:
     addi r4, r4, 1
     srli r24, r24, 1
     bne zero, r24, 6b				/* More bits to search*/
-spurios_interrupt_site:
-    br spurios_interrupt
+spurious_interrupt_site:
+	/* ea or $r29 contains address site of interrupt */
+    br spurious_interrupt_done
 
 7:
     /*
@@ -514,7 +515,9 @@ spurios_interrupt_site:
     addi sp, sp, 4
 
 
-spurios_interrupt:
+	/* This is where we continue after a spurious interrupt, same as
+	normal interrupt processing. */
+spurious_interrupt_done:
 
 #if defined(CYGIMP_HAL_COMMON_INTERRUPTS_USE_INTERRUPT_STACK)
     /*
@@ -605,6 +608,7 @@ spurios_interrupt:
     /*
      * Return to the interrupted instruction.
      */
+_return_interrupt_site:
     eret
 
     /*
