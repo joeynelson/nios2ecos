@@ -93,21 +93,23 @@ cdl_package CYGPKG_DEVS_ETH_OPENCORES_ETHERMAC {
     cdl_option CYGINT_DEVS_ETH_OPENCORES_ETHERMAC_TxNUM {
         display       "Number of output buffers"
         flavor        data
-        legal_values  1 to 64
+        legal_values  1 to 126
         default_value 4
         description   "
             This option specifies the number of output buffer packets
-            to be used for the opencores ethernet device in multiples of 2."
+            to be used for the opencores ethernet device. A maximum of 128 for
+            receive and send."
     }
 
     cdl_option CYGINT_DEVS_ETH_OPENCORES_ETHERMAC_RxNUM {
         display       "Number of input buffers"
         flavor        data
-        legal_values  2 to 64
+        legal_values  2 to 126
         default_value 4
         description   "
             This option specifies the number of input buffer packets
-            to be used for the opencores ethernet device in multiples of 2."
+            to be used for the opencores ethernet device. A maximum of 128 for
+            receive and send."
     }
 
     cdl_component CYGPKG_DEVS_ETH_OPENCORES_ETHERMAC_OPTIONS {

@@ -190,11 +190,12 @@ typedef struct _oeth_bd {
 #define OETH_MIISTATUS_BUSY     0x00000002 /* MII Busy */
 #define OETH_MIISTATUS_NVALID   0x00000004 /* Data in MII Status Register is invalid */
 
-/* Buffer number (must be 2^n)  */
 #define OETH_RXBD_NUM		CYGINT_DEVS_ETH_OPENCORES_ETHERMAC_RxNUM
 #define OETH_TXBD_NUM		CYGINT_DEVS_ETH_OPENCORES_ETHERMAC_TxNUM
-#define OETH_RXBD_NUM_MASK	(OETH_RXBD_NUM-1)
-#define OETH_TXBD_NUM_MASK	(OETH_TXBD_NUM-1)
+
+#if OETH_RXBD_NUM + OETH_TXBD_NUM > 128
+#error "Maximum 128 tx/rx buffers total, adjust CYGINT_DEVS_ETH_OPENCORES_ETHERMAC_RxNUM and CYGINT_DEVS_ETH_OPENCORES_ETHERMAC_TxNUM"
+#endif
 
 /* Buffer size  (if not XXBUF_PREALLOC */
 #define OETH_MAX_FRAME_SIZE	((1518 + 7) & ~7)

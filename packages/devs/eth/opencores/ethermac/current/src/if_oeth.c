@@ -620,7 +620,11 @@ static void openeth_send(struct eth_drv_sc *sc,
   OETH_REGLOAD(bdp->len_status,status);
   OETH_REGSAVE(bdp->len_status , (status & 0x0000ffff) | (total_len << 16));   //bdp->len_status = (bdp->len_status & 0x0000ffff) | (skb->len << 16);
 
-  cep->tx_next = (cep->tx_next + 1) % OETH_TXBD_NUM;
+  cep->tx_next = (cep->tx_next + 1);
+  if (cep->tx_next >= OETH_TXBD_NUM)
+  {
+	  cep->tx_next = 0;
+  }
 
   if (cep->tx_next == cep->tx_last)
     cep->tx_full = 1;
@@ -826,7 +830,11 @@ static void openeth_rxready(struct eth_drv_sc *sc) {
 		//diag_printf("\n");
     }
 
-    cep->rx_cur=(cep->rx_cur + 1) & OETH_RXBD_NUM_MASK;
+    cep->rx_cur = (cep->rx_cur + 1);
+    if (cep->rx_cur >= OETH_RXBD_NUM)
+    {
+    	cep->rx_cur = 0;
+    }
 
 #ifdef CYGPKG_DEVS_ETH_OPENCORES_ETHERMAC_FLUSH
    	/* We can invalidate here since we *know* that the bdp->addr is on
