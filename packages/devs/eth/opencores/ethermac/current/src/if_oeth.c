@@ -159,8 +159,14 @@ static void oeth_txdone(struct eth_drv_sc *sc);
 
 
 
-static cyg_uint8 rxbuff[OETH_RXBD_NUM*OETH_RX_BUFF_SIZE];
-static cyg_uint8 txbuff[OETH_TXBD_NUM*OETH_TX_BUFF_SIZE];
+/* Danger!!!! we need to align this to cache line sizes, otherwise
+ * a flush/invalidate of one buffer could bleed over into another!
+ */
+#define ROUND_UP_BUF_SIZE(a) (((a+HAL_DCACHE_LINE_SIZE-1)/HAL_DCACHE_LINE_SIZE)*HAL_DCACHE_LINE_SIZE)
+static cyg_uint8 rxbuff[OETH_RXBD_NUM][ROUND_UP_BUF_SIZE(OETH_RX_BUFF_SIZE)]
+ __attribute__((aligned(HAL_DCACHE_LINE_SIZE)));
+static cyg_uint8 txbuff[OETH_TXBD_NUM][ROUND_UP_BUF_SIZE(OETH_TX_BUFF_SIZE)]
+__attribute__((aligned(HAL_DCACHE_LINE_SIZE)));
 
 extern bool CYGPKG_DEVS_ETH_OPENCORES_ETHERMAC_INITFN(struct cyg_netdevtab_entry *ndp);
 
@@ -594,7 +600,7 @@ static void openeth_send(struct eth_drv_sc *sc,
   }
 
   OETH_REGLOAD(bdp->addr, addr);
-  to_addr = (cyg_uint8 *)(addr | 0x80000000);;
+  to_addr = (cyg_uint8 *)(addr);
   for (i = 0;  i < sg_len;  i++) {
     len = sg_list[i].len;
     memcpy(to_addr, (void*)sg_list[i].buf, len);
@@ -620,7 +626,12 @@ static void openeth_send(struct eth_drv_sc *sc,
     cep->tx_full = 1;
 
 #ifdef CYGPKG_DEVS_ETH_OPENCORES_ETHERMAC_FLUSH
-  /* the DMA will read memory directly.. */
+	/* the DMA will read memory directly..
+	 *
+	 * We can invalidate here since we *know* that the bdp->addr is on
+ 	 * a cache line boundry and that the length of the rx/tx slot is aligned up
+ 	 * to the nearest cache line size.
+ 	 */
   HAL_DCACHE_FLUSH(bdp->addr, total_len );
 #endif
 
@@ -660,7 +671,7 @@ static void openeth_recv( struct eth_drv_sc *sc, struct eth_drv_sg *sg_list, int
   bdp = cep->rx_bd_base + cep->rx_cur;
   OETH_REGLOAD(bdp->len_status,status);
   OETH_REGLOAD(bdp->addr,from);
-  from_addr = (cyg_uint8 *) (from | 0x80000000);
+  from_addr = (cyg_uint8 *) (from);
 
   /* Process the incoming frame.
    *
@@ -818,7 +829,10 @@ static void openeth_rxready(struct eth_drv_sc *sc) {
     cep->rx_cur=(cep->rx_cur + 1) & OETH_RXBD_NUM_MASK;
 
 #ifdef CYGPKG_DEVS_ETH_OPENCORES_ETHERMAC_FLUSH
-   	/* the DMA will fill the memory, so we must invalidate the cache lines. */
+   	/* We can invalidate here since we *know* that the bdp->addr is on
+   	 * a cache line boundry and that the length of the rx/tx slot is aligned up
+   	 * to the nearest cache line size.
+   	 */
     HAL_DCACHE_INVALIDATE(bdp->addr, pkt_len );
 #endif
 
@@ -896,8 +910,6 @@ bool openeth_device_init(struct eth_drv_sc *sc, cyg_uint32 idx, cyg_uint32 base,
   volatile oeth_regs *regs;
   volatile oeth_bd *tx_bd, *rx_bd;
   int i;
-  unsigned long rxmem_addr = (unsigned long)&(rxbuff);
-  unsigned long txmem_addr = (unsigned long)&(txbuff);
 
   openeth_priv_array[idx]->found = 1;
 
@@ -1033,15 +1045,13 @@ bool openeth_device_init(struct eth_drv_sc *sc, cyg_uint32 idx, cyg_uint32 base,
   /* Initialize TXBDs. */
   for(i = 0; i < OETH_TXBD_NUM; i++) {
     OETH_REGSAVE(tx_bd[i].len_status , OETH_TX_BD_PAD | OETH_TX_BD_CRC | OETH_TX_BD_IRQ); //tx_bd[i].len_status = OETH_TX_BD_PAD | OETH_TX_BD_CRC | OETH_RX_BD_IRQ;
-    OETH_REGSAVE(tx_bd[i].addr , txmem_addr); //tx_bd[i].addr = __pa(mem_addr);
-    txmem_addr += OETH_TX_BUFF_SIZE;
+    OETH_REGSAVE(tx_bd[i].addr, txbuff+i); //tx_bd[i].addr = __pa(mem_addr);
   }
   OETH_REGORIN(tx_bd[OETH_TXBD_NUM - 1].len_status , OETH_TX_BD_WRAP); //tx_bd[OETH_TXBD_NUM - 1].len_status |= OETH_TX_BD_WRAP;
 
   for(i = 0; i < OETH_RXBD_NUM; i++) {
     OETH_REGSAVE(rx_bd[i].len_status , OETH_RX_BD_EMPTY | OETH_RX_BD_IRQ); //rx_bd[k].len_status = OETH_RX_BD_EMPTY | OETH_RX_BD_IRQ;
-    OETH_REGSAVE(rx_bd[i].addr , rxmem_addr); //rx_bd[k].addr = __pa(mem_addr);
-    rxmem_addr += OETH_RX_BUFF_SIZE;
+    OETH_REGSAVE(rx_bd[i].addr, rxbuff+i); //rx_bd[k].addr = __pa(mem_addr);
   }
   OETH_REGORIN(rx_bd[OETH_RXBD_NUM - 1].len_status , OETH_RX_BD_WRAP); //rx_bd[OETH_RXBD_NUM - 1].len_status |= OETH_RX_BD_WRAP;
 
