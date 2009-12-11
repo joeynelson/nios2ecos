@@ -81,48 +81,11 @@
 #if NIOS2_DCACHE_SIZE != 0
 #define HAL_DCACHE_IS_ENABLED(_state_) (_state_) = 1
 
-// Invalidate the entire cache
-// We simply use HAL_DCACHE_SYNC() to do this. For writeback caches this
-// is not quite what we want, but there is no index-invalidate operation
-// available.
-
-#define HAL_DCACHE_INVALIDATE_ALL() HAL_DCACHE_INVALIDATE(0, NIOS2_DCACHE_SIZE)
-
-// Synchronize the contents of the cache with memory.
-// This uses the index-writeback-invalidate operation.
-
-#define HAL_DCACHE_SYNC() HAL_DCACHE_FLUSH(0, NIOS2_DCACHE_SIZE)
-    
 // It is not possible to lock entries in the Nios II data cache, so no
 // implementation is provided for these macros.
 // Flushing must happen on 4 byte aligned addresses
 
-#define HAL_DCACHE_FLUSH( _base_ , _asize_ )                     \
-CYG_MACRO_START                                                  \
-    char* __i__;        											 \
-    char* __start__ = (char*)(((cyg_uint32)_base_) & 0xffffff00);       \
-    char* __end__;                                                   \
-    cyg_uint32 __size__ = _asize_ + ((cyg_uint32)(_asize_ ) - (cyg_uint32)(__start__));                                   \
-                                                                 \
-    if (__size__ > NIOS2_DCACHE_SIZE)                                \
-    {                                                            \
-      __size__ = NIOS2_DCACHE_SIZE;                                  \
-    }                                                            \
-                                                                 \
-    __end__ = ((char*)(__start__)) + __size__;                               \
-                                                                 \
-    for (__i__ = (__start__); __i__ < __end__; __i__+= NIOS2_DCACHE_LINE_SIZE)       \
-    {                                                            \
-      __asm__ volatile ("flushd (%0)" :: "r" (__i__));               \
-    }                                                            \
-                                                                 \
-    if (((cyg_uint32)(__start__)) & (NIOS2_DCACHE_LINE_SIZE - 1))    \
-    {                                                            \
-      __asm__ volatile ("flushd (%0)" :: "r" (__i__));               \
-    }                                                            \
-CYG_MACRO_END
-
-#define HAL_DCACHE_INVALIDATE( _base_ , _asize_ ) \
+#define HAL_DCACHE_OPERATION( _base_ , _asize_, _operation_ ) \
 CYG_MACRO_START                                                  \
     char* __i__;        											 \
     char* __start__ = (char*)(((cyg_uint32)_base_) & ~(NIOS2_DCACHE_LINE_SIZE-1));       \
@@ -138,14 +101,33 @@ CYG_MACRO_START                                                  \
                                                                  \
     for (__i__ = (__start__); __i__ < __end__; __i__+= NIOS2_DCACHE_LINE_SIZE)       \
     {                                                            \
-      __asm__ volatile ("initda (%0)" :: "r" (__i__));               \
-    } \
-\
-    if (((cyg_uint32)(__start__)) & (NIOS2_DCACHE_LINE_SIZE - 1))    \
-    {                                                            \
-      __asm__ volatile ("initda (%0)" :: "r" (__i__));               \
+      __asm__ volatile (_operation_ :: "r" (__i__));               \
     } \
 CYG_MACRO_END
+
+
+#define HAL_DCACHE_INVALIDATE( _base_ , _asize_ ) \
+	HAL_DCACHE_OPERATION(_base_, _asize_, "initda (%0)")
+
+#define HAL_DCACHE_FLUSH( _base_ , _asize_ ) \
+	HAL_DCACHE_OPERATION(_base_, _asize_, "flushda (%0)")
+
+
+// Invalidate the entire cache
+// We simply use HAL_DCACHE_SYNC() to do this. For writeback caches this
+// is not quite what we want, but there is no index-invalidate operation
+// available.
+
+#define HAL_DCACHE_INVALIDATE_ALL() \
+	HAL_DCACHE_OPERATION(0, NIOS2_DCACHE_SIZE, "initd (%0)")
+
+// Synchronize the contents of the cache with memory.
+// This uses the index-writeback-invalidate operation.
+
+#define HAL_DCACHE_SYNC() \
+	HAL_DCACHE_OPERATION(0, NIOS2_DCACHE_SIZE, "flushd (%0)")
+
+
 
 #define HAL_DCACHE_STORE( _base_ , _asize_ )  \
   HAL_DCACHE_FLUSH( _base_ , _asize_ )   
