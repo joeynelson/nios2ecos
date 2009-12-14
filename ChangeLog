@@ -1,3 +1,7 @@
+2009-12-14 Edgar Grimberg <edgar.grimberg@zylin.com>
+	
+	* <<implements CYGHWR_IO_FLASH_DEVICE>> is needed for the *second* flash drive
+
 2009-12-04 Laurentiu Cocanu <laurentiu.cocanu@zylin.com>
 
 	* changed block info for 28f256p30 top and bottom

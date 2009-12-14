@@ -47,6 +47,9 @@ cdl_package CYGPKG_ALTERA_AVALON_28F256P30T_FLASH {
     requires      CYGPKG_DEVS_FLASH_STRATA_V2
     implements    CYGHWR_IO_FLASH_BLOCK_LOCKING
 
+#remove this if the system has *only* this flash device
+	implements    CYGHWR_IO_FLASH_DEVICE
+
     description   "
            This option enables the 28F256P30T driver "
 
