@@ -313,7 +313,8 @@ static cyg_uint32 eth_isr(cyg_vector_t vector, cyg_addrword_t data) {
 
   cyg_drv_interrupt_acknowledge(cep ->irq);
   if (calldsr) {
-    //cyg_drv_interrupt_mask(cep ->irq);
+	  /* Processing interrupts while handling DSR's just add overhead */
+    cyg_drv_interrupt_mask(cep->irq);
   }
 
   if (!calldsr) {
@@ -334,12 +335,15 @@ static void openeth_deliver(struct eth_drv_sc *sc) {
   //struct oeth_private *cep = (struct oeth_private *)&(oi->cep);
   //cyg_drv_dsr_lock();
   //cyg_drv_isr_lock();
+
   openeth_rxready(sc);
   oeth_txdone(sc);
+
   //cyg_drv_isr_unlock();
   //cyg_drv_dsr_unlock();
-  //cyg_drv_interrupt_unmask(cep->irq);
-
+  oeth_info *oi = (oeth_info *)sc->driver_private;
+  struct oeth_private *cep = (struct oeth_private *)&(oi->cep);
+  cyg_drv_interrupt_unmask(cep->irq);
 }
 
 static void oeth_tx(struct eth_drv_sc *sc)
