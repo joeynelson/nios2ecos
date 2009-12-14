@@ -553,11 +553,6 @@ static int openeth_ioctl(struct eth_drv_sc *sc, unsigned long key, void *data, i
 static int openeth_can_send(struct eth_drv_sc *sc) {
   oeth_info *oi = (oeth_info *)sc->driver_private;
   struct oeth_private *cep = (struct oeth_private *)&(oi->cep);
-  oeth_txdone(sc);
-  //db_printf("openeth: openeth_can_send: %d\n",!cep->tx_full);
-
-
-
   return !cep->tx_full;
 }
 
