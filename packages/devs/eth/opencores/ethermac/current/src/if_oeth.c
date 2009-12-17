@@ -1069,10 +1069,8 @@ bool openeth_device_init(struct eth_drv_sc *sc, cyg_uint32 idx, cyg_uint32 base,
   /* Clear all pending interrupts  */
   OETH_REGSAVE(regs->int_src , 0xffffffff); //regs->int_src = 0xffffffff;
 
-  /* Promisc, IFG, CRCEn, do not receive small packets */
-  OETH_REGSAVE(regs->moder , OETH_MODER_HUGEN | OETH_MODER_PAD | OETH_MODER_IFG | OETH_MODER_CRCEN); //regs->moder |= OETH_MODER_PAD | OETH_MODER_IFG | OETH_MODER_CRCEN;
-
-  OETH_REGANDIN(regs->moder , ~OETH_MODER_FULLD); // ensure half duplex
+  /* Full duplex always enabled. Promiscious mode disabled. */
+  OETH_REGSAVE(regs->moder , OETH_MODER_HUGEN | OETH_MODER_PAD | OETH_MODER_IFG | OETH_MODER_CRCEN | OETH_MODER_FULLD);
 
   /* Enable interrupt sources. */
   OETH_REGSAVE(regs->int_mask ,
