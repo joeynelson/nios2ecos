@@ -1,6 +1,7 @@
 2009-12-18 Laurentiu Cocanu <laurentiu.cocanu@zylin.com>
 	
 	* added new condition to re-map addresses 
+	* added bootloader and deflator 
 
 2009-12-14 Edgar Grimberg <edgar.grimberg@zylin.com>
 	
