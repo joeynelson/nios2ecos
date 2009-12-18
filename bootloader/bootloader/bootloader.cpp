@@ -42,6 +42,8 @@
 
 //#include <phi_network_support.h>
 
+#define UNCACHED_EXT_FLASH_BASE (0x80000000+EXT_FLASH_BASE)
+
 static char FIRMWARE_FILE[] = "/ram/firmware.phi";
 static char BOOTLOADER_FILE[] = "/ram/bootloader.phi";
 static char FPGA_FILE[] = "/ram/fpga.phi";
@@ -191,7 +193,7 @@ void format(void)
 	}
 
 #ifdef CYGHWR_IO_FLASH_BLOCK_LOCKING
-	if ((stat = flash_unlock((void *) EXT_FLASH_BASE, EXT_FLASH_SPAN,
+	if ((stat = flash_unlock((void *) UNCACHED_EXT_FLASH_BASE, EXT_FLASH_SPAN,
 			(void **) &err_addr)) != 0)
 	{
 		fprintf(ser_fp, "Flash Error flash_unlock: %d\r\n", stat);
@@ -199,7 +201,7 @@ void format(void)
 #endif
 
 	fprintf(ser_fp, "Formatting 0x%08x bytes\r\n", JFFS2_LENGTH);
-	if ((stat = flash_erase((void *) (EXT_FLASH_BASE + JFFS2_OFFSET), JFFS2_LENGTH,
+	if ((stat = flash_erase((void *) (UNCACHED_EXT_FLASH_BASE + JFFS2_OFFSET), JFFS2_LENGTH,
 			(void **) &err_addr)) != 0)
 	{
 		fprintf(ser_fp, "Flash Error flash_erase: %d\r\n", stat);
@@ -321,7 +323,7 @@ static void upgradeBootloader()
 		 reset();
 		 }*/
 
-		cyg_uint8 *bootloaderAddr = (cyg_uint8 *) (EXT_FLASH_BASE
+		cyg_uint8 *bootloaderAddr = (cyg_uint8 *) (UNCACHED_EXT_FLASH_BASE
 				+ FACTORY_FPGA_OFFSET);
 		struct stat results;
 
@@ -407,7 +409,7 @@ static void upgradeFirmware()
 		 reset();
 		 }*/
 
-		cyg_uint8 *firmwareAddr = (cyg_uint8 *) (EXT_FLASH_BASE
+		cyg_uint8 *firmwareAddr = (cyg_uint8 *) (UNCACHED_EXT_FLASH_BASE
 				+ APPLICATION_FPGA_OFFSET);
 		struct stat results;
 
@@ -493,7 +495,7 @@ static void upgradeFPGA(int start, int stop)
 		 reset();
 		 }*/
 
-		cyg_uint8 *fpgaAddr = (cyg_uint8 *) (EXT_FLASH_BASE + start);
+		cyg_uint8 *fpgaAddr = (cyg_uint8 *) (UNCACHED_EXT_FLASH_BASE + start);
 		struct stat results;
 
 		if (stat(FPGA_FILE, &results) == 0)
@@ -691,7 +693,7 @@ static cyg_uint8 * transformMacAddress(char* buffer, cyg_uint8 mac_addr[6])
 static bool hasMacAddress()
 {
 
-	cyg_uint8* mac = (cyg_uint8 *) (EXT_FLASH_BASE + FACTORY_FPGA_OFFSET - 6);
+	cyg_uint8* mac = (cyg_uint8 *) (UNCACHED_EXT_FLASH_BASE + FACTORY_FPGA_OFFSET - 6);
 	int i;
 	cyg_uint8 ret = 0xFF;
 	for(int i = 0; i < 6; i++)
@@ -706,7 +708,7 @@ static void printMACAddress()
 {
 	if (hasMacAddress())
 	{
-		cyg_uint8* mac = (cyg_uint8 *) (EXT_FLASH_BASE + FACTORY_FPGA_OFFSET - 6);
+		cyg_uint8* mac = (cyg_uint8 *) (UNCACHED_EXT_FLASH_BASE + FACTORY_FPGA_OFFSET - 6);
 		fprintf(ser_fp, "Mac address %02x:%02x:%02x:%02x:%02x:%02x\r\n", mac[0],
 				mac[1], mac[2], mac[3], mac[4], mac[5]);
 	}
@@ -729,7 +731,7 @@ static void changeMac()
 	int stat;
 	void *err_addr;
 
-	cyg_uint8 *macAddr = (cyg_uint8 *) (EXT_FLASH_BASE + FACTORY_FPGA_OFFSET - 6);
+	cyg_uint8 *macAddr = (cyg_uint8 *) (UNCACHED_EXT_FLASH_BASE + FACTORY_FPGA_OFFSET - 6);
 
 #ifdef CYGHWR_IO_FLASH_BLOCK_LOCKING
 	if ((stat = flash_unlock((void *) macAddr, 6,
@@ -978,7 +980,7 @@ void mountJFFS2()
 	cyg_flashaddr_t err_address;
 
 #ifdef CYGHWR_IO_FLASH_BLOCK_LOCKING
-	if ((err = flash_unlock((void *) EXT_FLASH_BASE, EXT_FLASH_SPAN,
+	if ((err = flash_unlock((void *) UNCACHED_EXT_FLASH_BASE, EXT_FLASH_SPAN,
 			(void **) &err_address)) != 0)
 	{
 		fprintf(ser_fp, "Flash Error flash_unlock: %d\r\n", err);
@@ -1222,14 +1224,14 @@ int main()
 
 		fprintf(ser_fp, "Reconfigure and reboot\r\n");
 		cleaning();
-		CycloneIIIReconfig(REMOTE_UPDATE_BASE, EXT_FLASH_BASE,
+		CycloneIIIReconfig(REMOTE_UPDATE_BASE, UNCACHED_EXT_FLASH_BASE,
 				APPLICATION_FPGA_OFFSET, 0, 16);
 	}
 	// launch application!
 	fprintf(ser_fp, "Jump to deflate application\r\n");
 	cleaning();
 	cyg_interrupt_disable();
-	((void(*)(void)) (EXT_FLASH_BASE + DEFLATOR_OFFSET))();
+	((void(*)(void)) (UNCACHED_EXT_FLASH_BASE + DEFLATOR_OFFSET))();
 	for (;;)
 		; // never reached
 }
