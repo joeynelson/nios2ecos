@@ -198,8 +198,8 @@ void format(void)
 	}
 #endif
 
-	fprintf(ser_fp, "Formatting 0x%08x bytes\r\n", JFFS2_LENGTH - JFFS2_OFFSET);
-	if ((stat = flash_erase((void *) JFFS2_OFFSET, JFFS2_LENGTH - JFFS2_OFFSET,
+	fprintf(ser_fp, "Formatting 0x%08x bytes\r\n", JFFS2_LENGTH);
+	if ((stat = flash_erase((void *) (EXT_FLASH_BASE + JFFS2_OFFSET), JFFS2_LENGTH,
 			(void **) &err_addr)) != 0)
 	{
 		fprintf(ser_fp, "Flash Error flash_erase: %d\r\n", stat);
@@ -707,7 +707,7 @@ static void printMACAddress()
 	if (hasMacAddress())
 	{
 		cyg_uint8* mac = (cyg_uint8 *) (EXT_FLASH_BASE + FACTORY_FPGA_OFFSET - 6);
-		fprintf(ser_fp, "Mac address 2 %02x:%02x:%02x:%02x:%02x:%02x\r\n", mac[0],
+		fprintf(ser_fp, "Mac address %02x:%02x:%02x:%02x:%02x:%02x\r\n", mac[0],
 				mac[1], mac[2], mac[3], mac[4], mac[5]);
 	}
 	else
@@ -982,7 +982,7 @@ void mountJFFS2()
 			(void **) &err_address)) != 0)
 	{
 		fprintf(ser_fp, "Flash Error flash_unlock: %d\r\n", err);
-		reset();
+		return;
 	}
 #endif
 
@@ -1006,29 +1006,7 @@ void mountJFFS2()
 		fprintf(ser_fp, "JFFS2 mounting error %d\r\n", err);
 		format();
 	}
-	fprintf(ser_fp, "mounted jffs2 just fine\r\n");
-	fprintf(ser_fp, "testing file write/read/delete\r\n");
-	FILE* pf = fopen("/config/tralala.txt", "w+");
-	if (pf == NULL)
-	{
-		fprintf(ser_fp, "unable to create/open file\r\n");
-		format();
-	}
-	else
-	{
-		fprintf(ser_fp, "File opened OK\r\n");
-		int e = fprintf(pf, "tralala\n");
-		if (e < 0)
-		{
-			fprintf(ser_fp, "Unable to fprintf\r\n");
-			format();
-		}
-		else
-		{
-			fprintf(ser_fp, "Printfed OK\r\n");
-		}
-		fclose(pf);
-	}
+	fprintf(ser_fp, "mounted jffs2\r\n");
 }
 
 void mountRamFS()
@@ -1048,7 +1026,7 @@ void mountRamFS()
 	if (pf == NULL)
 	{
 		fprintf(ser_fp, "unable to create/open file\r\n");
-		reset();
+		return;
 	}
 	fclose(pf);
 }
@@ -1064,7 +1042,7 @@ int menu()
 {
 	char fileName[NAME_MAX];
 
-	fprintf(ser_fp, "Bootloader. Copyright 2006-2010 All rights reserved\r\n");
+	fprintf(ser_fp, "Bootloader. Copyright FSF 2006-2010 All rights reserved\r\n");
 	fprintf(ser_fp, "Version unknown %s %s\r\n", __DATE__, __TIME__);
 
 	//	cyg_exception_handler_t *old;
@@ -1240,13 +1218,13 @@ int main()
 
 	if (needReset())
 	{
+		menu();
+
 		fprintf(ser_fp, "Reconfigure and reboot\r\n");
-		diag_printf("Reconfigure and reboot %d\r\n", APPLICATION_FPGA_OFFSET);
 		cleaning();
 		CycloneIIIReconfig(REMOTE_UPDATE_BASE, EXT_FLASH_BASE,
 				APPLICATION_FPGA_OFFSET, 0, 16);
 	}
-	menu();
 	// launch application!
 	fprintf(ser_fp, "Jump to deflate application\r\n");
 	cleaning();
