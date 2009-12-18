@@ -6,9 +6,6 @@
 #include <cyg/hal/hal_intr.h>
 #include <cyg/hal/hal_diag.h>
 
-#include <pkgconf/io_fileio.h>
-#include <cyg/fileio/fileio.h>
-
 #include <cyg/kernel/kapi.h>
 #include <cyg/io/io.h>                  /* I/O functions */
 #include <cyg/infra/diag.h>     // diag_printf
