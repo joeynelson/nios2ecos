@@ -68,8 +68,8 @@ static const cyg_strata_dev altera_avalon_28f256p30b_flash_priv = {
 CYG_FLASH_DRIVER(altera_avalon_28f256p30b_flash,
                  &altera_avalon_28f256p30b_flash_strata_funs,
                  0,
-                 EXT_FLASH_BASE,
-                 (EXT_FLASH_BASE + EXT_FLASH_SPAN - 1),
+                 0x80000000 + EXT_FLASH_BASE,
+                 (0x80000000 + EXT_FLASH_BASE + EXT_FLASH_SPAN - 1),
                  2,
                  altera_avalon_28f256p30b_flash_priv.block_info,
                  &altera_avalon_28f256p30b_flash_priv
