@@ -110,7 +110,7 @@ MEMORY
 		<set_variable variable="NEW_BASE_ADDRESS" to="%BASE_ADDRESS%"/>    
         <switch>
             <!-- if the base address for this MODULE/SLAVE is the same as the reset address, then make room for the reset handler -->
-            <if condition="eq( %BASE_ADDRESS%, %RESET_ADDRESS% )">
+             <if condition="or(and( gt( %RESET_ADDRESS%, %BASE_ADDRESS% ), lt( %RESET_ADDRESS%, add( %BASE_ADDRESS%, %ADDRESS_SPAN% ) ) ), eq( %RESET_ADDRESS%, %BASE_ADDRESS% ) )">
                 <set_variable variable="BASE_ADDRESS" to="add( %BASE_ADDRESS%, %RESET_ROUTINE_SIZE% )"/>
                 <set_variable variable="NEW_BASE_ADDRESS" to="(CYGBLD_GLOBAL_START_ADDRESS + %RESET_ROUTINE_SIZE%)"/>                 
                 <set_variable variable="ADDRESS_SPAN" to="sub( %ADDRESS_SPAN%, %RESET_ROUTINE_SIZE% )"/>

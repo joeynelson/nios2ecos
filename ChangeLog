@@ -1,3 +1,7 @@
+2009-12-18 Laurentiu Cocanu <laurentiu.cocanu@zylin.com>
+	
+	* added new condition to re-map addresses 
+
 2009-12-14 Edgar Grimberg <edgar.grimberg@zylin.com>
 	
 	* <<implements CYGHWR_IO_FLASH_DEVICE>> is needed for the *second* flash drive
