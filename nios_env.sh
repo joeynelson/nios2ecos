@@ -3,8 +3,8 @@
 # cd nios2ecos
 # source nios_env.sh
 #
-# Intended to work on Cygwin & Linux out of the box(tested on Ubuntu 9.04
-# and Cygwin as of writing).
+# Intended to work on Cygwin & Linux out of the box(tested on Ubuntu 9.04,
+# 9.10 and Cygwin as of writing).
 
 # Be afraid!!!! here we have to figure out the location of the
 # script being sourced!!!! Requires bash 3.0 or later.
@@ -12,12 +12,15 @@ export NIOS2_ENV_PATH=$(dirname $BASH_ARGV)
 export NIOS_ECOS=$(readlink -f $NIOS2_ENV_PATH/packages)
 
 echo "Test $BASH_ARGV"
-
 echo "NIOS_ECOS = $NIOS_ECOS"
 
 if [ `uname` = Linux ] ;then
 	echo "Linux box"
-	export CYG_ALTERA_ROOTDIR=/opt/altera9.0
+	if [ -d /opt/altera9.1 ]; then
+	    export CYG_ALTERA_ROOTDIR=/opt/altera9.1
+	else
+	    export CYG_ALTERA_ROOTDIR=/opt/altera9.0
+	fi
 	# FIX!!!! check if nios2-elf-gcc is already added to path
 	export PATH=$PATH:$CYG_ALTERA_ROOTDIR/nios2eds/bin/nios2-gnutools/H-i686-pc-linux-gnu/bin
 	export TMP=/tmp
@@ -54,7 +57,6 @@ export ECOS_REPOSITORY=$NIOS_ECOS:$ECOS_REPOSITORY
 #export ECOS_REPOSITORY=$NIOS_ECOS/../tools/gcc4libstdxx/ecos:$ECOS_REPOSITORY
 echo "ECOS_REPOSITORY=$ECOS_REPOSITORY"
 
-
 # generally place the altera stuff *LAST* in the path because it contains
 # lots of obsolete stuff
 export PATH=$PATH:$NIOS_ECOS/hal/nios2/arch/current/host
@@ -62,9 +64,9 @@ export PATH=$PATH:$CYG_ALTERA_ROOTDIR/quartus/sopc_builder/bin
 
 # These two last paths are not necessary to build stuff, only to
 # get tools to communicate with the FPGA(nios2-gdb-server, etc.)
+
 export PATH=$PATH:$CYG_ALTERA_ROOTDIR/nios2eds/bin
 export PATH=$PATH:$QUARTUS_ROOTDIR/bin
-
 
 # Workaround for cygpath problems.
 if [ `uname` = Linux ] ;then
