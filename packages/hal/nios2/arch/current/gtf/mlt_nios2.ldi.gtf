@@ -202,6 +202,10 @@ SECTIONS
 #else /* !CYG_HAL_STARTUP_ROM */
     SECTIONS_rwdata (CURRENT_LMA, LMA_EQ_VMA)
 #endif /* CYG_HAL_STARTUP_ROM */
+    /* __flash_end is the first address after the .bin image. This
+    address can be used to e.g. append data to the application.
+    */
+    __flash_end = LOADADDR (.rwdata) + SIZEOF (.rwdata);
     SECTIONS_bss (CURRENT_LMA, LMA_EQ_VMA)
     CYG_LABEL_DEFN(__heap1) = ABSOLUTE(.);
 
