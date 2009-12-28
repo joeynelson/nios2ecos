@@ -279,6 +279,7 @@ ENTRY( _start )
 #define SECTIONS_rom_monitor_rwdata(_vma_, _lma_)                  \
     .rom_monitor_rwdata _vma_ (NOLOAD) : _lma_                     \
     {                                                              \
+		. = . + CYGBLD_RAM_OFFSET;                   \
         . = ALIGN(32 / 8);                                         \
         PROVIDE (hal_virtual_vector_table = ABSOLUTE(.));          \
         . += 256;                                                  \
@@ -294,6 +295,7 @@ ENTRY( _start )
 #define SECTIONS_rom_monitor_rwdata(_vma_, _lma_)                  \
     .rom_monitor_rwdata _vma_ : _lma_                              \
     {                                                              \
+		. = . + CYGBLD_RAM_OFFSET;                   \
         . = ALIGN(32 / 8);                                         \
         PROVIDE (hal_virtual_vector_table = ABSOLUTE(.));          \
         . += 256;                                                  \

@@ -322,6 +322,16 @@ cdl_component CYGBLD_GLOBAL_OPTIONS {
 	    display "Start address"
 	    flavor  data	    
 	    default_value 0
-	    description "Start address"
+	    description "The start address of the application. This can be used to
+	    	adjust where in flash the application will reside."
+	}
+	
+    cdl_option CYGBLD_RAM_OFFSET {
+	    display "RAM offset"
+	    flavor  data	    
+	    default_value 0
+	    description "We do not have to start using RAM from the base address of the ram.
+	    	This can be useful when you want to create a RAM application than can
+	    	launch another application."
 	}
 }

@@ -177,6 +177,11 @@ MEMORY
     </if>
 
     <text><![CDATA[
+    
+/* rwdata is the first segment in RAM.
+It's possible to providean offset in RAM via 
+CYGBLD_RAM_OFFSET. */
+    
 SECTIONS
 {
     SECTIONS_BEGIN
@@ -190,6 +195,7 @@ SECTIONS
     SECTIONS_rom_monitor_rodata (CURRENT_LMA, LMA_EQ_VMA)
     SECTIONS_rom_monitor_text (CURRENT_LMA, LMA_EQ_VMA)
     SECTIONS_text (CURRENT_LMA, LMA_EQ_VMA)
+    
     SECTIONS_rodata (CURRENT_LMA, LMA_EQ_VMA)
 #ifdef CYG_HAL_STARTUP_ROM
 #ifndef CYG_HAL_EXCEPTIONS_IN_ROM
