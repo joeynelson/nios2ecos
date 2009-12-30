@@ -36,6 +36,7 @@
 #include <cyg/hal/system.h>
 
 #include <sys/stat.h>
+#include <cyg/io/serialio.h>
 
 #include <cyg/compress/zlib.h>
 
@@ -685,6 +686,46 @@ void printAvailableRAM()
 	fprintf(ser_fp, "Available RAM: %d\r\n", info.fordblks);
 }
 
+static void set115200(void)
+{
+	cyg_serial_baud_rate_t baud;
+	baud = CYGNUM_SERIAL_BAUD_115200;
+
+	cyg_serial_info_t buf;
+	cyg_uint32 len;
+	//get existing serial configuration
+	len = sizeof(cyg_serial_info_t);
+	int err;
+	cyg_io_handle_t serial_handle;
+
+	err = cyg_io_lookup(UART_0_NAME, &serial_handle);
+	if (err != ENOERR)
+	{
+		fprintf(ser_fp, "Error: could not get port handle\r\n");
+		return;
+	}
+
+	err = cyg_io_get_config(serial_handle,
+			CYG_IO_GET_CONFIG_SERIAL_OUTPUT_DRAIN, &buf, &len);
+	err = cyg_io_get_config(serial_handle, CYG_IO_GET_CONFIG_SERIAL_INFO, &buf,
+			&len);
+	if (err != ENOERR)
+	{
+		fprintf(ser_fp, "Error: could not get port settings\r\n");
+		return;
+	}
+	buf.baud = baud;
+
+	err = cyg_io_set_config(serial_handle, CYG_IO_SET_CONFIG_SERIAL_INFO, &buf,
+			&len);
+	if (err != ENOERR)
+	{
+		fprintf(ser_fp, "Error: could not set baud rate\r\n");
+		return;
+	}
+}
+
+
 void menu(void)
 {
 	char fileName[NAME_MAX];
@@ -733,6 +774,9 @@ void menu(void)
 		case 'D':
 			showParameter();
 			goto start_menu;
+		case 'B':
+			set115200();
+			goto start_menu;
 		case 'E':
 			fprintf(ser_fp, "File name: ");
 			getFileName(fileName, sizeof(fileName));
@@ -763,6 +807,7 @@ void menu(void)
 			fprintf(ser_fp, "Press <Y> to start single shot update of bootloader\r\n");
 			fprintf(ser_fp, "Press <P> set parameter\r\n");
 			fprintf(ser_fp, "Press <D> show parameter\r\n");
+			fprintf(ser_fp, "Press <B> set 115200 serial speed\r\n");
 			goto waitMoreChar;
 
 		default:
