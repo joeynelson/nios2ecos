@@ -18,17 +18,13 @@ FILES		=  ${OUT}/bootloader.o  ${OUT}/xyzModem.o
 
 
 
-all: $(OUT) ${OUT}/$(PROJECTNAME).bin transform
+all: $(OUT) ${OUT}/$(PROJECTNAME).bin
 
 $(OUT):
 	mkdir $(OUT)
 
 clean:
 	rm -rf ${OUT}
-
-transform:
-	elf2flash --input=${OUT}/bootloader.elf --output=${OUT}/bootloader.flash --base=0x4000000 --end=0x5FFFFFF --reset=0x4120000 --boot=$(SOPC_KIT_NIOS2)/components/altera_nios2/boot_loader_cfi.srec
-	./bin2srec/out/srec2bin ${OUT}/bootloader.flash ${OUT}/bootloader.bin -o 0x4120000
 
 ${OUT}/%.o: %.c*
 	$(XCC) -c -o ${OUT}/$*.o $(ECOS_GLOBAL_CFLAGS) $(CFLAGS) `pwd`/$<
@@ -38,5 +34,7 @@ ${OUT}/$(PROJECTNAME).elf: $(FILES)
 
 ${OUT}/$(PROJECTNAME).bin: ${OUT}/$(PROJECTNAME).elf	
 	$(OBJCOPY) -O binary $< $@ 
-	$(OBJCOPY) -O srec --srec-forceS3 $< ${OUT}/$(PROJECTNAME).flash	
 	$(OBJDUMP) -d $<  > ${OUT}/$(PROJECTNAME).asm
+	elf2flash --input=${OUT}/bootloader.elf --output=${OUT}/bootloader.flash --base=0x4000000 --end=0x5FFFFFF --reset=0x4120000 --boot=$(SOPC_KIT_NIOS2)/components/altera_nios2/boot_loader_cfi.srec
+	./bin2srec/out/srec2bin ${OUT}/bootloader.flash ${OUT}/$(PROJECTNAME).bin -o 0x4120000
+	
