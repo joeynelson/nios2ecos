@@ -755,7 +755,10 @@ void menu(void)
 	//use default firmware file name
 	strcpy(fileName, firmware.file);
 	char key;
-	waitMoreChar: if (waitChar(2, &key))
+	/* 5 second wait is a wee bit long here for normal execution,
+	 * but it makes the bootloader a lot easier to use and debug
+	 */
+	waitMoreChar: if (waitChar(5, &key))
 	{
 		switch (key)
 		{
