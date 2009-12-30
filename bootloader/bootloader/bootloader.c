@@ -478,13 +478,15 @@ static void transformMacAddress(char* buffer, cyg_uint8 mac_addr[6])
 	}
 }
 
+static cyg_uint8 * const macAddr = (cyg_uint8 *) (UNCACHED_EXT_FLASH_BASE + FACTORY_FPGA_OFFSET - 6);
+static const int macAddrLen = 6;
+
 static bool hasMacAddress()
 {
-	cyg_uint8* mac = (cyg_uint8 *) (UNCACHED_EXT_FLASH_BASE + FACTORY_FPGA_OFFSET - 6);
 	cyg_uint8 ret = 0xFF;
-	for(int i = 0; i < 6; i++)
+	for(int i = 0; i < macAddrLen; i++)
 	{
-		ret = ret & mac[i];
+		ret = ret & macAddr[i];
 	}
 	return ret != 0xFF;
 }
@@ -518,10 +520,8 @@ static void changeMac(void)
 	int stat;
 	void *err_addr;
 
-	cyg_uint8 *macAddr = (cyg_uint8 *) (UNCACHED_EXT_FLASH_BASE + FACTORY_FPGA_OFFSET - 6);
-
 #ifdef CYGHWR_IO_FLASH_BLOCK_LOCKING
-	if ((stat = flash_unlock((void *) macAddr, 6,
+	if ((stat = flash_unlock((void *) macAddr, macAddrLen,
 			(void **) &err_addr)) != 0)
 	{
 		fprintf(ser_fp, "Error: %s\r\n", "Unlocking flash failed");
@@ -529,14 +529,14 @@ static void changeMac(void)
 	}
 #endif
 
-	if ((stat = flash_erase((void *) (macAddr), 6, (void **) &err_addr)) != 0)
+	if ((stat = flash_erase((void *) (macAddr), macAddrLen, (void **) &err_addr)) != 0)
 	{
 		fprintf(ser_fp, "Error: %s\r\n", "Erasing flash failed");
 		reset();
 	}
 	printf("erasing done\n");
 
-	if ((stat = FLASH_PROGRAM(macAddr, ui_mac, 6, (void **)&err_addr))
+	if ((stat = FLASH_PROGRAM(macAddr, ui_mac, macAddrLen, (void **)&err_addr))
 			!= 0)
 	{
 		fprintf(ser_fp, "Error: %s\r\n", "Programming flash failed");
@@ -777,6 +777,11 @@ void menu(void)
 		case 'B':
 			set115200();
 			goto start_menu;
+		case 'X':
+			fprintf(ser_fp, "Erasing MAC address...");
+			flash_erase_range(macAddr, macAddrLen);
+			fprintf(ser_fp, "done\r\n");
+			goto start_menu;
 		case 'E':
 			fprintf(ser_fp, "File name: ");
 			getFileName(fileName, sizeof(fileName));
@@ -808,6 +813,7 @@ void menu(void)
 			fprintf(ser_fp, "Press <P> set parameter\r\n");
 			fprintf(ser_fp, "Press <D> show parameter\r\n");
 			fprintf(ser_fp, "Press <B> set 115200 serial speed\r\n");
+			fprintf(ser_fp, "Press <X> erase MAC address\r\n");
 			goto waitMoreChar;
 
 		default:
