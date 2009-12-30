@@ -49,6 +49,10 @@
 #include <pkgconf/system.h>
 #include <cyg/hal/hal_intr.h>          
 
+#ifndef CYGPKG_DEVS_ETH_NIOS_OPENCORES_PHI_ETH0_ESA
+#error "CYGPKG_DEVS_ETH_NIOS_OPENCORES_PHI_ETH0_ESA is required"
+#endif
+
 #define CYGPKG_DEVS_ETH_OPENCORES_ETHERMAC_ETH0_ESA CYGPKG_DEVS_ETH_NIOS_OPENCORES_PHI_ETH0_ESA
 #define CYGPKG_DEVS_ETH_OPENCORES_ETHERMAC_INITFN openeth_phi_init
 

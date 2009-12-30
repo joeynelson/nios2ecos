@@ -87,7 +87,6 @@
 
 #include <cyg/hal/hal_arch.h>
 #include <cyg/hal/hal_intr.h>
-//#include <cyg/hal/hal_leon3.h>
 
 externC bool openeth_device_init(struct eth_drv_sc *sc, cyg_uint32 idx, cyg_uint32 base, cyg_uint32 irq);
 
@@ -103,6 +102,3 @@ bool openeth_phi_init(struct cyg_netdevtab_entry *ndp)
 	return openeth_device_init(sc, 0, IGOR_MAC_BASE|0x80000000, IGOR_MAC_IRQ);
 #endif
 }
-
-cyg_uint8 mymac[] = {0x00, 0x00, 0x5e, 0x11, 0x00, 0x08};
-volatile cyg_uint8 *macstart = mymac;

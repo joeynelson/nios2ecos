@@ -95,11 +95,10 @@ cdl_package CYGPKG_DEVS_ETH_NIOS_OPENCORES_PHI {
     
         cdl_option CYGPKG_DEVS_ETH_NIOS_OPENCORES_PHI_ETH0_ESA {
             display       "The ethernet station address (MAC)"
-            flavor        data
-            default_value {"{0x00, 0x00, 0x5e, 0x00, 0x00, 0x13}"}
-            description   "A static ethernet station address. 
-                          Caution: Booting two systems with the same MAC on the same
-                          network, will cause severe conflicts."
+		    flavor booldata
+            description   "The ethernet address is in a memory location depending
+            			  on the memory layout. Typically the bootloader will have 
+            			  a capability to set this."
        }
     }
 

@@ -93,7 +93,7 @@
 #endif
 
 
-#define FIAD_PHY_ADDRESS 31 // for Zylin PHI board.
+#define FIAD_PHY_ADDRESS 31 // for Zylin boards, make this a cdl option
 
 //#define DEBUG_OPENETH
 
@@ -126,8 +126,12 @@
 #include <oeth_info.h>
 #include CYGDAT_DEVS_ETH_OPENCORES_ETHERMAC_INL
 
-cyg_uint8 macaddr[6] = CYGPKG_DEVS_ETH_OPENCORES_ETHERMAC_ETH0_ESA;
-extern volatile cyg_uint8 *macstart;
+#ifndef CYGPKG_DEVS_ETH_OPENCORES_ETHERMAC_ETH0_ESA
+#error "Mac address must be defined"
+#endif
+
+const static volatile cyg_uint8 *macstart = (volatile cyg_uint8 *) CYGPKG_DEVS_ETH_OPENCORES_ETHERMAC_ETH0_ESA;
+static cyg_uint8 macaddr[6];
 
 
 //#define OETH_REGLOAD(a,v) HAL_READ_UINT32(&(a),v); diag_printf("load %08x=%08x\n", &(a), v);
@@ -920,7 +924,11 @@ bool openeth_device_init(struct eth_drv_sc *sc, cyg_uint32 idx, cyg_uint32 base,
 
   openeth_priv_array[idx]->found = 1;
 
-  /* Try to get the ethernet station address from 0x1030000 - 6*/
+  /* Notice we copy the address from flash to RAM. The flash
+   * could become unavailable during normal operation, e.g.
+   * when it is being erased. Interrupts can still be active during
+   * flash erase operations.
+   */
   for(i = 0; i < 6; i++)
   {
 	  macaddr[i] = *(macstart + i);
