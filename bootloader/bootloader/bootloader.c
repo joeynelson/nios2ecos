@@ -251,12 +251,7 @@ void mountJFFS2()
 	}
 #endif
 
-
-	char buffer[256];
-	sprintf(buffer, "dev/flash/0/0X%x,0X%x", JFFS2_OFFSET, JFFS2_LENGTH);
-	fprintf(ser_fp, "%s\r\n", buffer);
-
-	if ((err = mount(buffer, "/config", "jffs2")) < 0)
+	if ((err = mount(CYGDAT_IO_FLASH_BLOCK_DEVICE_NAME_1, "/config", "jffs2")) < 0)
 	{
 		fprintf(ser_fp, "Error: could not mount flash %d\r\n", err);
 		return;
@@ -316,7 +311,7 @@ void format(void)
 
 	flash_erase_range((void *)(UNCACHED_EXT_FLASH_BASE + JFFS2_OFFSET), JFFS2_LENGTH);
 
-	fprintf(ser_fp, "%s\r\n", "Flash formatted successfully");
+	fprintf(ser_fp, "/config formatted successfully\r\n");
 	reset();
 }
 
@@ -550,7 +545,7 @@ static void changeIP()
 	char ip[81];
 	//get IP
 	fprintf(ser_fp,
-			"\r\nEnter ip, mask and gateway(optional) (x.x.x.x,y.y.y.y[,z.z.z.z]): ");
+			"\r\nEnter ip, mask and gateway(optional) (x.x.x.x,y.y.y.y[,z.z.z.z]):\r\n");
 	readLine(ip, sizeof(ip));
 	writeFile(IP_FILE, ip);
 	reset();
@@ -808,6 +803,7 @@ void menu(void)
 			runfile("/ram/run");
 			break;
 		case ' ':
+			fprintf(ser_fp, "\r\nAdvanced menu:\r\n\r\n");
 			fprintf(ser_fp, "Press <F> format flash\r\n");
 			fprintf(ser_fp,
 					"Press <E> to start Ymodem upload of a file to a specified file name\r\n");
