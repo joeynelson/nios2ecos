@@ -58,12 +58,6 @@
 #include "xyzModem.h"
 
 
-//extern void * const APPLICATION_START;
-
-
-void reset(void);
-
-
 bool getChar(char *key);
 bool waitChar(int seconds, char *key);
 

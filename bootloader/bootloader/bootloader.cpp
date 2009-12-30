@@ -31,22 +31,20 @@
 // -------------------------------------------
 // ####ECOSGPLCOPYRIGHTEND####
 //========================================================================
+
 #include <cyg/hal/io.h>
 #include <cyg/hal/system.h>
 
 #include <sys/stat.h>
 
-
 #include "addresses.h"
 #include "bootloader.h"
+#include "constants.h"
 
-//#include <phi_network_support.h>
+#define UNCACHED_EXT_FLASH_BASE (0x80000000 + EXT_FLASH_BASE)
 
-#define UNCACHED_EXT_FLASH_BASE (0x80000000+EXT_FLASH_BASE)
+using namespace std;
 
-static char FIRMWARE_FILE[] = "/ram/firmware.phi";
-static char BOOTLOADER_FILE[] = "/ram/bootloader.phi";
-static char FPGA_FILE[] = "/ram/fpga.phi";
 static char IP_FILE[] = "/config/ip";
 static char MAC_FILE[] = "/config/mac";
 static const int WRITE_BUF_SIZE = 4096;
@@ -55,19 +53,14 @@ static char WRITE_BUF[WRITE_BUF_SIZE];
 int ser = -1;
 FILE *ser_fp;
 
-static void writeMac(cyg_uint8 mac[6]);
-static void writeFile(const char *fileName, const char *string);
-static bool hasMacAddress();
-static void printMACAddress();
-
 #define LENGTH 8
+
 
 void cleaning()
 {
 	fclose(ser_fp);
 	close(ser);
 }
-
 
 bool getChar(char *key)
 {
@@ -155,9 +148,16 @@ bool waitChar(int seconds, char *key)
 	return false;
 }
 
-void reset(void)
+void reset(string message)
 {
-	fprintf(ser_fp, "Resetting\r\n");
+	if(message != "")
+	{
+		fprintf(ser_fp, "Resetting\r\n");
+	}
+	else
+	{
+		fprintf(ser_fp, "%s. Resetting\r\n", message.c_str());
+	}
 	umount("/config");
 	cleaning();
 	IOWR(REMOTE_UPDATE_BASE, 0x20, 0x1);
@@ -169,7 +169,7 @@ void openSerial()
 	if (ser < 0)
 	{
 		diag_printf("Serial device problems %s\r\n", UART_0_NAME);
-		reset();
+		reset("");
 	}
 
 	ser_fp = fdopen(ser, "r+");
@@ -177,26 +177,80 @@ void openSerial()
 	if (ser_fp == NULL)
 	{
 		diag_printf("Serial device problems %s\r\n", UART_0_NAME);
-		reset();
+		reset("");
 	}
+}
+
+
+int mountJFFS2()
+{
+	Cyg_ErrNo err = 0;
+	err = cyg_flash_init(NULL);
+	if (err)
+	{
+		return BOOT_FLASH_INIT;
+	}
+
+	cyg_flashaddr_t err_address;
+
+#ifdef CYGHWR_IO_FLASH_BLOCK_LOCKING
+	if ((err = flash_unlock((void *) UNCACHED_EXT_FLASH_BASE, EXT_FLASH_SPAN,
+			(void **) &err_address)) != 0)
+	{
+		//fprintf(ser_fp, "Flash Error flash_unlock: %d\r\n", err);
+		return BOOT_FLASH_UNLOCK;
+	}
+#endif
+
+	//	std::ostringstream s;
+	//	s << "/dev/flash/0/" << JFFS2_OFFSET << "," << JFFS2_LENGTH;
+
+	std::string fis = "/dev/flash/0/";
+	char number[9];
+	number[8] = 0;
+	sprintf(number, "0X%0x", JFFS2_OFFSET);
+	fis += number;
+	fis += ",";
+	sprintf(number, "0X%0x", JFFS2_LENGTH);
+	fis += number;
+	fprintf(ser_fp, "%s\r\n", fis.c_str());
+
+	if ((err = mount(fis.c_str(), "/config", "jffs2")) < 0)
+	{
+		return BOOT_MOUNT_JFFS;
+	}
+	return BOOT_OK;
+
+}
+
+int mountRamFS()
+{
+	Cyg_ErrNo err = 0;
+
+	if ((err = mount("", "/ram", "ramfs")) < 0)
+	{
+		return BOOT_MOUNT_RAMFS;
+	}
+	return BOOT_OK;
 }
 
 void format(void)
 {
-	fprintf(ser_fp, "Formatting JFFS2...\r\n");
 	int stat;
 	void *err_addr;
 
+	fprintf(ser_fp, "Formatting JFFS2...\r\n");
+
 	if ((stat = flash_init(0)) != 0)
 	{
-		fprintf(ser_fp, "Flash Error flash_init: \r\n");
+		reset("Error: " + string(error_messages[BOOT_FLASH_INIT]));
 	}
 
 #ifdef CYGHWR_IO_FLASH_BLOCK_LOCKING
 	if ((stat = flash_unlock((void *) UNCACHED_EXT_FLASH_BASE, EXT_FLASH_SPAN,
 			(void **) &err_addr)) != 0)
 	{
-		fprintf(ser_fp, "Flash Error flash_unlock: %d\r\n", stat);
+		reset("Error: " + string(error_messages[BOOT_FLASH_UNLOCK]));
 	}
 #endif
 
@@ -204,28 +258,26 @@ void format(void)
 	if ((stat = flash_erase((void *) (UNCACHED_EXT_FLASH_BASE + JFFS2_OFFSET), JFFS2_LENGTH,
 			(void **) &err_addr)) != 0)
 	{
-		fprintf(ser_fp, "Flash Error flash_erase: %d\r\n", stat);
+		reset("Error: " + string(error_messages[BOOT_FLASH_ERASE]));
 	}
 
-	fprintf(ser_fp, "Flash formatted successfully\r\n");
-	reset();
+	reset("Flash formatted successfully");
 }
 
 int firmwareFile, fpgaFile;
 
-static bool expect(const char *string, bool resetOnFailure = true)
+static bool expect(const char *strin, bool resetOnFailure = true)
 {
 	//	fprintf(ser_fp, "Expecting \"%s\"\r\n", string);
-	for (size_t i = 0; i < strlen(string); i++)
+	for (size_t i = 0; i < strlen(strin); i++)
 	{
 		char t;
 		if (read(firmwareFile, &t, 1) != 1)
 		{
-			fprintf(ser_fp, "Error: reading firmware file %d, expecting \"%s\"\r\n",
-					errno, string);
+			fprintf(ser_fp, "Error: reading firmware file , expecting \"%s\"\r\n", strin);
 			if (resetOnFailure)
 			{
-				reset();
+				reset("");
 			}
 			else
 			{
@@ -233,14 +285,11 @@ static bool expect(const char *string, bool resetOnFailure = true)
 				return false;
 			}
 		}
-		if (t != string[i])
+		if (t != strin[i])
 		{
 			if (resetOnFailure)
 			{
-				fprintf(ser_fp,
-						"Unexpected data in firmware file while expecting \"%s\"\r\n",
-						string);
-				reset();
+				reset("Unexpected data in firmware file while expecting " + string(strin));
 			}
 			else
 			{
@@ -253,51 +302,53 @@ static bool expect(const char *string, bool resetOnFailure = true)
 }
 
 /* read integer which is terminated by whitespace or eof */
-int readInt(void)
-{
-	char buf[32];
-	size_t i;
-	i = 0;
-	for (;;)
-	{
-		if (i >= sizeof(buf))
-		{
-			fprintf(ser_fp, "Error: reading string. Too long %d\r\n", (int) i);
-			reset();
-		}
-
-		char t;
-		int actual;
-		actual = read(firmwareFile, &t, 1);
-		if (actual < 0)
-		{
-			fprintf(ser_fp, "Error: reading integer %d\r\n", errno);
-			reset();
-		}
-		if (actual == 1)
-		{
-			if (!isspace((int) t))
-			{
-				buf[i++] = t;
-			}
-			else
-			{
-				break;
-			}
-		}
-		else if (actual == 0)
-		{
-			break;
-		}
-		else
-		{
-			fprintf(ser_fp, "Error: reading integer\r\n");
-			reset();
-		}
-	}
-	buf[i] = 0;
-	return atoi(buf);
-}
+//int readInt(void)
+//{
+//	char buf[32];
+//	size_t i;
+//	i = 0;
+//	for (;;)
+//	{
+//		if (i >= sizeof(buf))
+//		{
+//			stringstream message;
+//			message << "Error: reading string. Too long " << (int)i;
+//			reset(message.str());
+//		}
+//
+//		char t;
+//		int actual;
+//		actual = read(firmwareFile, &t, 1);
+//		if (actual < 0)
+//		{
+//			stringstream message;
+//			message << "Error: reading integer";
+//			reset(message.str());
+//		}
+//
+//		if (actual == 1)
+//		{
+//			if (!isspace((int) t))
+//			{
+//				buf[i++] = t;
+//			}
+//			else
+//			{
+//				break;
+//			}
+//		}
+//		else if (actual == 0)
+//		{
+//			break;
+//		}
+//		else
+//		{
+//			reset("Error: reading integer");
+//		}
+//	}
+//	buf[i] = 0;
+//	return atoi(buf);
+//}
 
 void appendPadding(char* buffer, int start, int length)
 {
@@ -305,263 +356,6 @@ void appendPadding(char* buffer, int start, int length)
 	for (i = 0; i < length; i++)
 	{
 		buffer[start + i] = 0xFF;
-	}
-}
-
-static void upgradeBootloader()
-{
-	/* Do we have a pending bootloader update? */
-	if ((firmwareFile = open(BOOTLOADER_FILE, O_RDONLY)) > 0)
-	{
-		fprintf(ser_fp, "Single shot bootloader update in progress\r\n");
-
-		/*    	if (!expect("ZylinPhiBootloader\r\n", false))
-		 {
-		 close(firmwareFile);
-		 fprintf(ser_fp, "Corrupt bootloader image uploaded. Safely aborting bootloader update.\r\n");
-		 remove(BOOTLOADER_FILE);
-		 reset();
-		 }*/
-
-		cyg_uint8 *bootloaderAddr = (cyg_uint8 *) (UNCACHED_EXT_FLASH_BASE
-				+ FACTORY_FPGA_OFFSET);
-		struct stat results;
-
-		if (stat(BOOTLOADER_FILE, &results) == 0)
-		{
-			fprintf(ser_fp, "size %ld\r\n", results.st_size);
-		}
-
-		printMACAddress();
-		bool hasMac = hasMacAddress();
-
-		int stat;
-		void *err_addr;
-		fprintf(ser_fp, "Erasing flash...");
-		if ((stat = flash_erase((void *) (bootloaderAddr), APPLICATION_FPGA_OFFSET
-				- FACTORY_FPGA_OFFSET, (void **) &err_addr)) != 0)
-		{
-			fprintf(ser_fp, "Error: erasing bootloader %p: %d\r\n", err_addr, stat);
-			reset();
-		}
-		fprintf(ser_fp, "done\r\n");
-
-		char buf[1024];
-		int actual;
-		while ((actual = read(firmwareFile, buf, sizeof(buf))) > 0)
-		{
-			int stat;
-			void *err_addr;
-			int rem = actual % LENGTH;
-			if (rem != 0)
-			{
-				rem = LENGTH - rem;
-				appendPadding(buf, actual, rem);
-			}
-
-			if ((stat
-					= FLASH_PROGRAM(bootloaderAddr, buf, actual + rem, (void **)&err_addr))
-					!= 0)
-			{
-				fprintf(ser_fp, "Error: writing bootloader data at %p: %d\r\n", err_addr,
-						stat);
-				reset();
-			}
-
-			bootloaderAddr += actual;
-		}
-
-		close(firmwareFile);
-
-		if (actual < 0)
-		{
-			fprintf(ser_fp, "Error: catastrophic failure. Bootloader corrupt %d.\r\n",
-					errno);
-			remove(BOOTLOADER_FILE);
-			reset();
-		}
-
-		if (hasMac)
-		{
-			// FIX!!! This won't work. If we ever type the wrong mac number, we're screwed.
-			//			fprintf(ser_fp, "Updating mac address");
-			//			writeMac(mac);
-		}
-
-		fprintf(ser_fp, "Bootloader successfully updated.\r\n");
-		remove(BOOTLOADER_FILE);
-		reset();
-	}
-}
-
-static void upgradeFirmware()
-{
-	/* Do we have a pending firmware update? */
-	if ((firmwareFile = open(FIRMWARE_FILE, O_RDONLY)) > 0)
-	{
-		fprintf(ser_fp, "Firmware update in progress\r\n");
-
-		/*    	if (!expect("ZylinPhiBootloader\r\n", false))
-		 {
-		 close(firmwareFile);
-		 fprintf(ser_fp, "Corrupt bootloader image uploaded. Safely aborting bootloader update.\r\n");
-		 remove(BOOTLOADER_FILE);
-		 reset();
-		 }*/
-
-		cyg_uint8 *firmwareAddr = (cyg_uint8 *) (UNCACHED_EXT_FLASH_BASE
-				+ APPLICATION_FPGA_OFFSET);
-		struct stat results;
-
-		if (stat(FIRMWARE_FILE, &results) == 0)
-		{
-			fprintf(ser_fp, "size %ld\r\n", results.st_size);
-		}
-
-		printMACAddress();
-		bool hasMac = hasMacAddress();
-
-		int stat;
-		void *err_addr;
-		fprintf(ser_fp, "Erasing flash...");
-		if ((stat = flash_erase((void *) (firmwareAddr), BOOTLOADER_OFFSET
-				- APPLICATION_FPGA_OFFSET, (void **) &err_addr)) != 0)
-		{
-			fprintf(ser_fp, "Error: erasing firmware %p: %d\r\n", err_addr, stat);
-			reset();
-		}
-		fprintf(ser_fp, "done\r\n");
-
-		char buf[1024];
-		int actual;
-		while ((actual = read(firmwareFile, buf, sizeof(buf))) > 0)
-		{
-			int stat;
-			void *err_addr;
-			int rem = actual % LENGTH;
-			if (rem != 0)
-			{
-				rem = LENGTH - rem;
-				appendPadding(buf, actual, rem);
-			}
-
-			if ((stat
-					= FLASH_PROGRAM(firmwareAddr, buf, actual + rem, (void **)&err_addr))
-					!= 0)
-			{
-				fprintf(ser_fp, "Error: writing bootloader data at %p: %d\r\n", err_addr,
-						stat);
-				reset();
-			}
-
-			firmwareAddr += actual;
-		}
-
-		close(firmwareFile);
-
-		if (actual < 0)
-		{
-			fprintf(ser_fp, "Error: catastrophic failure. Bootloader corrupt %d.\r\n",
-					errno);
-			remove(FIRMWARE_FILE);
-			reset();
-		}
-
-		if (hasMac)
-		{
-			// FIX!!! This won't work. If we ever type the wrong mac number, we're screwed.
-			//			fprintf(ser_fp, "Updating mac address");
-			//			writeMac(mac);
-		}
-
-		fprintf(ser_fp, "Firmware successfully updated.\r\n");
-		remove(FIRMWARE_FILE);
-		reset();
-	}
-}
-
-static void upgradeFPGA(int start, int stop)
-{
-	/* Do we have a pending FPGA update? */
-	if ((fpgaFile = open(FPGA_FILE, O_RDONLY)) > 0)
-	{
-		fprintf(ser_fp, "FPGA update in progress\r\n");
-
-		/*    	if (!expect("ZylinPhiBootloader\r\n", false))
-		 {
-		 close(firmwareFile);
-		 fprintf(ser_fp, "Corrupt bootloader image uploaded. Safely aborting bootloader update.\r\n");
-		 remove(BOOTLOADER_FILE);
-		 reset();
-		 }*/
-
-		cyg_uint8 *fpgaAddr = (cyg_uint8 *) (UNCACHED_EXT_FLASH_BASE + start);
-		struct stat results;
-
-		if (stat(FPGA_FILE, &results) == 0)
-		{
-			fprintf(ser_fp, "size %ld\r\n", results.st_size);
-		}
-
-		printMACAddress();
-		bool hasMac = hasMacAddress();
-
-		int stat;
-		void *err_addr;
-		fprintf(ser_fp, "Erasing flash...from %0x size %0x", fpgaAddr, stop - start);
-		if ((stat = flash_erase((void *) (fpgaAddr), stop - start,
-				(void **) &err_addr)) != 0)
-		{
-			fprintf(ser_fp, "Error: erasing fpga %p: %d\r\n", err_addr, stat);
-			reset();
-		}
-		fprintf(ser_fp, "done\r\n");
-
-		char buf[1024];
-		int actual;
-		while ((actual = read(fpgaFile, buf, sizeof(buf))) > 0)
-		{
-			int stat;
-			void *err_addr;
-
-			int rem = actual % LENGTH;
-			if (rem != 0)
-			{
-				rem = LENGTH - rem;
-				appendPadding(buf, actual, rem);
-			}
-
-			fprintf(ser_fp, "%d\r\n", fpgaAddr);
-			if ((stat
-					= FLASH_PROGRAM(fpgaAddr, buf, actual + rem, (void **)&err_addr))
-					!= 0)
-			{
-				fprintf(ser_fp, "Error: writing fpga data at %p: %d\r\n", err_addr, stat);
-				reset();
-			}
-
-			fpgaAddr += actual;
-		}
-
-		close(fpgaFile);
-
-		if (actual < 0)
-		{
-			fprintf(ser_fp, "Error: catastrophic failure. fpga corrupt %d.\r\n", errno);
-			remove(FPGA_FILE);
-			reset();
-		}
-
-		if (hasMac)
-		{
-			// FIX!!! This won't work. If we ever type the wrong mac number, we're screwed.
-			//			fprintf(ser_fp, "Updating mac address");
-			//			writeMac(mac);
-		}
-
-		fprintf(ser_fp, "FPGA successfully updated. %d\r\n", actual);
-		remove(FPGA_FILE);
-		reset();
 	}
 }
 
@@ -579,14 +373,12 @@ static void readLine(char *buffer,
 		switch (c)
 		{
 		case 0x3:
-			fprintf(ser_fp, "\r\nCtrl-c pressed\r\n");
-			reset();
+			reset("\r\nCtrl-c pressed");
 		case '\n':
 		case '\r':
 			if (index == 0)
 			{
-				fprintf(ser_fp, "\r\nEmpty string not allowed\r\n");
-				reset();
+				reset("\r\nEmpty string not allowed");
 			}
 			buffer[index] = '\0';
 			fprintf(ser_fp, "\r\n");
@@ -602,8 +394,7 @@ static void readLine(char *buffer,
 		default:
 			if (index >= (maxLen - 1))
 			{
-				fprintf(ser_fp, "\r\nString too long\r\n");
-				reset();
+				reset("\r\nString too long");
 			}
 			fprintf(ser_fp, "%c", c);
 			buffer[index] = c;
@@ -616,145 +407,6 @@ static void readLine(char *buffer,
 static void getFileName(char *name, int maxLen)
 {
 	readLine(name, maxLen);
-}
-
-static void wrongMAC()
-{
-	fprintf(ser_fp, "Wrong MAC address syntax\r\n");
-	reset();
-}
-
-static int getMacAddress(char* buffer)
-{
-	buffer[0] = 0;
-	buffer[12] = 0;
-
-	int fd = open(MAC_FILE, O_RDONLY);
-	if (fd < 0)
-	{
-		fprintf(ser_fp, "Could not open %s\r\n", MAC_FILE);
-		return fd;
-	}
-
-	for (int i = 0; i < 12; i++)
-	{
-		char c;
-		int actual;
-		actual = read(fd, &c, 1);
-		if (actual < 0)
-		{
-			fprintf(ser_fp, "\r\nFailed while reading %s\r\n", MAC_FILE);
-			reset();
-		}
-		if (actual != 1)
-			break;
-		buffer[i] = c;
-	}
-	close(fd);
-	fprintf(ser_fp, "\r\n");
-	return fd;
-}
-
-
-static cyg_uint8 * transformMacAddress(char* buffer, cyg_uint8 mac_addr[6])
-{
-	mac_addr[0] = 0;
-	mac_addr[1] = 0;
-	mac_addr[2] = 0;
-	mac_addr[3] = 0;
-	mac_addr[4] = 0;
-	mac_addr[5] = 0;
-
-	if (strlen(buffer) != 12)
-	{
-		wrongMAC();
-	}
-
-	for (size_t i = 0; i < strlen(buffer); i++)
-	{
-		char c = buffer[i];
-		if (('0' <= c && c <= '9') || ('a' <= c && c <= 'f') || ('A' <= c && c
-				<= 'F'))
-		{
-			cyg_uint32 val;
-			sscanf(&c, "%x", &val);
-			mac_addr[i / 2] += (val << (4 * ((i + 1) % 2)));
-
-		}
-		else
-		{
-			wrongMAC();
-		}
-	}
-	return mac_addr;
-
-}
-
-static bool hasMacAddress()
-{
-
-	cyg_uint8* mac = (cyg_uint8 *) (UNCACHED_EXT_FLASH_BASE + FACTORY_FPGA_OFFSET - 6);
-	int i;
-	cyg_uint8 ret = 0xFF;
-	for(int i = 0; i < 6; i++)
-	{
-		ret = ret & mac[i];
-	}
-	return ret != 0xFF;
-
-}
-
-static void printMACAddress()
-{
-	if (hasMacAddress())
-	{
-		cyg_uint8* mac = (cyg_uint8 *) (UNCACHED_EXT_FLASH_BASE + FACTORY_FPGA_OFFSET - 6);
-		fprintf(ser_fp, "Mac address %02x:%02x:%02x:%02x:%02x:%02x\r\n", mac[0],
-				mac[1], mac[2], mac[3], mac[4], mac[5]);
-	}
-	else
-		fprintf(ser_fp, "Mac address not set\r\n");
-}
-
-static void changeMac()
-{
-	char mac[13];
-	cyg_uint8 ui_mac[6];
-
-	fprintf(ser_fp, "Enter the mac address in the format XXXXXXXXXXXX  \r\n");
-	readLine(mac, sizeof(mac));
-
-	transformMacAddress(mac, ui_mac);
-	fprintf(ser_fp, "Mac address %02x:%02x:%02x:%02x:%02x:%02x\r\n", ui_mac[0],
-			ui_mac[1], ui_mac[2], ui_mac[3], ui_mac[4], ui_mac[5]);
-
-	int stat;
-	void *err_addr;
-
-	cyg_uint8 *macAddr = (cyg_uint8 *) (UNCACHED_EXT_FLASH_BASE + FACTORY_FPGA_OFFSET - 6);
-
-#ifdef CYGHWR_IO_FLASH_BLOCK_LOCKING
-	if ((stat = flash_unlock((void *) macAddr, 6,
-			(void **) &err_addr)) != 0)
-	{
-		fprintf(ser_fp, "Flash Error flash_unlock: %d\r\n", stat);
-	}
-#endif
-
-	if ((stat = flash_erase((void *) (macAddr), 6, (void **) &err_addr)) != 0)
-	{
-		printf("Error: erasing bootloader %p: %d\n", err_addr, stat);
-		reset();
-	}
-	printf("erasing done\n");
-
-	if ((stat = FLASH_PROGRAM(macAddr, ui_mac, 6, (void **)&err_addr))
-			!= 0)
-	{
-		printf("Error: writing bootloader data at %p: %d\n", err_addr, stat);
-		reset();
-	}
-
 }
 
 static void writeFile(const char *fileName, const char *string)
@@ -812,14 +464,112 @@ static void showParameter()
 		actual = read(param, &c, 1);
 		if (actual < 0)
 		{
-			fprintf(ser_fp, "\r\nFailed while reading %s\r\n", name);
-			reset();
+			reset("\r\nFailed while reading " + string(name));
 		}
 		if (actual != 1)
 			break;
 		fprintf(ser_fp, "%c", c);
 	}
 	fprintf(ser_fp, "\r\n");
+
+}
+
+static void wrongMAC()
+{
+	reset("Wrong MAC address syntax");
+}
+
+static void transformMacAddress(char* buffer, cyg_uint8 mac_addr[6])
+{
+	memset(mac_addr, 0, 6);
+
+	if (strlen(buffer) != 12)
+	{
+		wrongMAC();
+	}
+
+	for (size_t i = 0; i < strlen(buffer); i++)
+	{
+		char c = toupper(buffer[i]);
+		if ('0' <= c && c <= '9')
+		{
+			cyg_uint8 val = c - '0';
+			mac_addr[i / 2] += (val << (4 * ((i + 1) % 2)));
+		}
+		else
+		if ('A' <= c && c <= 'F')
+		{
+			cyg_uint8 val = c - 'A' + 10;
+			mac_addr[i / 2] += (val << (4 * ((i + 1) % 2)));
+		}
+		else
+		{
+			wrongMAC();
+		}
+	}
+}
+
+static bool hasMacAddress()
+{
+	cyg_uint8* mac = (cyg_uint8 *) (UNCACHED_EXT_FLASH_BASE + FACTORY_FPGA_OFFSET - 6);
+	cyg_uint8 ret = 0xFF;
+	for(int i = 0; i < 6; i++)
+	{
+		ret = ret & mac[i];
+	}
+	return ret != 0xFF;
+}
+
+static void printMACAddress()
+{
+	if (hasMacAddress())
+	{
+		cyg_uint8* mac = (cyg_uint8 *) (UNCACHED_EXT_FLASH_BASE + FACTORY_FPGA_OFFSET - 6);
+		fprintf(ser_fp, "Mac address %02x:%02x:%02x:%02x:%02x:%02x\r\n", mac[0],
+				mac[1], mac[2], mac[3], mac[4], mac[5]);
+	}
+	else
+	{
+		fprintf(ser_fp, "Mac address not set\r\n");
+	}
+}
+
+static void changeMac()
+{
+	char mac[13];
+	cyg_uint8 ui_mac[6];
+
+	fprintf(ser_fp, "Enter the mac address in the format XXXXXXXXXXXX\r\n");
+	readLine(mac, sizeof(mac));
+
+	transformMacAddress(mac, ui_mac);
+	fprintf(ser_fp, "New MAC address: %02x:%02x:%02x:%02x:%02x:%02x\r\n", ui_mac[0],
+			ui_mac[1], ui_mac[2], ui_mac[3], ui_mac[4], ui_mac[5]);
+
+	int stat;
+	void *err_addr;
+
+	cyg_uint8 *macAddr = (cyg_uint8 *) (UNCACHED_EXT_FLASH_BASE + FACTORY_FPGA_OFFSET - 6);
+
+#ifdef CYGHWR_IO_FLASH_BLOCK_LOCKING
+	if ((stat = flash_unlock((void *) macAddr, 6,
+			(void **) &err_addr)) != 0)
+	{
+		reset("Error: " + string(error_messages[BOOT_FLASH_UNLOCK]));
+	}
+#endif
+
+	if ((stat = flash_erase((void *) (macAddr), 6, (void **) &err_addr)) != 0)
+	{
+		reset("Error: " + string(error_messages[BOOT_FLASH_ERASE]));
+	}
+	printf("erasing done\n");
+
+	if ((stat = FLASH_PROGRAM(macAddr, ui_mac, 6, (void **)&err_addr))
+			!= 0)
+	{
+		reset("Error: " + string(error_messages[BOOT_FLASH_PROGRAM]));
+	}
 
 }
 
@@ -831,7 +581,88 @@ static void changeIP()
 			"\r\nEnter ip, mask and gateway(optional) (x.x.x.x,y.y.y.y[,z.z.z.z]): ");
 	readLine(ip, sizeof(ip));
 	writeFile(IP_FILE, ip);
+	reset("");
 }
+
+static void upgrade(upgrade_info upgraded_file)
+{
+	/* Do we have a pending bootloader update? */
+	if ((firmwareFile = open(upgraded_file.file, O_RDONLY)) > 0)
+	{
+		fprintf(ser_fp, "%s update in progress\r\n", upgraded_file.name);
+
+		/*    	if (!expect("ZylinPhiBootloader\r\n", false))
+		 {
+		 close(firmwareFile);
+		 fprintf(ser_fp, "Corrupt bootloader image uploaded. Safely aborting bootloader update.\r\n");
+		 remove(BOOTLOADER_FILE);
+		 reset();
+		 }*/
+
+		cyg_uint8 *startAddr = (cyg_uint8 *) (UNCACHED_EXT_FLASH_BASE + upgraded_file.start_address);
+		struct stat results;
+
+		if (stat(upgraded_file.file, &results) == 0)
+		{
+			fprintf(ser_fp, "size %ld\r\n", results.st_size);
+		}
+
+		int stat;
+		void *err_addr;
+
+#ifdef CYGHWR_IO_FLASH_BLOCK_LOCKING
+		if ((stat = flash_unlock((void *) startAddr, upgraded_file.length,
+			(void **) &err_addr)) != 0)
+			{
+				reset("Error: " + string(error_messages[BOOT_FLASH_UNLOCK]));
+			}
+#endif
+
+		fprintf(ser_fp, "Erasing flash...");
+		if ((stat = flash_erase((void *) (startAddr), upgraded_file.length, (void **) &err_addr)) != 0)
+		{
+			reset("Error: " + string(error_messages[BOOT_FLASH_ERASE]));
+		}
+		fprintf(ser_fp, "done.\r\n");
+
+		char buf[1024];
+		int actual;
+		fprintf(ser_fp, "Programming flash...");
+		while ((actual = read(firmwareFile, buf, sizeof(buf))) > 0)
+		{
+			int stat;
+			void *err_addr;
+			int rem = actual % LENGTH;
+			if (rem != 0)
+			{
+				rem = LENGTH - rem;
+				appendPadding(buf, actual, rem);
+			}
+
+			if ((stat
+					= FLASH_PROGRAM(startAddr, buf, actual + rem, (void **)&err_addr))
+					!= 0)
+			{
+				reset("Error: " + string(error_messages[BOOT_FLASH_PROGRAM]));
+			}
+
+			startAddr += actual;
+		}
+		fprintf(ser_fp, "done.\r\n");
+
+		close(firmwareFile);
+
+		if (actual < 0)
+		{
+			remove(upgraded_file.file);
+			reset("Error: catastrophic failure. " + string(upgraded_file.name) + "corrupt");
+		}
+
+		remove(upgraded_file.file);
+		reset(string(upgraded_file.name) + " successfully updated.");
+	}
+}
+
 
 static void ymodemUpload(const char *fileName)
 {
@@ -843,21 +674,17 @@ static void ymodemUpload(const char *fileName)
 	memset(&connection, 0, sizeof(connection));
 	connection.mode = xyzModem_ymodem;
 
-	fprintf(ser_fp, "connection over %s\r\n", fileName);
+	fprintf(ser_fp, "Connection over %s\r\n", fileName);
 
 	if (xyzModem_stream_open(&connection, &err) == 0)
 	{
 		firmwareFile = creat(fileName, O_TRUNC | O_CREAT);
 		if (firmwareFile < 0)
 		{
-			int t = errno;
-
 			// close yModem connection so we can see error message in HyperTerminal
 			int moreError;
 			xyzModem_stream_close(&moreError);
-
-			fprintf(ser_fp, "Could not create firmware file %d\r\n", t);
-			reset();
+			reset("Could not create firmware file");
 		}
 
 		int err;
@@ -869,7 +696,6 @@ static void ymodemUpload(const char *fileName)
 		 */
 		int actual;
 		int pos = 0;
-		int ii = 0;
 		for (;;)
 		{
 			err = 0;
@@ -886,7 +712,7 @@ static void ymodemUpload(const char *fileName)
 				int written = write(firmwareFile, WRITE_BUF, actual + pos);
 				if (written < (actual + pos))
 				{
-					fprintf(ser_fp, "Writing %s failed %d\r\n", fileName, errno);
+					fprintf(ser_fp, "Writing %s failed\r\n", fileName);
 					abortedByWrite = true;
 					break;
 				}
@@ -947,8 +773,7 @@ static void selectFile(char *fileName)
 			names[index] = (char *) malloc(strlen(entry->d_name) + 1);
 			if (names[index] == NULL)
 			{
-				fprintf(ser_fp, "ERROR, not enough memory. Resetting...");
-				reset();
+				reset("Error: not enough memory");
 			}
 			strcpy(names[index], entry->d_name);
 			index++;
@@ -959,78 +784,12 @@ static void selectFile(char *fileName)
 	getChar(&key);
 	if (!(key >= '0' && key <= '9' || key - '0' > index - 1))
 	{
-		fprintf(ser_fp, "No such app\r\n");
-		reset();
+		reset("No such app");
 	}
 	fprintf(ser_fp, "\r\n");
 
 	strcpy(fileName, "/config/");
 	strcat(fileName, names[key - '0']);
-}
-
-void mountJFFS2()
-{
-	Cyg_ErrNo err = 0;
-	err = cyg_flash_init(NULL);
-	if (err)
-	{
-		fprintf(ser_fp, "cyg_flash_init error %d\r\n ", err);
-	}
-
-	cyg_flashaddr_t err_address;
-
-#ifdef CYGHWR_IO_FLASH_BLOCK_LOCKING
-	if ((err = flash_unlock((void *) UNCACHED_EXT_FLASH_BASE, EXT_FLASH_SPAN,
-			(void **) &err_address)) != 0)
-	{
-		fprintf(ser_fp, "Flash Error flash_unlock: %d\r\n", err);
-		return;
-	}
-#endif
-
-	//	std::ostringstream s;
-	//	s << "/dev/flash/0/" << JFFS2_OFFSET << "," << JFFS2_LENGTH;
-
-	std::string fis = "/dev/flash/0/";
-	char number[9];
-	number[8] = 0;
-	sprintf(number, "0X%0x", JFFS2_OFFSET);
-	fis += number;
-	fis += ",";
-	sprintf(number, "0X%0x", JFFS2_LENGTH);
-	fis += number;
-	fprintf(ser_fp, "%s\r\n", fis.c_str());
-
-	err = mount(fis.c_str(), "/config", "jffs2");
-
-	if (err < 0)
-	{
-		fprintf(ser_fp, "JFFS2 mounting error %d\r\n", err);
-		format();
-	}
-	fprintf(ser_fp, "mounted jffs2\r\n");
-}
-
-void mountRamFS()
-{
-	Cyg_ErrNo err = 0;
-
-	err = mount("", "/ram", "ramfs");
-
-	if (err < 0)
-	{
-		fprintf(ser_fp, "RAMFS mounting error %d\r\n", err);
-		format();
-	}
-	fprintf(ser_fp, "mounted ramfs just fine\r\n");
-	fprintf(ser_fp, "testing file write/read/delete\r\n");
-	FILE* pf = fopen("/ram/tralala.txt", "w+");
-	if (pf == NULL)
-	{
-		fprintf(ser_fp, "unable to create/open file\r\n");
-		return;
-	}
-	fclose(pf);
 }
 
 void printAvailableRAM()
@@ -1043,27 +802,19 @@ void printAvailableRAM()
 int menu()
 {
 	char fileName[NAME_MAX];
+	Cyg_ErrNo err = 0;
 
 	fprintf(ser_fp, "Bootloader. Copyright FSF 2006-2010 All rights reserved\r\n");
 	fprintf(ser_fp, "Version unknown %s %s\r\n", __DATE__, __TIME__);
 
-	//	cyg_exception_handler_t *old;
-	//	cyg_addrword_t oldData;
-	//	cyg_exception_set_handler(CYGNUM_HAL_VECTOR_UNDEF_INSTRUCTION, exception_handler, 0, &old, &oldData);
-	//	cyg_exception_set_handler(CYGNUM_HAL_VECTOR_ABORT_PREFETCH, exception_handler, 0, &old, &oldData);
-	//	cyg_exception_set_handler( CYGNUM_HAL_VECTOR_ABORT_DATA, exception_handler, 0, &old, &oldData);
-
-	mountJFFS2();
-	mountRamFS();
+	err = mountJFFS2();
+	if(err == BOOT_OK)
+	{
+		err = mountRamFS();
+	}
 
 	printMACAddress();
-
-	printAvailableRAM();
-
-	//extern void phi_init_all_network_interfaces(void);
-	// CYGPKG_PHI_NET
-	// phi_init_all_network_interfaces();
-
+	// printAvailableRAM();
 
 	start_menu:
 
@@ -1079,7 +830,7 @@ int menu()
 	}
 
 	//use default firmware file name
-	strcpy(fileName, FIRMWARE_FILE);
+	strcpy(fileName, firmware.file);
 	char key;
 	waitMoreChar: if (waitChar(2, &key))
 	{
@@ -1090,12 +841,10 @@ int menu()
 			break;
 		case 'F':
 			format();
-			reset();
 			break;
 		case 'i':
 		case 'I':
 			changeIP();
-			reset();
 		case 'P':
 			enterParameter();
 			goto start_menu;
@@ -1106,25 +855,19 @@ int menu()
 			fprintf(ser_fp, "File name: ");
 			getFileName(fileName, sizeof(fileName));
 			ymodemUpload(fileName);
-			reset();
 		case '\r':
 			fprintf(ser_fp, "Default firmware file update\r\n");
-			ymodemUpload(FIRMWARE_FILE); //fall through
+			ymodemUpload(firmware.file); //fall through
 			break;
 		case 'Y':
 			fprintf(ser_fp, "Single shot bootloader update\r\n");
-			ymodemUpload(BOOTLOADER_FILE); //fall through
-			break;
-		case 'A':
-			fprintf(ser_fp, "FPGA image update\r\n");
-			ymodemUpload(FPGA_FILE); //fall through
+			ymodemUpload(bootloader.file); //fall through
 			break;
 		case ' ':
 			fprintf(ser_fp, "Press <F> format flash\r\n");
 			fprintf(ser_fp,
 					"Press <E> to start Ymodem upload of firmware to a specified file name\r\n");
 			fprintf(ser_fp, "Press <Y> to start single shot update of bootloader\r\n");
-			fprintf(ser_fp, "Press <A> to start update of FPGA image\r\n");
 			fprintf(ser_fp, "Press <P> set parameter\r\n");
 			fprintf(ser_fp, "Press <D> show parameter\r\n");
 			goto waitMoreChar;
@@ -1133,7 +876,7 @@ int menu()
 			/* ignore unknown keys... */
 			break;
 		}
-		if(!hasMacAddress())
+		//if(!hasMacAddress())
 		{
 			if ((key == 'M') || (key == 'm'))
 			{
@@ -1142,14 +885,19 @@ int menu()
 		}
 	}
 
-	upgradeFPGA(FACTORY_FPGA_OFFSET, APPLICATION_FPGA_OFFSET);
-	upgradeBootloader();
-	upgradeFirmware();
+	if(err)
+	{
+		reset("Error: " + string(error_messages[err]));
+	}
+
+	upgrade(bootloader);
+	upgrade(firmware);
+
 
 	if (!hasMacAddress())
 	{
 		/* do not allow running application without mac address */
-		//reset();
+		reset("MAC address not set");
 	}
 
 	umount("/config");
@@ -1169,7 +917,7 @@ int menu()
  * width_of_flash - data-width of flash device
  * Returns: 0 ( but never exits since it reconfigures the FPGA )
  ****************************************************************************/
-int CycloneIIIReconfig(int remote_update_base, int flash_base,
+void CycloneIIIReconfig(int remote_update_base, int flash_base,
 		int reconfig_offset, int watchdog_timeout, int width_of_flash)
 {
 	int offset_shift, addr;
@@ -1203,7 +951,6 @@ int CycloneIIIReconfig(int remote_update_base, int flash_base,
 	// Perform the reconfiguration by setting bit 0 in the
 	// control/status register
 	IOWR( remote_update_base, 0x20, 0x1 );
-	return (0);
 }
 
 int needReset()
@@ -1215,8 +962,6 @@ int needReset()
 int main()
 {
 	openSerial();
-
-	fprintf(ser_fp, "Main\r\n");
 
 	if (needReset())
 	{

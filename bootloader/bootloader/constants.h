@@ -31,25 +31,40 @@
 // -------------------------------------------
 // ####ECOSGPLCOPYRIGHTEND####
 //========================================================================
+#ifndef _CONSTANTS_H_
+#define _CONSTANTS_H_
 
-/*
-#define FACTORY_FPGA_OFFSET 0x20000
-#define APPLICATION_FPGA_OFFSET 0x120000
-#define DEFLATOR_OFFSET 0x220000
-#define MAIN_APPLICATION_OFFSET 0x240000
-#define BOOTLOADER_OFFSET 0x500000
-#define JFFS2_OFFSET 0x700000
-#define JFFS2_LENGTH 0x100000
-*/
+#define BOOT_OK					0
+#define BOOT_FLASH_INIT			(BOOT_OK + 1)
+#define BOOT_FLASH_UNLOCK		(BOOT_FLASH_INIT + 1)
+#define BOOT_MOUNT_JFFS			(BOOT_FLASH_UNLOCK + 1)
+#define BOOT_MOUNT_RAMFS		(BOOT_MOUNT_JFFS + 1)
+#define BOOT_FLASH_ERASE		(BOOT_MOUNT_RAMFS + 1)
+#define BOOT_FLASH_PROGRAM		(BOOT_FLASH_ERASE + 1)
+#define BOOT_LENGTH				(BOOT_FLASH_PROGRAM	+ 1)
 
+static const char * error_messages[] =
+		{
+				"",
+				"Initializing flash failed",
+				"Unlocking flash failed",
+				"Mounting JFFS2 failed",
+				"Mounting RAMFS failed",
+				"Erasing flash failed",
+				"Programming flash failed"
+		};
 
+struct upgrade_info
+{
+	char* file;
+	char * name;
+	int start_address;
+	size_t length;
+};
 
-#define FACTORY_FPGA_OFFSET 0x20000
-#define BOOTLOADER_OFFSET 0x120000
-#define APPLICATION_FPGA_OFFSET 0x200000
-#define DEFLATOR_OFFSET 0x300000
-#define MAIN_APPLICATION_OFFSET 0x320000
-#define MAIN_APPLICATION_END 0x500000
-#define JFFS2_LENGTH 0x100000
-#define JFFS2_OFFSET (EXT_FLASH_SPAN - JFFS2_LENGTH)
+upgrade_info bootloader = {"/ram/bootloader.phi", "Bootloader", FACTORY_FPGA_OFFSET, APPLICATION_FPGA_OFFSET
+		- FACTORY_FPGA_OFFSET};
+upgrade_info firmware = {"/ram/firmware.phi", "Firmware", APPLICATION_FPGA_OFFSET, MAIN_APPLICATION_END
+		- APPLICATION_FPGA_OFFSET};
 
+#endif // _CONSTANTS_H_
