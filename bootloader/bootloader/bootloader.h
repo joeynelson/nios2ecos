@@ -34,9 +34,6 @@
 #ifndef _BOOTLOADER_H_
 #define _BOOTLOADER_H_
 
-#include <sstream>
-#include <string>
-
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
@@ -56,7 +53,6 @@
 #include <errno.h>
 #include "redboot.h"
 #include "xyzModem.h"
-
 
 bool getChar(char *key);
 bool waitChar(int seconds, char *key);

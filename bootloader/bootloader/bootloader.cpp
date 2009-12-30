@@ -39,14 +39,23 @@
 
 #include "addresses.h"
 #include "bootloader.h"
-#include "constants.h"
+
+struct upgrade_info
+{
+	char* file;
+	char * name;
+	int start_address;
+	size_t length;
+};
+
+upgrade_info bootloader = {"/ram/bootloader.phi", "Bootloader", FACTORY_FPGA_OFFSET, APPLICATION_FPGA_OFFSET
+		- FACTORY_FPGA_OFFSET};
+upgrade_info firmware = {"/ram/firmware.phi", "Firmware", APPLICATION_FPGA_OFFSET, MAIN_APPLICATION_END
+		- APPLICATION_FPGA_OFFSET};
 
 #define UNCACHED_EXT_FLASH_BASE (0x80000000 + EXT_FLASH_BASE)
 
-using namespace std;
-
 static char IP_FILE[] = "/config/ip";
-static char MAC_FILE[] = "/config/mac";
 static const int WRITE_BUF_SIZE = 4096;
 static char WRITE_BUF[WRITE_BUF_SIZE];
 
@@ -148,18 +157,13 @@ bool waitChar(int seconds, char *key)
 	return false;
 }
 
-void reset(string message)
+void reset(void)
 {
-	if(message != "")
-	{
-		fprintf(ser_fp, "Resetting\r\n");
-	}
-	else
-	{
-		fprintf(ser_fp, "%s. Resetting\r\n", message.c_str());
-	}
+	fprintf(ser_fp, "Resetting\r\n");
 	umount("/config");
 	cleaning();
+	/* 1000ms is necessary to let everyting "calmn down" */
+	cyg_thread_delay(100);
 	IOWR(REMOTE_UPDATE_BASE, 0x20, 0x1);
 }
 
@@ -168,27 +172,32 @@ void openSerial()
 	ser = open(UART_0_NAME, O_RDWR|O_SYNC|O_NONBLOCK);
 	if (ser < 0)
 	{
-		diag_printf("Serial device problems %s\r\n", UART_0_NAME);
-		reset("");
+		diag_printf("Error: serial device problems %s\r\n", UART_0_NAME);
+		reset();
 	}
 
 	ser_fp = fdopen(ser, "r+");
 
 	if (ser_fp == NULL)
 	{
-		diag_printf("Serial device problems %s\r\n", UART_0_NAME);
-		reset("");
+		diag_printf("Error: serial device problems %s\r\n", UART_0_NAME);
+		reset();
 	}
 }
 
 
-int mountJFFS2()
+/* Try to mount jffs2, if it fails print error message and return.
+ * Failing is "normal" in that formatting jffs2 might fix it for
+ * instance.
+ */
+void mountJFFS2()
 {
 	Cyg_ErrNo err = 0;
 	err = cyg_flash_init(NULL);
 	if (err)
 	{
-		return BOOT_FLASH_INIT;
+		fprintf(ser_fp, "Error: could not init flash\r\n");
+		return;
 	}
 
 	cyg_flashaddr_t err_address;
@@ -197,43 +206,39 @@ int mountJFFS2()
 	if ((err = flash_unlock((void *) UNCACHED_EXT_FLASH_BASE, EXT_FLASH_SPAN,
 			(void **) &err_address)) != 0)
 	{
-		//fprintf(ser_fp, "Flash Error flash_unlock: %d\r\n", err);
-		return BOOT_FLASH_UNLOCK;
+		fprintf(ser_fp, "Error: could not unlock flash\r\n");
+		return;
 	}
 #endif
 
-	//	std::ostringstream s;
-	//	s << "/dev/flash/0/" << JFFS2_OFFSET << "," << JFFS2_LENGTH;
 
-	std::string fis = "/dev/flash/0/";
-	char number[9];
-	number[8] = 0;
-	sprintf(number, "0X%0x", JFFS2_OFFSET);
-	fis += number;
-	fis += ",";
-	sprintf(number, "0X%0x", JFFS2_LENGTH);
-	fis += number;
-	fprintf(ser_fp, "%s\r\n", fis.c_str());
+	char buffer[256];
+	sprintf(buffer, "dev/flash/0/0X%x,0X%x", JFFS2_OFFSET, JFFS2_LENGTH);
+	fprintf(ser_fp, "%s\r\n", buffer);
 
-	if ((err = mount(fis.c_str(), "/config", "jffs2")) < 0)
+	if ((err = mount(buffer, "/config", "jffs2")) < 0)
 	{
-		return BOOT_MOUNT_JFFS;
+		fprintf(ser_fp, "Error: could not mount flash %d\r\n", err);
+		return;
 	}
-	return BOOT_OK;
-
 }
 
-int mountRamFS()
+/* mount ramfs, print error message and return in case of error.
+ *
+ * This fn can not really fail, except if we run out of memory. */
+void mountRamFS()
 {
 	Cyg_ErrNo err = 0;
 
 	if ((err = mount("", "/ram", "ramfs")) < 0)
 	{
-		return BOOT_MOUNT_RAMFS;
+		fprintf(ser_fp, "Error: could not mount RAMFS %d\r\n", err);
+		return;
 	}
-	return BOOT_OK;
+	return;
 }
 
+/* Format jffs2 area and reset */
 void format(void)
 {
 	int stat;
@@ -243,14 +248,16 @@ void format(void)
 
 	if ((stat = flash_init(0)) != 0)
 	{
-		reset("Error: " + string(error_messages[BOOT_FLASH_INIT]));
+		fprintf(ser_fp, "Error: %s\r\n", "Initializing flash failed");
+		reset();
 	}
 
 #ifdef CYGHWR_IO_FLASH_BLOCK_LOCKING
 	if ((stat = flash_unlock((void *) UNCACHED_EXT_FLASH_BASE, EXT_FLASH_SPAN,
 			(void **) &err_addr)) != 0)
 	{
-		reset("Error: " + string(error_messages[BOOT_FLASH_UNLOCK]));
+		fprintf(ser_fp, "Error: %s\r\n", "Unlocking flash failed");
+		reset();
 	}
 #endif
 
@@ -258,14 +265,17 @@ void format(void)
 	if ((stat = flash_erase((void *) (UNCACHED_EXT_FLASH_BASE + JFFS2_OFFSET), JFFS2_LENGTH,
 			(void **) &err_addr)) != 0)
 	{
-		reset("Error: " + string(error_messages[BOOT_FLASH_ERASE]));
+		fprintf(ser_fp, "Error: %s\r\n", "Erasing flash failed");
+		reset();
 	}
 
-	reset("Flash formatted successfully");
+	fprintf(ser_fp, "%s\r\n", "Flash formatted successfully");
+	reset();
 }
 
 int firmwareFile, fpgaFile;
 
+/* check that the firmware file contains the expected string. */
 static bool expect(const char *strin, bool resetOnFailure = true)
 {
 	//	fprintf(ser_fp, "Expecting \"%s\"\r\n", string);
@@ -277,7 +287,7 @@ static bool expect(const char *strin, bool resetOnFailure = true)
 			fprintf(ser_fp, "Error: reading firmware file , expecting \"%s\"\r\n", strin);
 			if (resetOnFailure)
 			{
-				reset("");
+				reset();
 			}
 			else
 			{
@@ -289,7 +299,8 @@ static bool expect(const char *strin, bool resetOnFailure = true)
 		{
 			if (resetOnFailure)
 			{
-				reset("Unexpected data in firmware file while expecting " + string(strin));
+				fprintf(ser_fp, "Unexpected data in firmware file while expecting %s\r\n", strin);
+				reset();
 			}
 			else
 			{
@@ -300,55 +311,6 @@ static bool expect(const char *strin, bool resetOnFailure = true)
 	}
 	return true;
 }
-
-/* read integer which is terminated by whitespace or eof */
-//int readInt(void)
-//{
-//	char buf[32];
-//	size_t i;
-//	i = 0;
-//	for (;;)
-//	{
-//		if (i >= sizeof(buf))
-//		{
-//			stringstream message;
-//			message << "Error: reading string. Too long " << (int)i;
-//			reset(message.str());
-//		}
-//
-//		char t;
-//		int actual;
-//		actual = read(firmwareFile, &t, 1);
-//		if (actual < 0)
-//		{
-//			stringstream message;
-//			message << "Error: reading integer";
-//			reset(message.str());
-//		}
-//
-//		if (actual == 1)
-//		{
-//			if (!isspace((int) t))
-//			{
-//				buf[i++] = t;
-//			}
-//			else
-//			{
-//				break;
-//			}
-//		}
-//		else if (actual == 0)
-//		{
-//			break;
-//		}
-//		else
-//		{
-//			reset("Error: reading integer");
-//		}
-//	}
-//	buf[i] = 0;
-//	return atoi(buf);
-//}
 
 void appendPadding(char* buffer, int start, int length)
 {
@@ -373,12 +335,14 @@ static void readLine(char *buffer,
 		switch (c)
 		{
 		case 0x3:
-			reset("\r\nCtrl-c pressed");
+			fprintf(ser_fp, "%s\r\n", "\r\nCtrl-c pressed");
+			reset();
 		case '\n':
 		case '\r':
 			if (index == 0)
 			{
-				reset("\r\nEmpty string not allowed");
+				fprintf(ser_fp, "%s\r\n", "\r\nEmpty string not allowed");
+				reset();
 			}
 			buffer[index] = '\0';
 			fprintf(ser_fp, "\r\n");
@@ -394,7 +358,8 @@ static void readLine(char *buffer,
 		default:
 			if (index >= (maxLen - 1))
 			{
-				reset("\r\nString too long");
+				fprintf(ser_fp, "%s\r\n", "\r\nString too long");
+				reset();
 			}
 			fprintf(ser_fp, "%c", c);
 			buffer[index] = c;
@@ -409,6 +374,7 @@ static void getFileName(char *name, int maxLen)
 	readLine(name, maxLen);
 }
 
+/* write config file based on 0 terminated string */
 static void writeFile(const char *fileName, const char *string)
 {
 	if (strlen(string) == 0)
@@ -464,7 +430,8 @@ static void showParameter()
 		actual = read(param, &c, 1);
 		if (actual < 0)
 		{
-			reset("\r\nFailed while reading " + string(name));
+			fprintf(ser_fp, "\r\nFailed while reading %s", name);
+			reset();
 		}
 		if (actual != 1)
 			break;
@@ -476,7 +443,8 @@ static void showParameter()
 
 static void wrongMAC()
 {
-	reset("Wrong MAC address syntax");
+	fprintf(ser_fp, "Error: wrong MAC address syntax\r\n");
+	reset();
 }
 
 static void transformMacAddress(char* buffer, cyg_uint8 mac_addr[6])
@@ -555,20 +523,23 @@ static void changeMac()
 	if ((stat = flash_unlock((void *) macAddr, 6,
 			(void **) &err_addr)) != 0)
 	{
-		reset("Error: " + string(error_messages[BOOT_FLASH_UNLOCK]));
+		fprintf(ser_fp, "Error: %s\r\n", "Unlocking flash failed");
+		reset();
 	}
 #endif
 
 	if ((stat = flash_erase((void *) (macAddr), 6, (void **) &err_addr)) != 0)
 	{
-		reset("Error: " + string(error_messages[BOOT_FLASH_ERASE]));
+		fprintf(ser_fp, "Error: %s\r\n", "Erasing flash failed");
+		reset();
 	}
 	printf("erasing done\n");
 
 	if ((stat = FLASH_PROGRAM(macAddr, ui_mac, 6, (void **)&err_addr))
 			!= 0)
 	{
-		reset("Error: " + string(error_messages[BOOT_FLASH_PROGRAM]));
+		fprintf(ser_fp, "Error: %s\r\n", "Programming flash failed");
+		reset();
 	}
 
 }
@@ -581,7 +552,7 @@ static void changeIP()
 			"\r\nEnter ip, mask and gateway(optional) (x.x.x.x,y.y.y.y[,z.z.z.z]): ");
 	readLine(ip, sizeof(ip));
 	writeFile(IP_FILE, ip);
-	reset("");
+	reset();
 }
 
 static void upgrade(upgrade_info upgraded_file)
@@ -591,6 +562,7 @@ static void upgrade(upgrade_info upgraded_file)
 	{
 		fprintf(ser_fp, "%s update in progress\r\n", upgraded_file.name);
 
+		/* FIX!!!! we need to check for header here!!! */
 		/*    	if (!expect("ZylinPhiBootloader\r\n", false))
 		 {
 		 close(firmwareFile);
@@ -614,14 +586,16 @@ static void upgrade(upgrade_info upgraded_file)
 		if ((stat = flash_unlock((void *) startAddr, upgraded_file.length,
 			(void **) &err_addr)) != 0)
 			{
-				reset("Error: " + string(error_messages[BOOT_FLASH_UNLOCK]));
+				fprintf(ser_fp, "Error: %s\r\n", "Unlocking flash failed");
+				reset();
 			}
 #endif
 
 		fprintf(ser_fp, "Erasing flash...");
 		if ((stat = flash_erase((void *) (startAddr), upgraded_file.length, (void **) &err_addr)) != 0)
 		{
-			reset("Error: " + string(error_messages[BOOT_FLASH_ERASE]));
+			fprintf(ser_fp, "Error: %s\r\n", "Erasing flash failed");
+			reset();
 		}
 		fprintf(ser_fp, "done.\r\n");
 
@@ -643,7 +617,8 @@ static void upgrade(upgrade_info upgraded_file)
 					= FLASH_PROGRAM(startAddr, buf, actual + rem, (void **)&err_addr))
 					!= 0)
 			{
-				reset("Error: " + string(error_messages[BOOT_FLASH_PROGRAM]));
+				fprintf(ser_fp, "Error: %s\r\n", "Programming flash failed");
+				reset();
 			}
 
 			startAddr += actual;
@@ -655,11 +630,13 @@ static void upgrade(upgrade_info upgraded_file)
 		if (actual < 0)
 		{
 			remove(upgraded_file.file);
-			reset("Error: catastrophic failure. " + string(upgraded_file.name) + "corrupt");
+			fprintf(ser_fp, "Error: catastrophic failure. %s corrupt\r\n", upgraded_file.name);
+			reset();
 		}
 
 		remove(upgraded_file.file);
-		reset(string(upgraded_file.name) + " successfully updated.");
+		fprintf(ser_fp, "%s successfully updated.\r\n", upgraded_file.name);
+		reset();
 	}
 }
 
@@ -684,7 +661,8 @@ static void ymodemUpload(const char *fileName)
 			// close yModem connection so we can see error message in HyperTerminal
 			int moreError;
 			xyzModem_stream_close(&moreError);
-			reset("Could not create firmware file");
+			fprintf(ser_fp, "Error: could not create firmware file\r\n");
+			reset();
 		}
 
 		int err;
@@ -763,6 +741,9 @@ static void selectFile(char *fileName)
 		if (entry == NULL)
 			break;
 		len = strlen(entry->d_name);
+		/* geeez.... The code below just checks for.zpu and .phi extensions
+		 * and although it looks ugly, it's tested, leave be until
+		 * a regression test can be done after fixing it. */
 		if (len > 4 && (entry->d_name[len - 4] == '.' && ((entry->d_name[len
 				- 3] == 'p' && entry->d_name[len - 2] == 'h'
 				&& entry->d_name[len - 1] == 'i') || (entry->d_name[len - 3]
@@ -773,7 +754,8 @@ static void selectFile(char *fileName)
 			names[index] = (char *) malloc(strlen(entry->d_name) + 1);
 			if (names[index] == NULL)
 			{
-				reset("Error: not enough memory");
+				fprintf(ser_fp, "Error: not enough memory\r\n");
+				reset();
 			}
 			strcpy(names[index], entry->d_name);
 			index++;
@@ -784,7 +766,8 @@ static void selectFile(char *fileName)
 	getChar(&key);
 	if (!(key >= '0' && key <= '9' || key - '0' > index - 1))
 	{
-		reset("No such app");
+		fprintf(ser_fp, "Error: No such app\r\n");
+		reset();
 	}
 	fprintf(ser_fp, "\r\n");
 
@@ -799,22 +782,18 @@ void printAvailableRAM()
 	fprintf(ser_fp, "Available RAM: %d\r\n", info.fordblks);
 }
 
-int menu()
+void menu(void)
 {
 	char fileName[NAME_MAX];
-	Cyg_ErrNo err = 0;
 
-	fprintf(ser_fp, "Bootloader. Copyright FSF 2006-2010 All rights reserved\r\n");
-	fprintf(ser_fp, "Version unknown %s %s\r\n", __DATE__, __TIME__);
+	fprintf(ser_fp, "Bootloader.\r\nCopyright FSF 2006-2010 All rights reserved\r\n");
+	fprintf(ser_fp, "eCos license (GPL with exception)\r\n");
+	fprintf(ser_fp, "Build date %s %s\r\n", __DATE__, __TIME__);
 
-	err = mountJFFS2();
-	if(err == BOOT_OK)
-	{
-		err = mountRamFS();
-	}
+	mountJFFS2();
+	mountRamFS();
 
 	printMACAddress();
-	// printAvailableRAM();
 
 	start_menu:
 
@@ -876,6 +855,10 @@ int menu()
 			/* ignore unknown keys... */
 			break;
 		}
+
+		/* FIX!!!! we should only be able to change mac address if we don't
+		 * have one already.
+		 */
 		//if(!hasMacAddress())
 		{
 			if ((key == 'M') || (key == 'm'))
@@ -885,25 +868,18 @@ int menu()
 		}
 	}
 
-	if(err)
-	{
-		reset("Error: " + string(error_messages[err]));
-	}
-
 	upgrade(bootloader);
 	upgrade(firmware);
-
 
 	if (!hasMacAddress())
 	{
 		/* do not allow running application without mac address */
-		reset("MAC address not set");
+		fprintf(ser_fp, "Error: MAC address not set\r\n");
+		reset();
 	}
 
 	umount("/config");
 	umount("/ram");
-
-	return 0;
 }
 
 /********************************************************************************
@@ -972,8 +948,7 @@ int main()
 		CycloneIIIReconfig(REMOTE_UPDATE_BASE, UNCACHED_EXT_FLASH_BASE,
 				APPLICATION_FPGA_OFFSET, 0, 16);
 	}
-	// launch application!
-	fprintf(ser_fp, "Jump to deflate application\r\n");
+	fprintf(ser_fp, "Jump to application\r\n");
 	cleaning();
 	cyg_interrupt_disable();
 	((void(*)(void)) (UNCACHED_EXT_FLASH_BASE + DEFLATOR_OFFSET))();
