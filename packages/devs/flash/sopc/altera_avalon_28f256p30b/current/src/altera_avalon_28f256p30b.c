@@ -50,7 +50,7 @@ static const CYG_FLASH_FUNS(
     &cyg_strata_init_check_devid_16,
     &cyg_flash_devfn_query_nop,
     &cyg_strata_erase_16,
-    &cyg_strata_program_16,
+    &cyg_strata_bufprogram_16,
     (int (*)(struct cyg_flash_dev*, const cyg_flashaddr_t, void*, size_t))0,
     &cyg_strata_lock_k3_16,
     &cyg_strata_unlock_k3_16);
