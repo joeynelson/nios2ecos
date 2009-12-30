@@ -656,6 +656,39 @@ static void upgrade(upgrade_info upgraded_file)
 }
 
 
+/* load app into ram and run it. The application will need
+ * a memory independant piece of code to begin with that
+ * can be used to launch itself.
+ */
+static void runfile(const char *name)
+{
+	struct stat results;
+	if (stat(name, &results) != 0)
+	{
+		fprintf(ser_fp, "Error: could not get length of file");
+		reset();
+	}
+
+	int runfile_fd;
+	if ((runfile_fd = open(name, O_RDONLY)) <= 0)
+	{
+		fprintf(ser_fp, "Error: failed to open file");
+		reset();
+	}
+	void * mem = malloc(results.st_size);
+
+	read(runfile_fd, mem, results.st_size);
+
+	cyg_interrupt_disable();
+	((void(*)(void)) (mem))();
+	for (;;)
+	{
+
+	}
+	/* never reached */
+}
+
+
 static void ymodemUpload(const char *fileName)
 {
 	int err = 0;
@@ -807,18 +840,24 @@ void menu(void)
 			goto start_menu;
 		case '\r':
 			fprintf(ser_fp, "Default firmware file update\r\n");
-			ymodemUpload(firmware.file); //fall through
+			ymodemUpload(firmware.file);
 			upgrade(firmware);
 			break;
 		case 'Y':
 			fprintf(ser_fp, "Single shot bootloader update\r\n");
-			ymodemUpload(bootloader.file); //fall through
+			ymodemUpload(bootloader.file);
 			upgrade(bootloader);
+			break;
+		case 'R':
+			fprintf(ser_fp, "Upload and run file from RAM\r\n");
+			ymodemUpload("/ram/run");
+			runfile("/ram/run");
 			break;
 		case ' ':
 			fprintf(ser_fp, "Press <F> format flash\r\n");
 			fprintf(ser_fp,
 					"Press <E> to start Ymodem upload of a file to a specified file name\r\n");
+			fprintf(ser_fp, "Press <R> run file from RAM\r\n");
 			fprintf(ser_fp, "Press <Y> to start single shot update of bootloader\r\n");
 			fprintf(ser_fp, "Press <P> set parameter\r\n");
 			fprintf(ser_fp, "Press <D> show parameter\r\n");
