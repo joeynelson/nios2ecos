@@ -911,7 +911,7 @@ int main()
 	fprintf(ser_fp, "Jump to application\r\n");
 	cleaning();
 	cyg_interrupt_disable();
-	((void(*)(void)) (UNCACHED_EXT_FLASH_BASE + DEFLATOR_OFFSET))();
+	((void(*)(void)) (UNCACHED_EXT_FLASH_BASE + APPLICATION_OFFSET))();
 	for (;;)
 		; // never reached
 }
