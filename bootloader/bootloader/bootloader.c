@@ -651,77 +651,79 @@ static void ymodemUpload(const char *fileName)
 
 	fprintf(ser_fp, "Connection over %s\r\n", fileName);
 
-	if (xyzModem_stream_open(&connection, &err) == 0)
+	if (xyzModem_stream_open(&connection, &err) != 0)
 	{
-		firmwareFile = creat(fileName, O_TRUNC | O_CREAT);
-		if (firmwareFile < 0)
-		{
-			// close yModem connection so we can see error message in HyperTerminal
-			int moreError;
-			xyzModem_stream_close(&moreError);
-			fprintf(ser_fp, "Error: could not create firmware file\r\n");
-			reset();
-		}
+		fprintf(ser_fp, "Could not open Ymodem connection %d\r\n", err);
+		reset();
+	}
 
-		int err;
-		bool ok = false;
-		bool abortedByWrite = false;
-
-		/* make sure we don't write too small blocks as this will
-		 * increase memory usage catastrophically when reading the file
-		 */
-		int actual;
-		int pos = 0;
-		for (;;)
-		{
-			err = 0;
-			actual = xyzModem_stream_read(WRITE_BUF + pos, sizeof(WRITE_BUF)
-					- pos, &err);
-			if (actual < 0)
-			{
-				break;
-			}
-
-			if (((actual == 0) && (pos > 0)) || ((actual + pos)
-					> (WRITE_BUF_SIZE - 0x100)))
-			{
-				int written = write(firmwareFile, WRITE_BUF, actual + pos);
-				if (written < (actual + pos))
-				{
-					fprintf(ser_fp, "Writing %s failed\r\n", fileName);
-					abortedByWrite = true;
-					break;
-				}
-				pos = 0;
-			}
-			else
-			{
-				pos += actual;
-			}
-			if (actual == 0)
-			{
-				break;
-			}
-		}
-
+	firmwareFile = creat(fileName, O_TRUNC | O_CREAT);
+	if (firmwareFile < 0)
+	{
+		// close yModem connection so we can see error message in HyperTerminal
 		int moreError;
 		xyzModem_stream_close(&moreError);
+		fprintf(ser_fp, "Error: could not create firmware file\r\n");
+		reset();
+	}
 
-		if ((!abortedByWrite) && (actual == 0) && (err == 0))
+	bool ok = false;
+	bool abortedByWrite = false;
+
+	/* make sure we don't write too small blocks as this will
+	 * increase memory usage catastrophically when reading the file
+	 */
+	int actual;
+	int pos = 0;
+	for (;;)
+	{
+		err = 0;
+		actual = xyzModem_stream_read(WRITE_BUF + pos, sizeof(WRITE_BUF)
+				- pos, &err);
+		if (actual < 0)
 		{
-			fprintf(ser_fp, "\r\nFirmware successfully uploaded\r\n");
-			ok = true;
+			break;
+		}
+		pos += actual;
+
+		/* avoid lots of tiny writes, by flushing 0x100 bytes from
+		 * end of buffer */
+		if (((actual == 0) && (pos > 0)) || (pos > (WRITE_BUF_SIZE - 0x100)))
+		{
+			int written = write(firmwareFile, WRITE_BUF, pos);
+			if (written < pos)
+			{
+				fprintf(ser_fp, "Writing %s failed\r\n", fileName);
+				abortedByWrite = true;
+				break;
+			}
+			pos = 0;
 		}
 
-		close(firmwareFile);
-
-		if (!ok)
+		if (actual == 0)
 		{
-			remove(fileName);
-			if (!abortedByWrite)
-			{
-				fprintf(ser_fp, "\r\nFirmware upload failed: %s\r\n", xyzModem_error(err));
-			}
+			break;
+		}
+	}
+
+	int moreError;
+	xyzModem_stream_close(&moreError);
+
+	if ((!abortedByWrite) && (actual == 0) && (err == 0))
+	{
+		fprintf(ser_fp, "\r\nYmodem transfer complete\r\n");
+		ok = true;
+	}
+
+	close(firmwareFile);
+
+	if (!ok)
+	{
+		remove(fileName);
+		if (!abortedByWrite)
+		{
+			fprintf(ser_fp, "\r\nFirmware upload failed: %s\r\n", xyzModem_error(err));
+			reset();
 		}
 	}
 }
