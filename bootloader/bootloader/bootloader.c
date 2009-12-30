@@ -236,13 +236,11 @@ void mountRamFS()
 	return;
 }
 
-/* Format jffs2 area and reset */
-void format(void)
+/* erase all sectors in this address range */
+static void flash_erase_range(void *address, int length)
 {
 	int stat;
 	void *err_addr;
-
-	fprintf(ser_fp, "Formatting JFFS2...\r\n");
 
 	if ((stat = flash_init(0)) != 0)
 	{
@@ -259,13 +257,22 @@ void format(void)
 	}
 #endif
 
-	fprintf(ser_fp, "Formatting 0x%08x bytes\r\n", JFFS2_LENGTH);
-	if ((stat = flash_erase((void *) (UNCACHED_EXT_FLASH_BASE + JFFS2_OFFSET), JFFS2_LENGTH,
+	fprintf(ser_fp, "Erasing flash at %p, 0x%08x bytes\r\n", address, length);
+	if ((stat = flash_erase((void *)address, length,
 			(void **) &err_addr)) != 0)
 	{
 		fprintf(ser_fp, "Error: %s\r\n", "Erasing flash failed");
 		reset();
 	}
+}
+
+
+/* Format jffs2 area and reset */
+void format(void)
+{
+	fprintf(ser_fp, "Formatting JFFS2...\r\n");
+
+	flash_erase_range((void *)(UNCACHED_EXT_FLASH_BASE + JFFS2_OFFSET), JFFS2_LENGTH);
 
 	fprintf(ser_fp, "%s\r\n", "Flash formatted successfully");
 	reset();
