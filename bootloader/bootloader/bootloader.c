@@ -67,6 +67,9 @@ void cleaning()
 {
 	fclose(ser_fp);
 	close(ser);
+
+	/* 1000ms is necessary to let everyting "calmn down" */
+	cyg_thread_delay(100);
 }
 
 bool getChar(char *key)
@@ -160,8 +163,6 @@ void reset(void)
 	fprintf(ser_fp, "Resetting\r\n");
 	umount("/config");
 	cleaning();
-	/* 1000ms is necessary to let everyting "calmn down" */
-	cyg_thread_delay(100);
 	IOWR(REMOTE_UPDATE_BASE, 0x20, 0x1);
 }
 
