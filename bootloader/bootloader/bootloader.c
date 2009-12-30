@@ -37,21 +37,13 @@
 
 #include <sys/stat.h>
 
+#include <cyg/compress/zlib.h>
+
+#include <cyg/firmwareutil/firmwareutil.h>
+
 #include "addresses.h"
 #include "bootloader.h"
 
-struct upgrade_info
-{
-	char* file;
-	char * name;
-	int start_address;
-	size_t length;
-};
-
-upgrade_info bootloader = {"/ram/bootloader.phi", "Bootloader", FACTORY_FPGA_OFFSET, APPLICATION_FPGA_OFFSET
-		- FACTORY_FPGA_OFFSET};
-upgrade_info firmware = {"/ram/firmware.phi", "Firmware", APPLICATION_FPGA_OFFSET, MAIN_APPLICATION_END
-		- APPLICATION_FPGA_OFFSET};
  /* nios2-gdb-server will go ga-ga when we invoke the remote
   * update stuff, disable while debugging */
 #define DEBUG_NO_RESET() 0
@@ -59,6 +51,45 @@ upgrade_info firmware = {"/ram/firmware.phi", "Firmware", APPLICATION_FPGA_OFFSE
 #define UNCACHED_EXT_FLASH_BASE (0x80000000 + EXT_FLASH_BASE)
 
 static FILE *ser_fp;
+
+/* naive conversion of \n to \r\n for serial terminal */
+static void report_info(void *data, const char * format, va_list args)
+{
+	char buffer[1024];
+	vsnprintf(buffer, sizeof(buffer), format, args);
+	int i;
+	for (i = 0; i < strlen(buffer); i++)
+	{
+		if (buffer[i] == '\n')
+		{
+			fprintf(ser_fp, "\r");
+		}
+		fprintf(ser_fp, "%c", buffer[i]);
+	}
+}
+
+struct cyg_upgrade_info bootloader =
+{
+	(cyg_uint8 *)UNCACHED_EXT_FLASH_BASE,
+	"/ram/bootloader.phi",
+	"Bootloader",
+	FACTORY_FPGA_OFFSET,
+	APPLICATION_FPGA_OFFSET - FACTORY_FPGA_OFFSET,
+	"ZylinNiosBootloader\n",
+	report_info
+};
+
+struct cyg_upgrade_info firmware =
+{
+	(cyg_uint8 *)UNCACHED_EXT_FLASH_BASE,
+	"/ram/firmware.phi",
+	"Firmware",
+	APPLICATION_FPGA_OFFSET,
+	JFFS2_OFFSET - APPLICATION_FPGA_OFFSET,
+	"ZylinNiosFirmware\n",
+	report_info
+};
+
 
 static char IP_FILE[] = "/config/ip";
 static const int WRITE_BUF_SIZE = 4096;
@@ -289,52 +320,6 @@ void format(void)
 }
 
 int firmwareFile, fpgaFile;
-
-/* check that the firmware file contains the expected string. */
-static bool expect(const char *strin, bool resetOnFailure = true)
-{
-	//	fprintf(ser_fp, "Expecting \"%s\"\r\n", string);
-	for (size_t i = 0; i < strlen(strin); i++)
-	{
-		char t;
-		if (read(firmwareFile, &t, 1) != 1)
-		{
-			fprintf(ser_fp, "Error: reading firmware file , expecting \"%s\"\r\n", strin);
-			if (resetOnFailure)
-			{
-				reset();
-			}
-			else
-			{
-				lseek(firmwareFile, -1, SEEK_CUR);
-				return false;
-			}
-		}
-		if (t != strin[i])
-		{
-			if (resetOnFailure)
-			{
-				fprintf(ser_fp, "Unexpected data in firmware file while expecting %s\r\n", strin);
-				reset();
-			}
-			else
-			{
-				lseek(firmwareFile, -1, SEEK_CUR);
-				return false;
-			}
-		}
-	}
-	return true;
-}
-
-void appendPadding(char* buffer, int start, int length)
-{
-	int i;
-	for (i = 0; i < length; i++)
-	{
-		buffer[start + i] = 0xFF;
-	}
-}
 
 // Read a string in from serial port and reset if
 // anything goes wrong.
@@ -570,91 +555,6 @@ static void changeIP()
 	reset();
 }
 
-static void upgrade(upgrade_info upgraded_file)
-{
-	/* Do we have a pending bootloader update? */
-	if ((firmwareFile = open(upgraded_file.file, O_RDONLY)) > 0)
-	{
-		fprintf(ser_fp, "%s update in progress\r\n", upgraded_file.name);
-
-		/* FIX!!!! we need to check for header here!!! */
-		/*    	if (!expect("ZylinPhiBootloader\r\n", false))
-		 {
-		 close(firmwareFile);
-		 fprintf(ser_fp, "Corrupt bootloader image uploaded. Safely aborting bootloader update.\r\n");
-		 remove(BOOTLOADER_FILE);
-		 reset();
-		 }*/
-
-		cyg_uint8 *startAddr = (cyg_uint8 *) (UNCACHED_EXT_FLASH_BASE + upgraded_file.start_address);
-		struct stat results;
-
-		if (stat(upgraded_file.file, &results) == 0)
-		{
-			fprintf(ser_fp, "size %ld\r\n", results.st_size);
-		}
-
-		int stat;
-		void *err_addr;
-
-#ifdef CYGHWR_IO_FLASH_BLOCK_LOCKING
-		if ((stat = flash_unlock((void *) startAddr, upgraded_file.length,
-			(void **) &err_addr)) != 0)
-			{
-				fprintf(ser_fp, "Error: %s\r\n", "Unlocking flash failed");
-				reset();
-			}
-#endif
-
-		fprintf(ser_fp, "Erasing flash...");
-		if ((stat = flash_erase((void *) (startAddr), upgraded_file.length, (void **) &err_addr)) != 0)
-		{
-			fprintf(ser_fp, "Error: %s\r\n", "Erasing flash failed");
-			reset();
-		}
-		fprintf(ser_fp, "done.\r\n");
-
-		char buf[1024];
-		int actual;
-		fprintf(ser_fp, "Programming flash...");
-		while ((actual = read(firmwareFile, buf, sizeof(buf))) > 0)
-		{
-			int stat;
-			void *err_addr;
-			int rem = actual % LENGTH;
-			if (rem != 0)
-			{
-				rem = LENGTH - rem;
-				appendPadding(buf, actual, rem);
-			}
-
-			if ((stat
-					= FLASH_PROGRAM(startAddr, buf, actual + rem, (void **)&err_addr))
-					!= 0)
-			{
-				fprintf(ser_fp, "Error: %s\r\n", "Programming flash failed");
-				reset();
-			}
-
-			startAddr += actual;
-		}
-		fprintf(ser_fp, "done.\r\n");
-
-		close(firmwareFile);
-
-		if (actual < 0)
-		{
-			remove(upgraded_file.file);
-			fprintf(ser_fp, "Error: catastrophic failure. %s corrupt\r\n", upgraded_file.name);
-			reset();
-		}
-
-		remove(upgraded_file.file);
-		fprintf(ser_fp, "%s successfully updated.\r\n", upgraded_file.name);
-		reset();
-	}
-}
-
 
 /* load app into ram and run it. The application will need
  * a memory independant piece of code to begin with that
@@ -841,12 +741,14 @@ void menu(void)
 		case '\r':
 			fprintf(ser_fp, "Default firmware file update\r\n");
 			ymodemUpload(firmware.file);
-			upgrade(firmware);
+			cyg_firmware_upgrade(NULL, firmware);
+			reset();
 			break;
 		case 'Y':
 			fprintf(ser_fp, "Single shot bootloader update\r\n");
 			ymodemUpload(bootloader.file);
-			upgrade(bootloader);
+			cyg_firmware_upgrade(NULL, bootloader);
+			reset();
 			break;
 		case 'R':
 			fprintf(ser_fp, "Upload and run file from RAM\r\n");
