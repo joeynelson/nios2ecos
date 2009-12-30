@@ -55,15 +55,13 @@ upgrade_info firmware = {"/ram/firmware.phi", "Firmware", APPLICATION_FPGA_OFFSE
 
 #define UNCACHED_EXT_FLASH_BASE (0x80000000 + EXT_FLASH_BASE)
 
+static FILE *ser_fp;
+
 static char IP_FILE[] = "/config/ip";
 static const int WRITE_BUF_SIZE = 4096;
 static char WRITE_BUF[WRITE_BUF_SIZE];
 
 int ser = -1;
-FILE *ser_fp;
-
-#define LENGTH 8
-
 
 void cleaning()
 {
@@ -502,7 +500,7 @@ static void printMACAddress()
 	}
 }
 
-static void changeMac()
+static void changeMac(void)
 {
 	char mac[13];
 	cyg_uint8 ui_mac[6];
@@ -896,7 +894,7 @@ int main()
 	{
 		menu();
 
-		fprintf(ser_fp, "Reconfigure and reboot\r\n");
+		fprintf(ser_fp, "Start application image\r\n");
 		cleaning();
 		CycloneIIIReconfig(REMOTE_UPDATE_BASE, UNCACHED_EXT_FLASH_BASE,
 				APPLICATION_FPGA_OFFSET, 0, 16);
