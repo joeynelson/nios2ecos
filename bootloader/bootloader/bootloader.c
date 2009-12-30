@@ -728,53 +728,6 @@ static void ymodemUpload(const char *fileName)
 	}
 }
 
-static void selectFile(char *fileName)
-{
-	int index = 0;
-	char *names[10]; //max 10 files
-	DIR* fs = opendir("/config");
-	char key = 0;
-	for (index = 0; index < 10;)
-	{
-		struct dirent *entry = readdir(fs);
-		int len = 0;
-		if (entry == NULL)
-			break;
-		len = strlen(entry->d_name);
-		/* geeez.... The code below just checks for.zpu and .phi extensions
-		 * and although it looks ugly, it's tested, leave be until
-		 * a regression test can be done after fixing it. */
-		if (len > 4 && (entry->d_name[len - 4] == '.' && ((entry->d_name[len
-				- 3] == 'p' && entry->d_name[len - 2] == 'h'
-				&& entry->d_name[len - 1] == 'i') || (entry->d_name[len - 3]
-				== 'z' && entry->d_name[len - 2] == 'p' && entry->d_name[len
-				- 1] == 'u'))))
-		{
-			fprintf(ser_fp, "%d. %s\r\n", index, entry->d_name);
-			names[index] = (char *) malloc(strlen(entry->d_name) + 1);
-			if (names[index] == NULL)
-			{
-				fprintf(ser_fp, "Error: not enough memory\r\n");
-				reset();
-			}
-			strcpy(names[index], entry->d_name);
-			index++;
-		}
-	}
-	fprintf(ser_fp, "Type in the index of the file you want to select (0 - %d)", index
-			- 1);
-	getChar(&key);
-	if (!(key >= '0' && key <= '9' || key - '0' > index - 1))
-	{
-		fprintf(ser_fp, "Error: No such app\r\n");
-		reset();
-	}
-	fprintf(ser_fp, "\r\n");
-
-	strcpy(fileName, "/config/");
-	strcat(fileName, names[key - '0']);
-}
-
 void printAvailableRAM()
 {
 	struct mallinfo info;
@@ -815,15 +768,15 @@ void menu(void)
 	{
 		switch (key)
 		{
-		case 'S':
-			selectFile(fileName);
-			break;
 		case 'F':
 			format();
+			/* never reached */
 			break;
 		case 'i':
 		case 'I':
 			changeIP();
+			/* never reached */
+			break;
 		case 'P':
 			enterParameter();
 			goto start_menu;
@@ -834,18 +787,21 @@ void menu(void)
 			fprintf(ser_fp, "File name: ");
 			getFileName(fileName, sizeof(fileName));
 			ymodemUpload(fileName);
+			goto start_menu;
 		case '\r':
 			fprintf(ser_fp, "Default firmware file update\r\n");
 			ymodemUpload(firmware.file); //fall through
+			upgrade(firmware);
 			break;
 		case 'Y':
 			fprintf(ser_fp, "Single shot bootloader update\r\n");
 			ymodemUpload(bootloader.file); //fall through
+			upgrade(bootloader);
 			break;
 		case ' ':
 			fprintf(ser_fp, "Press <F> format flash\r\n");
 			fprintf(ser_fp,
-					"Press <E> to start Ymodem upload of firmware to a specified file name\r\n");
+					"Press <E> to start Ymodem upload of a file to a specified file name\r\n");
 			fprintf(ser_fp, "Press <Y> to start single shot update of bootloader\r\n");
 			fprintf(ser_fp, "Press <P> set parameter\r\n");
 			fprintf(ser_fp, "Press <D> show parameter\r\n");
@@ -867,9 +823,6 @@ void menu(void)
 			}
 		}
 	}
-
-	upgrade(bootloader);
-	upgrade(firmware);
 
 	if (!hasMacAddress())
 	{
