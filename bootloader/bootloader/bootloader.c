@@ -52,6 +52,9 @@ upgrade_info bootloader = {"/ram/bootloader.phi", "Bootloader", FACTORY_FPGA_OFF
 		- FACTORY_FPGA_OFFSET};
 upgrade_info firmware = {"/ram/firmware.phi", "Firmware", APPLICATION_FPGA_OFFSET, MAIN_APPLICATION_END
 		- APPLICATION_FPGA_OFFSET};
+ /* nios2-gdb-server will go ga-ga when we invoke the remote
+  * update stuff, disable while debugging */
+#define DEBUG_NO_RESET() 0
 
 #define UNCACHED_EXT_FLASH_BASE (0x80000000 + EXT_FLASH_BASE)
 
@@ -163,7 +166,13 @@ void reset(void)
 	fprintf(ser_fp, "Resetting\r\n");
 	umount("/config");
 	cleaning();
+#if DEBUG_NO_RESET()
+	/* DEBUG: should have reconfigured here, disabled to make debugging easier.
+	 * We no longer have serial output capability */
+	for (;;);
+#else
 	IOWR(REMOTE_UPDATE_BASE, 0x20, 0x1);
+#endif
 }
 
 void openSerial()
@@ -900,6 +909,12 @@ int main()
 {
 	openSerial();
 
+#if DEBUG_NO_RESET()
+	menu();
+	/* DEBUG: should have reconfigured here, disabled to make debugging easier.
+	 * We no longer have serial output capability */
+	for (;;);
+#else
 	if (needReset())
 	{
 		menu();
@@ -909,6 +924,7 @@ int main()
 		CycloneIIIReconfig(REMOTE_UPDATE_BASE, UNCACHED_EXT_FLASH_BASE,
 				APPLICATION_FPGA_OFFSET, 0, 16);
 	}
+#endif
 	fprintf(ser_fp, "Jump to application\r\n");
 	cleaning();
 	cyg_interrupt_disable();
