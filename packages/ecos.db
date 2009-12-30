@@ -296,3 +296,11 @@ package CYGPKG_ALTERA_AVALON_SPI {
     script			altera_avalon_spi.cdl
     description		 "Altera Avalon SPI support."
 }
+
+package CYGPKG_FIRMWAREUTIL {
+    alias			{  "Firmware utilities." firmwareutil }
+    hardware
+    directory		services/firmwareutil
+    script			firmwareutil.cdl
+    description		 "Firmware upgrade utilities."
+}
