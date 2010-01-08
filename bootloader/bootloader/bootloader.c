@@ -782,7 +782,7 @@ void menu(void)
 			goto start_menu;
 		case 'B':
 			set115200();
-			goto start_menu;
+			goto waitMoreChar;
 		case 'X':
 			fprintf(ser_fp, "Erasing MAC address...");
 			flash_erase_range(macAddr, macAddrLen);
