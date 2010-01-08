@@ -103,7 +103,7 @@ void cleaning()
 	fclose(ser_fp);
 	close(ser);
 
-	/* 1000ms is necessary to let everyting "calmn down" */
+	/* 1000ms is necessary to let everything "calm down" */
 	cyg_thread_delay(100);
 }
 
@@ -270,7 +270,6 @@ void mountRamFS()
 		fprintf(ser_fp, "Error: could not mount RAMFS %d\r\n", err);
 		return;
 	}
-	return;
 }
 
 /* erase all sectors in this address range */
@@ -315,7 +314,7 @@ void format(void)
 	reset();
 }
 
-int firmwareFile, fpgaFile;
+int firmwareFile;
 
 // Read a string in from serial port and reset if
 // anything goes wrong.
@@ -553,7 +552,7 @@ static void changeIP()
 
 
 /* load app into ram and run it. The application will need
- * a memory independant piece of code to begin with that
+ * a memory independent piece of code to begin with that
  * can be used to launch itself.
  */
 static void runfile(const char *name)
