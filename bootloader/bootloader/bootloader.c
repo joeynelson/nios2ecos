@@ -573,6 +573,11 @@ static void runfile(const char *name)
 		reset();
 	}
 	void * mem = malloc(results.st_size);
+	if(mem == NULL)
+	{
+		fprintf(ser_fp, "Error: out of memory");
+		reset();
+	}
 
 	read(runfile_fd, mem, results.st_size);
 
