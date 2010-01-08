@@ -781,7 +781,7 @@ void menu(void)
 			flash_erase_range(macAddr, macAddrLen);
 			fprintf(ser_fp, "done\r\n");
 			goto start_menu;
-		case 'E':
+		case 'U':
 			fprintf(ser_fp, "File name: ");
 			getFileName(fileName, sizeof(fileName));
 			ymodemUpload(fileName);
@@ -798,22 +798,27 @@ void menu(void)
 			cyg_firmware_upgrade(NULL, bootloader);
 			reset();
 			break;
-		case 'R':
+		case 'E':
 			fprintf(ser_fp, "Upload and run file from RAM\r\n");
 			ymodemUpload("/ram/run");
 			runfile("/ram/run");
+			break;
+		case 'R':
+			reset();
 			break;
 		case ' ':
 			fprintf(ser_fp, "\r\nAdvanced menu:\r\n\r\n");
 			fprintf(ser_fp, "Press <F> format flash\r\n");
 			fprintf(ser_fp,
-					"Press <E> to start Ymodem upload of a file to a specified file name\r\n");
-			fprintf(ser_fp, "Press <R> run file from RAM\r\n");
-			fprintf(ser_fp, "Press <Y> to start single shot update of bootloader\r\n");
+					"Press <U> to start Ymodem upload of a file to a specified file name\r\n");
+			fprintf(ser_fp, "Press <E> execute file from RAM\r\n");
+			fprintf(ser_fp, "Press <Y> start single shot update of bootloader\r\n");
 			fprintf(ser_fp, "Press <P> set parameter\r\n");
 			fprintf(ser_fp, "Press <D> show parameter\r\n");
 			fprintf(ser_fp, "Press <B> set 115200 serial speed\r\n");
 			fprintf(ser_fp, "Press <X> erase MAC address\r\n");
+			fprintf(ser_fp, "Press <R> reset\r\n");
+			fprintf(ser_fp, "Press <C> continue\r\n");
 			waiting = 0;
 			goto waitMoreChar;
 
