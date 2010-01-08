@@ -837,7 +837,7 @@ void menu(void)
 		/* FIX!!!! we should only be able to change mac address if we don't
 		 * have one already.
 		 */
-		//if(!hasMacAddress())
+		if(!hasMacAddress())
 		{
 			if ((key == 'M') || (key == 'm'))
 			{
