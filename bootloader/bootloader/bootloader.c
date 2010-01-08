@@ -178,7 +178,7 @@ bool waitChar(int seconds, char *key)
 	tv.tv_sec = seconds;
 	tv.tv_usec = 0;
 
-	retval = select(1, &rfds, NULL, NULL, &tv);
+	retval = select(1, &rfds, NULL, NULL, seconds > 0 ? &tv : NULL);
 	/* Don't rely on the value of tv now! */
 	if (retval)
 	{
@@ -723,6 +723,7 @@ static void set115200(void)
 void menu(void)
 {
 	char fileName[NAME_MAX];
+	int waiting;
 
 	fprintf(ser_fp, "Bootloader.\r\nCopyright FSF 2006-2010 All rights reserved\r\n");
 	fprintf(ser_fp, "eCos license (GPL with exception)\r\n");
@@ -734,6 +735,7 @@ void menu(void)
 	printMACAddress();
 
 	start_menu:
+	waiting = 5;
 
 	fprintf(ser_fp, "Press <space> for advanced help\r\n");
 	if (hasMacAddress())
@@ -752,7 +754,7 @@ void menu(void)
 	/* 5 second wait is a wee bit long here for normal execution,
 	 * but it makes the bootloader a lot easier to use and debug
 	 */
-	waitMoreChar: if (waitChar(5, &key))
+	waitMoreChar: if (waitChar(waiting, &key))
 	{
 		switch (key)
 		{
@@ -812,6 +814,7 @@ void menu(void)
 			fprintf(ser_fp, "Press <D> show parameter\r\n");
 			fprintf(ser_fp, "Press <B> set 115200 serial speed\r\n");
 			fprintf(ser_fp, "Press <X> erase MAC address\r\n");
+			waiting = 0;
 			goto waitMoreChar;
 
 		default:
