@@ -415,6 +415,7 @@ static void showParameter()
 	if ((param = open(name, O_RDONLY)) < 0)
 	{
 		fprintf(ser_fp, "Could not open %s\r\n", name);
+		return;
 	}
 
 	fprintf(ser_fp, "Displaying up to 1024 bytes of that parameter\r\n");
@@ -433,6 +434,7 @@ static void showParameter()
 		fprintf(ser_fp, "%c", c);
 	}
 	fprintf(ser_fp, "\r\n");
+	close(param);
 
 }
 
