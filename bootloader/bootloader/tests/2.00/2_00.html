@@ -1,0 +1,346 @@
+<html>
+<head>
+<title>Test results for bootloader version 2.00</title>
+</head>
+
+<body>
+
+<H1>Bootloader 2.00</H1>
+
+
+<H2>Menu options</H2>
+<table border=1>
+	<tr>
+		<td>ID</td>		
+		<td>Description</td>
+		<td>Initial state</td>
+		<td>Input</td>
+		<td>Expected output</td>
+		<td>Actual output</td>
+		<td>Pass/Fail</td>
+		<td>Observation</td>
+	</tr>
+	<tr>
+		<td><a name="MOS001"/>MOS001</td>		
+		<td>Set MAC address</td>
+		<td>MAC address is not set or was erased</td>
+		<td>Press &lt;m&gt; and type the address (XXXXXXXXXXXX)</td>
+		<td>The application should be started and the output should contain<br><code>hw_addr: XX:XX:XX:XX:XX:XX</code></td>
+		<td>
+			<code>
+Press &lt;space&gt; for advanced help<br>                                                 
+Press &lt;m&gt; to set MAC address<br>                                                 
+Enter the mac address in the format XXXXXXXXXXXX<br>                                
+000023230001<br>                           
+New MAC address: 00:00:23:23:00:01<br>                                              
+erasing done<br>   
+Jump to application<br>
+...<br>
+hw_addr: 00:00:23:23:00:01      
+			</code>
+		</td>
+		<td>PASS</td>
+		<td> </td>
+	</tr>
+	<tr>
+		<td><a name="MOS002"/>MOS002</td>		
+		<td>Erase MAC address</td>
+		<td>MAC address is set</td>
+		<td>Press &lt;space&gt; to enter the advanced menu and then &lt;X&gt;</td>
+		<td>The MAC address should be erased and the application will not be launched until the MAC address is set again</td>
+		<td>
+			<code>
+Erasing MAC address...Erasing flash at 0x8401fffa, 0x00000006 bytes<br>       
+done<br>                                                                             
+Press &lt;space&gt; for advanced help<br>                                                  
+Press &lt;m&gt; to set MAC address<br> 
+			</code>
+		</td>
+		<td>PASS</td>
+		<td> </td>
+	</tr>
+	<tr>
+		<td><a name="MOS003"/>MOS003</td>		
+		<td>Set IP address</td>
+		<td>MAC address is set</td>
+		<td>Press &lt;i&gt; and type IP, mask and gateway(optional) (x.x.x.x,y.y.y.y[,z.z.z.z])</td>
+		<td>After reset the application should be started and the IP should be set statically</td>
+		<td>
+			<code>
+Press &lt;space&gt; for advanced help<br>                                                 
+Press &lt;i&gt; to set static IP address<br>                                              
+Press &lt;enter&gt; to start Ymodem upload of firmware<br>                                
+<br>                                                                                
+Enter ip, mask and gateway(optional) (x.x.x.x,y.y.y.y[,z.z.z.z]):<br>               
+10.0.0.134,10.0.0.134<br>                                  
+...<br>
+Static IP configured(/config/ip): ip=10.0.0.134, mask=10.0.0.134, gateway=10.0.0.134<br>
+...<br>
+	client IP: 10.0.0.134<br>                                                      
+         my IP: 10.0.0.134<br>                                                      
+     server IP: 10.0.0.134<br>                                                      
+    gateway IP: 10.0.0.134      
+			</code>
+		</td>
+		<td>PASS</td>
+		<td> </td>
+	</tr>
+	</tr>
+	<tr>
+		<td><a name="MOS004"/>MOS004</td>		
+		<td>Format flash</td>
+		<td>MAC address is set</td>
+		<td>Press &lt;space&gt; to enter the advanced menu and then &lt;F&gt;</td>
+		<td>The output should contain "/config formatted successfully" and the firmware should get an IP from DHCP</td>
+		<td>
+			<code>
+Formatting JFFS2...<br>                                                             
+Erasing flash at 0x85f00000, 0x00100000 bytes<br>                                   
+/config formatted successfully<br>           
+			</code>
+		</td>
+		<td>PASS</td>
+		<td> </td>
+	</tr>
+	<tr>
+		<td><a name="MOS005"/>MOS005</td>		
+		<td>Upload of a file to a specified file name</td>
+		<td>MAC address is set</td>
+		<td>Press &lt;space&gt; to enter the advanced menu, then &lt;U&gt;, type the file name: /config/test and select a (text) file to upload.
+		After upload is completed and the firmware started, connect via telnet and type "cat /config/test"</td>
+		<td>Check that the file content is the expected one</td>
+		<td>
+			<code>
+telnet 10.0.0.133<br> 
+Trying 10.0.0.133...<br> 
+Connected to 10.0.0.133.<br> 
+Escape character is '^]'.<br> 
+Open On-Chip Debugger<br> 
+> cat /config/test<br> 
+...     
+			</code>
+		</td>
+		<td>PASS</td>
+		<td> </td>
+	</tr>
+	<tr>
+		<td><a name="MOS006"/>MOS006</td>		
+		<td>Execute a file from RAM</td>
+		<td>MAC address is set</td>
+		<td>Press &lt;space&gt; to enter the advanced menu, then &lt;E&gt; and upload an application independent of the memory location</td>
+		<td>The application should be started and run</td>
+		<td>
+			<code>
+Upload and run file from RAM<br>                                                    
+Start Ymodem upload of /ram/run<br>                                                 
+Connection over /ram/run  
+			</code>
+		</td>
+		<td>PASS</td>
+		<td> </td>
+	</tr>
+	<tr>
+		<td><a name="MOS007"/>MOS007</td>		
+		<td>Update bootloader</td>
+		<td>MAC address is set</td>
+		<td>Press &lt;space&gt; to enter the advanced menu, then &lt;Y&gt; and upload a new version of bootloader</td>
+		<td>After upload and reset check that the version and the build date correspond to the uploaded file</td>
+		<td>
+			<code>
+Single shot bootloader update<br>                                                       
+Start Ymodem upload of /ram/bootloader.phi<br>                                          
+Connection over /ram/bootloader.phi<br>  
+Cmode, 2961(SOH)/0(STX)/0(CAN) packets, 5 retries<br>                                
+<br>                                                                                 
+Ymodem transfer complete<br>                                                         
+Bootloader update in progress<br>                                                    
+Erasing flash...done.<br>                                                            
+Programming flash at 0x84020000 1328112 bytes.....................done.<br>          
+Bootloader successfully updated.<br>                                                 
+Resetting<br>                                                                        
+Bootloader 2.0.<br>                                                                  
+...<br> 
+Build date Jan 13 2010 13:11:55                         
+			</code>
+		</td>
+		<td>PASS</td>
+		<td> </td>
+	</tr>
+	<tr>
+		<td><a name="MOS008"/>MOS008</td>		
+		<td>Update firmware</td>
+		<td>MAC address is set</td>
+		<td>Press &lt;enter&gt; and upload a new version of firmware</td>
+		<td>After upload and reset check that the version and the build date correspond to the uploaded file</td>
+		<td>
+			<code>
+Default firmware file update<br>                                                        
+Start Ymodem upload of /ram/firmware.phi<br>                                            
+Connection over /ram/firmware.phi<br>              
+Cmode, 2961(SOH)/0(STX)/0(CAN) packets, 5 retries<br>                                
+<br>                                                                                 
+Ymodem transfer complete<br>                                                        
+Firmware update in progress<br>                                                     
+Erasing flash...done.<br>                                                           
+Programming flash at 0x84300000 3621896 bytes........................................................done.<br>                                                   
+Firmware successfully updated.<br>                                                  
+Resetting<br>                                                                                   
+...<br> 
+Open On-Chip Debugger 0.4.0-rc1-dev (2010-01-19-13:42)                        
+			</code>
+		</td>
+		<td>PASS</td>
+		<td> </td>
+	</tr>
+	<tr>
+		<td><a name="MOS009"/>MOS009</td>		
+		<td>Parameters</td>
+		<td>MAC address is set</td>
+		<td>Press &lt;space&gt; to enter the advanced menu, then &lt;P&gt;, type the file name: /config/param and the parameter</td>
+		<td>Press &lt;space&gt; to enter the advanced menu, then &lt;D&gt;, type the file name: /config/param and check that the parameter is identical to the one previously set</td>
+		<td>
+			<code>
+Enter file name: /config/param <br>                                                 
+Enter parameter: param 
+...<br>
+Enter filename: /config/param<br>                                                   
+Displaying up to 1024 bytes of that parameter<br>                                   
+param
+			</code>
+		</td>
+		<td>PASS</td>
+		<td> </td>
+	</tr>
+	<tr>
+		<td><a name="MOS010"/>MOS010</td>		
+		<td>Set 115200 serial speed</td>
+		<td>MAC address is set</td>
+		<td>Press &lt;space&gt; to enter the advanced menu and then &lt;B&gt;. Also change the speed to 115200 in terminal</td>
+		<td>Press &lt;space&gt; and check that the advanced menu is showed</td>
+		<td>
+			<code>
+Advanced menu:<br>                                                                   
+<br>                                                                                 
+Press &lt;F&gt; format flash<br>                                                           
+Press &lt;U&gt; to start Ymodem upload of a file to a specified file name<br>              
+Press &lt;E&gt; execute file from RAM<br>                                                  
+Press &lt;Y&gt; start single shot update of bootloader<br>                                 
+Press &lt;P&gt; set parameter<br>                                                          
+Press &lt;D&gt; show parameter<br>                                                         
+Press &lt;B&gt; set 115200 serial speed<br>                                                
+Press &lt;X&gt; erase MAC address<br>                                                      
+Press &lt;R&gt; reset<br>                                                                  
+Press &lt;C&gt; continue       
+			</code>
+		</td>
+		<td>PASS</td>
+		<td> </td>
+	</tr>
+</table>
+
+<H2>Menu options with failures</H2>
+<table border=1>
+	<tr>
+		<td>ID</td>		
+		<td>Description</td>
+		<td>Initial state</td>
+		<td>Input</td>
+		<td>Expected output</td>
+		<td>Actual output</td>
+		<td>Pass/Fail</td>
+		<td>Observation</td>
+	</tr>
+	<tr>
+		<td><a name="MOF001"/>MOF001</td>		
+		<td>Set wrong MAC address</td>
+		<td>MAC address is not set or was erased</td>
+		<td>Press &lt;m&gt; and type an incorrect address (shorter, longer, invalid digits)</td>
+		<td>Check for "Error: wrong MAC address syntax"</td>
+		<td>
+			<code>
+Enter the mac address in the format XXXXXXXXXXXX<br>                                
+00002323000G<br>                                                                    
+Error: wrong MAC address syntax         
+			</code>
+		</td>
+		<td>PASS</td>
+		<td> </td>
+	</tr>
+	<tr>
+		<td><a name="MOF002"/>MOF002</td>		
+		<td>Set wrong IP address</td>
+		<td>MAC address is set</td>
+		<td>Press &lt;i&gt; and type an incorrect address (shorter, longer, invalid digits)</td>
+		<td>After reset the application should be started, error identified and the IP should be given by DHCP and not set statically</td>
+		<td>
+			<code>
+Press &lt;space&gt; for advanced help<br>                                                 
+Press &lt;i&gt; to set static IP address<br>                                              
+Press &lt;enter&gt; to start Ymodem upload of firmware<br>                                
+<br>                                                                                
+Enter ip, mask and gateway(optional) (x.x.x.x,y.y.y.y[,z.z.z.z]):<br>               
+10.0.0.133,10.0.0.13G<br>                                  
+...<br>
+Static IP configured(/config/ip): ip=10.0.0.133, mask=10.0.0.13G, gateway=10.0.0.133<br>
+invalid mask: 10.0.0.13G  
+...<br>
+	 client IP: 0.0.0.0<br>                                                         
+         my IP: 10.0.0.127<br>                                                      
+     server IP: 10.0.0.1<br>                                                        
+    gateway IP: 0.0.0.0<br>       
+    </code>
+		</td>
+		<td>PASS</td>
+		<td> </td>    
+	<tr>
+		<td><a name="MOF003"/>MOF003</td>		
+		<td>Update with wrong bootloader</td>
+		<td>MAC address is set</td>
+		<td>Press &lt;space&gt; to enter the advanced menu, then &lt;Y&gt; and upload the bootloader for revision B</td>
+		<td>After upload and reset check that the following message <br>"Unexpected data in firmware file while 
+	expecting ZylinNiosBootloader invalid image uploaded. Safely aborting upgrade."</td>
+		<td>
+			<code>
+Single shot bootloader update<br>                                                       
+Start Ymodem upload of /ram/bootloader.phi<br>                                          
+Connection over /ram/bootloader.phi<br>  
+Cmode, 8993(SOH)/0(STX)/0(CAN) packets, 5 retries<br>                               
+<br>                                                                                
+Ymodem transfer complete<br>                                                        
+Unexpected data in firmware file while expecting ZylinNiosBootloader<br>            
+<br>                                                                                
+invalid image uploaded. Safely aborting upgrade.<br>                                
+Resetting                                                                                  
+			</code>
+		</td>
+		<td>PASS</td>
+		<td> </td>
+	</tr>
+	<tr>
+		<td><a name="MOF004"/>MOF004</td>		
+		<td>Update with wrong firmware</td>
+		<td>MAC address is set</td>
+		<td>Press &lt;enter&gt; and upload the firmware for revision B</td>
+		<td>After upload and reset check that the following message <br>"Unexpected data in firmware file while 
+	expecting ZylinNiosFirmware invalid image uploaded. Safely aborting upgrade."</td>
+		<td>
+			<code>
+Default firmware file update<br>                                                        
+Start Ymodem upload of /ram/firmware.phi<br>                                            
+Connection over /ram/firmware.phi<br>              
+Cmode, 8993(SOH)/0(STX)/0(CAN) packets, 5 retries<br>                                
+<br>                                                                                 
+Ymodem transfer complete<br>                                                         
+Unexpected data in firmware file while expecting ZylinNiosBootloader<br>             
+<br>                                                                                 
+invalid image uploaded. Safely aborting upgrade.<br>                                 
+Resetting                                                                 
+			</code>
+		</td>
+		<td>PASS</td>
+		<td> </td>
+	</tr>
+</table>
+
+</body>
+</html>
