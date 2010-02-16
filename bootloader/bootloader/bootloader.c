@@ -735,7 +735,8 @@ void menu(void)
 	/* 2.x is the major revision. Use build date to distinguish between minor
 	 * version differences.
 	 */
-	fprintf(ser_fp, "Bootloader 2.0.\r\nCopyright FSF 2006-2010 All rights reserved\r\n");
+	fprintf(ser_fp, "Bootloader 2.1.\r\n");
+	fprintf(ser_fp, "Copyright FSF 2006-2010 All rights reserved\r\n");
 	fprintf(ser_fp, "eCos license (GPL with exception)\r\n");
 	fprintf(ser_fp, "Build date %s %s\r\n", __DATE__, __TIME__);
 
